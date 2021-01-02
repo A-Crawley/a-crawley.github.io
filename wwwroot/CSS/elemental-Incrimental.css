@@ -1,0 +1,43 @@
+html,
+body {
+  padding: 0px;
+  margin: 0px;
+  overflow: hidden;
+  background-color: #322e3b;
+}
+
+#Grid {
+  display: grid;
+  grid-template-columns: 10vw auto auto auto 10vw;
+  grid-template-rows: 10vh auto 10vh;
+  grid-template-areas:
+    "left top top top right"
+    "left mid mid mid right"
+    "left bot bot bot right";
+  width: 100vw;
+  height: 100vh;
+}
+
+.btn:focus {
+  box-shadow: none;
+}
+
+#Grid > div {
+  border: 1.5px solid black;
+}
+
+#Top {
+  grid-area: top;
+}
+#Left {
+  grid-area: left;
+}
+#Middle {
+  grid-area: mid;
+}
+#Right {
+  grid-area: right;
+}
+#Bottom {
+  grid-area: bot;
+}
