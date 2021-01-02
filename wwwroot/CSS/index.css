@@ -1,7 +1,14 @@
+@import url("https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css");
 * {
   overflow: hidden;
 }
 
+html,
 body {
   background-color: #322e3b;
+  height: 100%;
+}
+
+#Text {
+  color: aliceblue;
 }
