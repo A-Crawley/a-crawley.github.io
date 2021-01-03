@@ -4,6 +4,25 @@ body {
   margin: 0px;
   overflow: hidden;
   background-color: #322e3b;
+  color: aliceblue;
+}
+
+.counter-progress {
+  width: 150px;
+}
+
+.progress {
+  background-color: inherit;
+  font-size: 1rem;
+  height: 1.5rem;
+}
+
+.popover-header {
+  color: #322e3b;
+}
+
+.progress-bar {
+  transition: width 0.1s ease;
 }
 
 #Grid {
@@ -18,8 +37,10 @@ body {
   height: 100vh;
 }
 
-.btn:focus {
+.btn:focus,
+.btn.focus {
   box-shadow: none;
+  outline: none;
 }
 
 #Grid > div {

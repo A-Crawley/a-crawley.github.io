@@ -14,3 +14,12 @@ const LeptonName = {
 const BosonName = {
     Gluon: "Gluon"
 }
+
+const HadronName = {
+    Proton: "Proton",  // 2u + 1d + 1g
+    Neutron: "Neutron" // 1u + 2d + 1g
+}
+
+const ElementName = {
+    Hydrogen: "Hydrogen"
+}

@@ -9,25 +9,93 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="wwwroot/CSS/elemental-Incrimental.css" />
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
 
     <div id="Grid">
-        <div id="Top"></div>
+        <div id="Top">
+            <div id="TimeControl" class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label for="" class="btn btn-secondary shadow-none">
+                    <input type="radio" name="options" id="Time-Play" autocomplete="off">Play</label>
+                </label>
+                <label for="" class="btn btn-secondary shadow-none">
+                    <input type="radio" name="options" id="Time-Pause" autocomplete="off">Pause</label>
+                </label>
+            </div>
+        </div>
         <div id="Left"></div>
         <div id="Middle">
-            <div id="Counters">
-                <span>Up Quarks:&nbsp;<a id="UpQuark_Counter">0</a></span>
-                <br>
-                <span>Down Quarks:&nbsp;<a id="DownQuark_Counter">0</a></span>
-                <br>
-                <span>Gluons:&nbsp;<a id="Gluon_Counter">0</a></span>
-                <br>
-                <span>Electrons:&nbsp;<a id="Electron_Counter">0</a></span>
-            </div>
+            <table id="Elementary_Counters">
+                <th colspan="2">Elementary Particals</th>
+                <tr data-toggle="popover" data-placement="right" title="Up Quark"
+                    data-content="The up quark or u quark (symbol: u) is the lightest of all quarks, a type of elementary particle, and a major constituent of matter.">
+                    <td class="counter-progress">
+                        <div class="progress">
+                            <span style="position: absolute;">Up Quarks:</span>
+                            <div id="UpQuark_Progress" class="progress-bar" role="progressbar""
+                                style=" width:0%">
+                            </div>
+                        </div>
+                    </td>
+                    <td id="UpQuark_Counter">0</td>
+                </tr>
+                <tr data-toggle="popover" data-placement="right" title="Down Quark"
+                    data-content="The down quark or d quark (symbol: d) is the second-lightest of all quarks, a type of elementary particle, and a major constituent of matter.">
+                    <td class="counter-progress">
+                        <div class="progress">
+                            <span style="position: absolute;">Down Quarks:</span>
+                            <div id="DownQuark_Progress" class="progress-bar" role="progressbar" style="width: 0%;">
+                            </div>
+                        </div>
+                    </td>
+                    <td id="DownQuark_Counter">0</td>
+                </tr>
+                <tr data-toggle="popover" data-placement="right" title="Gluon"
+                    data-content="A gluon (/ˈɡluːɒn/) is an elementary particle that acts as the exchange particle (or gauge boson) for the strong force between quarks.">
+                    <td class="counter-progress">
+                        <div class="progress">
+                            <span style="position: absolute;">Gluons:</span>
+                            <div id="Gluon_Progress" class="progress-bar" role="progressbar" style="width: 0%;">
+                            </div>
+                        </div>
+                    </td>
+                    <td id="Gluon_Counter">0</td>
+                </tr>
+                <tr data-toggle="popover" data-placement="right" title="Electron"
+                    data-content="Electrons are the negatively charged particles of atom.">
+                    <td class="counter-progress">
+                        <div class="progress">
+                            <span style="position: absolute;">Electrons:</span>
+                            <div id="Electron_Progress" class="progress-bar" role="progressbar" style="width: 0%;">
+                            </div>
+                        </div>
+                    </td>
+                    <td id="Electron_Counter">0</td>
+                </tr>
+            </table>
+
+            <table id="Sub_Atomic_Counters">
+                <th colspan="2">Sub Atomic Particals</th>
+                <tr>
+                    <td>Protons:</td>
+                    <td id="Proton_Counter">0</td>
+                </tr>
+                <tr>
+                    <td>Neutrons:</td>
+                    <td id="Neutron_Counter">0</td>
+                </tr>
+            </table>
             <div id="Actions">
-                <button id="String_Action" type="button" class="btn btn-dark">Break Strings</button>
             </div>
         </div>
         <div id="Right"></div>
@@ -36,16 +104,6 @@
 
 </body>
 
-
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-    crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-    crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-    crossorigin="anonymous"></script>
 <script src="/wwwroot/JS/enums.js"></script>
 <script src="/wwwroot/JS/classes.js"></script>
 <script src="/wwwroot/JS/main.js"></script>
@@ -54,6 +112,10 @@
 
     // When the document is ready start the game
     $(document).ready(() => {
+        $('[data-toggle="popover"]').popover({
+            container: 'body',
+            trigger: 'hover'
+        });
         Ready();
     })
 
