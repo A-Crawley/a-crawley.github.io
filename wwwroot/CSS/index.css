@@ -5,10 +5,73 @@
 
 html,
 body {
-  background-color: #322e3b;
+  background-color: #413c4d;
   height: 100%;
+  color: aliceblue;
+}
+
+#Grid {
+  display: grid;
+  grid-template-areas:
+    "top top top"
+    "left mid right"
+    "left bot right";
+
+  grid-template-columns: 10vw 80vw 10vw;
+  grid-template-rows: 10vh 80vh 10vh;
+}
+
+#Left {
+  grid-area: left;
+  position: relative;
+}
+
+#Left > h4 {
+  text-align: center;
+  padding-bottom: 20px;
+  text-decoration: underline;
+}
+
+#Left > Button {
+  display: block;
+  padding: 10px;
+  position: absolute;
+  left: 25%;
+}
+
+#Right {
+  grid-area: right;
+  position: relative;
+}
+
+#Right > h4 {
+  text-align: center;
+  padding-bottom: 20px;
+  text-decoration: underline;
+}
+
+#Top {
+  grid-area: top;
+  position: relative;
 }
 
 #Text {
-  color: aliceblue;
+  text-align: center;
+}
+
+#Middle {
+  grid-area: mid;
+  position: relative;
+}
+
+#Bottom {
+  grid-area: bot;
+  position: relative;
+}
+
+.credits {
+  text-align: right;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
 }
