@@ -23,3 +23,9 @@ const HadronName = {
 const ElementName = {
     Hydrogen: "Hydrogen"
 }
+
+const Tabs ={
+    PeriodicTable: "PeriodicTable",
+    ChemistryLab: "ChemistryLab",
+    TheField: "TheField"
+}

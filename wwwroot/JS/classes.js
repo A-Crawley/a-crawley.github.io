@@ -2,56 +2,168 @@
 class Engine{
     constructor(){
         this.runner = [];
-        this.counters = this.GetCounters();
-        this.progressBars = this.GetProgressBars();
-        this.player = new Player(this.counters, this.progressBars);
-        this.buttons = this.GetButtons();
+        this.elements = [];
+        this.activeTab = Tabs.PeriodicTable
         console.log("Engine Created...");
     }
 
     // Starts all the collection processes
-    Start(){
+    Start(elementContainers){
+        this.SetupElements(elementContainers);
+        this.SetupButtons();
+
         console.log("Starting...");
-
-        var calctime = function(base, multi){
-            return base / multi;
-        }
-
-        this.runner.push(setInterval(() => {
-           this.QuarkCollection();
-        }, 1000));
-
-        this.runner.push(setInterval(() => {
-            this.BosonCollection();
-        }, 2000));
-
-        this.runner.push(setInterval(() => {
-            this.LeptonCollection()
-        }, 2500));
-
-        //clearInterval(this.runner);
     }
 
-    ResetIntervals(){
-        this.ClearIntervals()
+    // Sets up all the buttons
+    SetupButtons(){
+        $("#PeriodicTable").addClass("active");
+        $("#PeriodicTable").click(() => {
+            if (this.activeTab === Tabs.PeriodicTable) return;
+            this.RemoveActive();
+            $("#PeriodicTable").addClass("active");
+            this.activeTab = Tabs.PeriodicTable;
+            this.ShowPeriodicTable();
+            this.HideChemistryLab();
+            this.HideTheField();
+        });
 
-        var calctime = function(base, multi){
-            return base / multi;
-        }
+        $("#ChemLab").click(() => {
+            if (this.activeTab === Tabs.ChemistryLab) return;
+            this.RemoveActive();
+            $("#ChemLab").addClass("active");
+            this.activeTab = Tabs.ChemistryLab;
+            this.HidePeriodicTable();
+            this.ShowChemistryLab();
+            this.HideTheField();
+        });
 
-        this.runner.push(setInterval(() => {
-            this.QuarkCollection();
-         }, calctime(1000,this.player.multiplyers.Quarks)));
- 
-         this.runner.push(setInterval(() => {
-             this.BosonCollection();
-         }, calctime(2000, this.player.multiplyers.Bosons)));
- 
-         this.runner.push(setInterval(() => {
-             this.LeptonCollection()
-         }, calctime(2500, this.player.multiplyers.Leptons)));
+        $("#Field").click(() => {
+            if (this.activeTab === Tabs.TheField) return;
+            this.RemoveActive();
+            $("#Field").addClass("active");
+            this.activeTab = Tabs.TheField;
+            this.HidePeriodicTable();
+            this.HideChemistryLab();
+            this.ShowTheField();
+        });
     }
 
+    // Shows the periodic table tab
+    ShowPeriodicTable(){
+        $("#ElementContainer").css('display','grid');
+    }
+
+    // Hides the periodic table tab
+    HidePeriodicTable(){
+        $("#ElementContainer").css('display','none');
+    }
+
+    // Show the field tab
+    ShowTheField(){
+        $("#TheField").css('display','grid');
+    }
+
+    // Hides the field tab
+    HideTheField(){
+        $("#TheField").css('display','none');
+    }
+
+    // Shows the chemistry tab
+    ShowChemistryLab(){
+        $("#ChemistryLab").css('display','grid');
+    }
+
+    // Hides the chemistry tab
+    HideChemistryLab(){
+        $("#ChemistryLab").css('display','none');
+    }
+
+    // Removes active flag from buttons
+    RemoveActive(){
+        $.each($("#GameTabs").children(),function(i, e) {
+            $(e).removeClass("active");
+        })
+    }
+
+    // Sets up all the html elements
+    SetupElements(elementContainers){
+        var tempElements = [];
+        var temp = this;
+
+        $.each(elementContainers, function(i,e){
+            tempElements.push(
+                {
+                    Name: $(e).attr("id"),
+                    Symbol: $(e).text().trim(),
+                    Weight: parseInt($(e).attr("data-weight")),
+                    HtmlElement: e,
+                    Amount: 0,
+                    Hide: () => temp.HideElement(this),
+                    Show: () => temp.ShowElement(this)
+                }
+            )
+        });
+
+        tempElements.forEach(e => {
+            $(e.HtmlElement).attr("data-toggle","popover");
+            $(e.HtmlElement).attr("data-html","true");
+            $(e.HtmlElement).attr("Title",e.Name);
+            $(e.HtmlElement).attr("data-placement","right");
+            $(e.HtmlElement).attr("data-content",this.Content(e));
+
+            $(`#${e.Name}Amount`).text(e.Amount);
+
+            $($(e.HtmlElement).children()[0]).click(function() {
+                e.Amount++;
+                $(`#${e.Name}Amount`).text(e.Amount);
+                $(e.HtmlElement).attr('data-content',temp.Content(e));
+                $(e.HtmlElement).popover('show');
+                temp.ConfigureElementVisability(e);
+            })
+        });
+
+        $(tempElements[0].HtmlElement).removeClass("hidden");
+
+        this.elements = tempElements;
+        tempElements = [];
+    }
+
+    ConfigureElementVisability(element){
+        switch(element.Weight){
+            case 1:
+                if (element.Amount === 10)
+                    this.elements[1].Show();
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    // Standardizes the content in the popovers
+    Content(element){
+        return `Weight: ${element.Weight} <br> Description: ${element.Description} <br> Amount: ${element.Amount}`
+    }
+
+    // Shows an element
+    ShowElement(element){
+        $(element).removeClass("hidden");
+    }
+
+    // Debug to show all elements
+    ShowAllElements(){
+        this.elements.forEach(e => {
+            e.Show();
+        })
+    }
+
+    // Hides an element
+    HideElement(element){
+        $(element).addClass("hidden");
+    }
+
+    // Clears any intervals that are running
     ClearIntervals(){
         this.runner.forEach(element => {
             clearInterval(element);
@@ -59,118 +171,9 @@ class Engine{
 
         this.runner = [];
     }
-
-    // Collects all the counter elements
-    GetCounters(){
-        var counters = {};
-
-        counters[QuarkName.Up] = $("#UpQuark_Counter");
-        counters[QuarkName.Down] = $("#DownQuark_Counter");
-        counters[LeptonName.Electron] = $("#Electron_Counter");
-        counters[BosonName.Gluon] = $("#Gluon_Counter");
-
-        return counters;
-    }
-
-    GetProgressBars(){
-        var progressBars = {};
-
-        progressBars[QuarkName.Up] = $("#UpQuark_Progress");
-        progressBars[QuarkName.Down] = $("#DownQuark_Progress");
-        progressBars[LeptonName.Electron] = $("#Electron_Progress");
-        progressBars[BosonName.Gluon] = $("#Gluon_Progress");
-
-        return progressBars;
-    }
-
-    // Collects all the button elements
-    GetButtons(){
-        var buttons = {};
-
-        buttons.Play = $("#Time-Play");
-        buttons.Pause = $("#Time-Pause");
-
-        $(buttons.Play.parent()).click(function(){engine.ResetIntervals()});
-        $(buttons.Pause.parent()).click(function(){engine.ClearIntervals()})
-
-        return buttons;
-    }
-
-    // Specifies how the quarks are collected
-    QuarkCollection(){
-        this.player.Add(QuarkName.Up, 0.1);
-        this.player.Add(QuarkName.Down, 0.1);
-    }
-
-    // Specifies how the bosons are collected
-    BosonCollection(){
-        this.player.Add(BosonName.Gluon, 0.1);
-    }
-
-    // Specifies how the leptons are collected
-    LeptonCollection(){
-        this.player.Add(LeptonName.Electron, 0.1);
-    }
 }
 
 class Player{
-    constructor(counters, progressBars){
-        this.counters = counters;
-        this.progressBars = progressBars;
-        this.particals = {};
-        console.log("Player Created...");
-        this.multiplyers = {
-            Quarks: 1,
-            Leptons: 1,
-            Bosons: 1
-        }
-    }
-
-    // Adds a partical to the totals
-    Add(partical, num){
-        switch(partical){
-            case QuarkName.Up:
-            case QuarkName.Down:
-            case QuarkName.Strange:
-            case QuarkName.Charm:
-            case QuarkName.Top:
-            case QuarkName.Bottom:
-            case LeptonName.Electron:
-            case BosonName.Gluon:
-                this.PrivateAdd(partical, num);
-                break;
-            default:
-                break;
-        }
-    }
-
-    PrivateAdd(partical, num){
-
-        num = parseFloat(num.toFixed(2));
-
-        if (this.particals[partical] == null || this.particals[partical] == undefined)
-            this.particals[partical] = num;
-        else
-            this.particals[partical] += num;
-
-        this.counters[partical].text(Math.floor(this.particals[partical]));
-        
-        switch(partical){
-            case QuarkName.Up:
-            case QuarkName.Down:
-            case QuarkName.Strange:
-            case QuarkName.Charm:
-            case QuarkName.Top:
-            case QuarkName.Bottom:
-                if (this.multiplyers.Quarks > 30)
-                    if (this.progressBars[partical].css("width") !== "100%"){
-                        this.progressBars[partical].addClass("progress-bar-striped progress-bar-animated")
-                        this.progressBars[partical].css("width","100%");
-                        break;
-                    }
-            default:
-                this.progressBars[partical].css("width",`${Math.ceil(this.particals[partical] % 1 * 100)}%`)
-                break;
-        }
+    constructor(){
     }
 }

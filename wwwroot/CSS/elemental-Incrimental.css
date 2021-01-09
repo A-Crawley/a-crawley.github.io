@@ -3,7 +3,7 @@ body {
   padding: 0px;
   margin: 0px;
   overflow: hidden;
-  background-color: #322e3b;
+  background-color: #e6e6e6;
   color: aliceblue;
 }
 
@@ -19,10 +19,6 @@ body {
 
 .popover-header {
   color: #322e3b;
-}
-
-.progress-bar {
-  transition: width 0.1s ease;
 }
 
 #Grid {
@@ -44,10 +40,11 @@ body {
 }
 
 #Grid > div {
-  border: 1.5px solid black;
+  border: 1px solid rgba(0, 0, 0, 0.062);
 }
 
 #Top {
+  position: relative;
   grid-area: top;
 }
 #Left {
@@ -55,10 +52,112 @@ body {
 }
 #Middle {
   grid-area: mid;
+  display: grid;
+  grid-template-areas: "e";
 }
+
 #Right {
   grid-area: right;
 }
 #Bottom {
   grid-area: bot;
+}
+
+/* Header Styles */
+
+#GameTabs {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+}
+
+/* Element Styling */
+
+#ElementContainer {
+  grid-area: e;
+}
+
+.hidden {
+  visibility: hidden;
+  border: none;
+}
+
+.element-table {
+  width: 100%;
+  height: 100%;
+}
+
+.element-cell {
+  width: 5%;
+  height: 10%;
+  text-align: left;
+  border: 1px solid black;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.element-cell > div {
+  position: relative;
+  height: 100%;
+}
+
+.element-cell > div > span {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+}
+
+.none {
+  border: none;
+}
+
+.metal {
+  background-color: #437fff;
+  color: black;
+}
+
+.semi-conductor {
+  background-color: #e252ff;
+  color: black;
+}
+
+.non-metal {
+  background-color: #00ff62;
+  color: black;
+}
+
+.inert-gass {
+  background-color: #efff5b;
+  color: black;
+}
+
+.lanthanide-or-actinides {
+  background-color: #3ef9ff;
+  color: black;
+}
+
+/* Chemisty Styles */
+
+#ChemistryLab {
+  display: none;
+}
+
+/* The Field Styles */
+
+#TheField {
+  display: none;
+}
+
+/* Bootstrap fixes */
+
+.btn-primary:not(:disabled):not(.disabled).active:focus,
+.btn-primary:not(:disabled):not(.disabled):active:focus,
+.show > .btn-primary.dropdown-toggle:focus {
+  box-shadow: none;
 }
