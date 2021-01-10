@@ -3,16 +3,45 @@ class Engine{
     constructor(){
         this.runner = [];
         this.elements = [];
-        this.activeTab = Tabs.PeriodicTable
+        this.activeTab = Tabs.PeriodicTable;
+        this.settings = {
+            Debug: false
+        };
         console.log("Engine Created...");
     }
 
     // Starts all the collection processes
     Start(elementContainers){
         this.SetupElements(elementContainers);
+        this.setUpPopOvers();
         this.SetupButtons();
+        this.AutoSave();
 
         console.log("Starting...");
+    }
+
+    Resume(saveData){
+        var temp = this;
+        var saveData = JSON.parse(saveData);
+
+        this.elements = saveData.Elements;
+        this.settings = saveData.Settings;
+
+        this.elements.forEach(e => {
+            e["Hide"] = () => temp.HideElement(e);
+            e["Show"] = () => temp.ShowElement(e);
+        })
+
+        this.elements.forEach(e => {
+            if (!e.Hidden)
+                e.Show();
+        })
+
+        this.setUpPopOvers();
+        this.SetupButtons();
+        this.AutoSave();
+
+        console.log("Resuming...");
     }
 
     // Sets up all the buttons
@@ -23,9 +52,8 @@ class Engine{
             this.RemoveActive();
             $("#PeriodicTable").addClass("active");
             this.activeTab = Tabs.PeriodicTable;
-            this.ShowPeriodicTable();
-            this.HideChemistryLab();
-            this.HideTheField();
+            this.HideTabs();
+            this.ShowTab("#ElementContainer");
         });
 
         $("#ChemLab").click(() => {
@@ -33,9 +61,8 @@ class Engine{
             this.RemoveActive();
             $("#ChemLab").addClass("active");
             this.activeTab = Tabs.ChemistryLab;
-            this.HidePeriodicTable();
-            this.ShowChemistryLab();
-            this.HideTheField();
+            this.HideTabs();
+            this.ShowTab("#ChemistryLab");
         });
 
         $("#Field").click(() => {
@@ -43,40 +70,56 @@ class Engine{
             this.RemoveActive();
             $("#Field").addClass("active");
             this.activeTab = Tabs.TheField;
-            this.HidePeriodicTable();
-            this.HideChemistryLab();
-            this.ShowTheField();
+            this.HideTabs();
+            this.ShowTab("#TheField");
         });
+
+        $("#SettingsButton").click(() => {
+            if (this.activeTab === Tabs.Settings) return;
+            this.RemoveActive();
+            $("#SettingsButton").addClass("active");
+            this.activeTab = Tabs.Settings;
+            this.HideTabs();
+            this.ShowTab("#Settings");
+        });
+
+        $("#Reset").click(() => {
+            this.Restart();
+        })
+
+        $("#ExportButton").click(() => {
+            $("#ExportTextinput").val(this.Export());
+        });
+
+        $("#ImportButton").click(() => {
+            var text = $("#ImportTextinput").val();
+            
+            switch(text){
+                case "debug":
+                    console.log("Oooh...");
+                    console.log("Someone knows their stuff...");
+                    this.settings.Debug = true;
+                    break;
+                default:
+                    this.Import(text);
+                    break;
+            }
+
+            $("#ImportTextinput").val("")
+        });
+        
     }
 
-    // Shows the periodic table tab
-    ShowPeriodicTable(){
-        $("#ElementContainer").css('display','grid');
+    ShowTab(id){
+        $(id).css('display','grid');
     }
 
     // Hides the periodic table tab
-    HidePeriodicTable(){
+    HideTabs(){
         $("#ElementContainer").css('display','none');
-    }
-
-    // Show the field tab
-    ShowTheField(){
-        $("#TheField").css('display','grid');
-    }
-
-    // Hides the field tab
-    HideTheField(){
         $("#TheField").css('display','none');
-    }
-
-    // Shows the chemistry tab
-    ShowChemistryLab(){
-        $("#ChemistryLab").css('display','grid');
-    }
-
-    // Hides the chemistry tab
-    HideChemistryLab(){
         $("#ChemistryLab").css('display','none');
+        $("#Settings").css('display','none');
     }
 
     // Removes active flag from buttons
@@ -92,20 +135,28 @@ class Engine{
         var temp = this;
 
         $.each(elementContainers, function(i,e){
-            tempElements.push(
-                {
-                    Name: $(e).attr("id"),
-                    Symbol: $(e).text().trim(),
-                    Weight: parseInt($(e).attr("data-weight")),
-                    HtmlElement: e,
-                    Amount: 0,
-                    Hide: () => temp.HideElement(this),
-                    Show: () => temp.ShowElement(this)
-                }
-            )
-        });
+            var element = {
+                Name: $(e).attr("id"),
+                Symbol: $(e).text().trim().replace("#","").replace(":",""),
+                Weight: parseInt($(e).attr("data-atomic-number")),
+                Description: $(e).attr("data-description"),
+                HtmlElement: `#${$(e).attr("id")}`,
+                Amount: 0,
+                Hidden: true
+            };
 
-        tempElements.forEach(e => {
+            element["Hide"] = () => temp.HideElement(element);
+            element["Show"] = () => temp.ShowElement(element);
+            
+            tempElements.push(element)
+        });
+        
+        this.elements = tempElements;
+    }
+
+    setUpPopOvers(){
+        var temp = this;
+        this.elements.forEach(e => {
             $(e.HtmlElement).attr("data-toggle","popover");
             $(e.HtmlElement).attr("data-html","true");
             $(e.HtmlElement).attr("Title",e.Name);
@@ -119,17 +170,15 @@ class Engine{
                 $(`#${e.Name}Amount`).text(e.Amount);
                 $(e.HtmlElement).attr('data-content',temp.Content(e));
                 $(e.HtmlElement).popover('show');
-                temp.ConfigureElementVisability(e);
+                temp.ConfigureElementVisibility(e);
             })
         });
 
-        $(tempElements[0].HtmlElement).removeClass("hidden");
+        this.elements[0].Show();
 
-        this.elements = tempElements;
-        tempElements = [];
     }
 
-    ConfigureElementVisability(element){
+    ConfigureElementVisibility(element){
         switch(element.Weight){
             case 1:
                 if (element.Amount === 10)
@@ -143,12 +192,13 @@ class Engine{
 
     // Standardizes the content in the popovers
     Content(element){
-        return `Weight: ${element.Weight} <br> Description: ${element.Description} <br> Amount: ${element.Amount}`
+        return `<b>Atomic Number:</b> ${element.Weight} <br> <b>Description:</b> ${element.Description} <br> <b>Amount:</b> ${element.Amount}`
     }
 
     // Shows an element
     ShowElement(element){
-        $(element).removeClass("hidden");
+        $(element.HtmlElement).removeClass("hidden");
+        element.Hidden = false;
     }
 
     // Debug to show all elements
@@ -160,7 +210,8 @@ class Engine{
 
     // Hides an element
     HideElement(element){
-        $(element).addClass("hidden");
+        $(element.HtmlElement).addClass("hidden");
+        element.Hidden = true;
     }
 
     // Clears any intervals that are running
@@ -170,6 +221,44 @@ class Engine{
         });
 
         this.runner = [];
+    }
+
+    AutoSave(){
+        this.runner.push(setInterval(() => {
+            this.Save();
+        },1000))
+    }
+
+    Export(){
+        var saveData = {
+            Elements: this.elements,
+            Settings: this.settings
+        };
+
+        return btoa(JSON.stringify(saveData));
+    }
+
+    Import(base64){
+        localStorage.setItem('gameSaveData', atob(base64));
+        location.reload();
+    }
+
+    Save(){
+        var saveData = {
+            Elements: this.elements,
+            Settings: this.settings
+        };
+
+        localStorage.setItem('gameSaveData',JSON.stringify(saveData));
+    }
+
+    Restart(){
+        localStorage.removeItem('gameSaveData');
+        location.reload();
+    }
+
+    Load(){
+        return localStorage.getItem('gameSaveData');        
     }
 }
 

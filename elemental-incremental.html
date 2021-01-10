@@ -4,11 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elemental Incrimental</title>
+    <title>Elemental Incremental</title>
     <link rel="shortcut icon" type="img/png" href="/favicon.png" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="wwwroot/CSS/elemental-Incrimental.css" />
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="wwwroot/CSS/elemental-Incremental.css" />
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
@@ -18,23 +20,32 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div id="Grid">
         <div id="Top">
-            <div id="GameTabs" class="btn-group-toggle">
-                <button id="PeriodicTable" class="btn btn-primary">Periodic table</button>
-                <button id="Field" class="btn btn-primary">The Field</button>
-                <button id="ChemLab" class="btn btn-primary">Chemistry Lab</button>
+            <div>
+                <h1 class="header">Elemental Incremental</h1>
             </div>
+
+            <div id="GameTabs" class="btn-group-toggle">
+                <button id="PeriodicTable" class="btn btn-primary">Periodic table <i class="fa fa-table"></i></button>
+                <button id="Field" class="btn btn-primary">The Field <i class="fa fa-envira"></i></button>
+                <button id="ChemLab" class="btn btn-primary">Chemistry Lab <i class="fa fa-flask"></i></button>
+            </div>
+
+            <button id="SettingsButton" class='btn btn-primary'>Settings <i class="fa fa-cog"></i></button>
         </div>
         <div id="Left"></div>
         <div id="Middle">
             <div id="ElementContainer">
                 <table id="Elements" class="element-table">
                     <tr id="Level1">
-                        <td data-weight="1" class="element-cell hidden non-metal" id="Hydrogen">
+                        <td data-atomic-number="1"
+                            data-description="Discovered by Henry Cavendish in 1766, this gas is colourless, odourless and insipid under normal conditions."
+                            class="element-cell hidden non-metal" id="Hydrogen">
                             <div>H<span>#:&nbsp;<a id="HydrogenAmount"></a></span></div>
                         </td>
                         <td class="element-cell hidden none" id=""></td>
@@ -53,15 +64,17 @@
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
-                        <td data-weight="2" class="element-cell hidden inert-gass" id="Helium">
+                        <td data-atomic-number="2"
+                            data-description="Discovered by Sir Ramsey in 1895, this nobel gas is colourless, odourless, insipid and non-toxic under normal conditions"
+                            class="element-cell hidden inert-gass" id="Helium">
                             <div>He<span>#:&nbsp;<a id="HeliumAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level2">
-                        <td data-weight="3" class="element-cell hidden metal" id="Lithium">
+                        <td data-atomic-number="3" class="element-cell hidden metal" id="Lithium">
                             <div>Li<span>#:&nbsp;<a id="LithiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="4" class="element-cell hidden metal" id="Berylium">
+                        <td data-atomic-number="4" class="element-cell hidden metal" id="Berylium">
                             <div>Be<span>#:&nbsp;<a id="BeryliumAmount"></a></span></div>
                         </td>
                         <td class="element-cell hidden none" id=""></td>
@@ -74,30 +87,30 @@
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
-                        <td data-weight="5" class="element-cell hidden semi-conductor" id="Boron">
+                        <td data-atomic-number="5" class="element-cell hidden semi-conductor" id="Boron">
                             <div>B<span>#:&nbsp;<a id="BoronAmount"></a></span></div>
                         </td>
-                        <td data-weight="6" class="element-cell hidden non-metal" id="Carbon">
+                        <td data-atomic-number="6" class="element-cell hidden non-metal" id="Carbon">
                             <div>C<span>#:&nbsp;<a id="CarbonAmount"></a></span></div>
                         </td>
-                        <td data-weight="7" class="element-cell hidden non-metal" id="Nitrogen">
+                        <td data-atomic-number="7" class="element-cell hidden non-metal" id="Nitrogen">
                             <div>N<span>#:&nbsp;<a id="NitrogenAmount"></a></span></div>
                         </td>
-                        <td data-weight="8" class="element-cell hidden non-metal" id="Oxygen">
+                        <td data-atomic-number="8" class="element-cell hidden non-metal" id="Oxygen">
                             <div>O<span>#:&nbsp;<a id="OxygenAmount"></a></span></div>
                         </td>
-                        <td data-weight="9" class="element-cell hidden non-metal" id="Flurine">
+                        <td data-atomic-number="9" class="element-cell hidden non-metal" id="Flurine">
                             <div>F<span>#:&nbsp;<a id="FlurineAmount"></a></span></div>
                         </td>
-                        <td data-weight="10" class="element-cell hidden inert-gass" id="Neon">
+                        <td data-atomic-number="10" class="element-cell hidden inert-gass" id="Neon">
                             <div>Ne<span>#:&nbsp;<a id="NeonAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level3">
-                        <td data-weight="11" class="element-cell hidden metal" id="Sodium">
+                        <td data-atomic-number="11" class="element-cell hidden metal" id="Sodium">
                             <div>Na<span>#:&nbsp;<a id="SodiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="12" class="element-cell hidden metal" id="Magnesium">
+                        <td data-atomic-number="12" class="element-cell hidden metal" id="Magnesium">
                             <div>Mg<span>#:&nbsp;<a id="MagnesiumAmount"></a></span></div>
                         </td>
                         <td class="element-cell hidden none" id=""></td>
@@ -110,246 +123,246 @@
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
                         <td class="element-cell hidden none" id=""></td>
-                        <td data-weight="13" class="element-cell hidden metal" id="Aluminium">
+                        <td data-atomic-number="13" class="element-cell hidden metal" id="Aluminium">
                             <div>Al<span>#:&nbsp;<a id="AluminiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="14" class="element-cell hidden semi-conductor" id="Silicon">
+                        <td data-atomic-number="14" class="element-cell hidden semi-conductor" id="Silicon">
                             <div>Si<span>#:&nbsp;<a id="SiliconAmount"></a></span></div>
                         </td>
-                        <td data-weight="15" class="element-cell hidden non-metal" id="Phosphorus">
+                        <td data-atomic-number="15" class="element-cell hidden non-metal" id="Phosphorus">
                             <div>P<span>#:&nbsp;<a id="PhosphorusAmount"></a></span></div>
                         </td>
-                        <td data-weight="16" class="element-cell hidden non-metal" id="Sulphur">
+                        <td data-atomic-number="16" class="element-cell hidden non-metal" id="Sulphur">
                             <div>S<span>#:&nbsp;<a id="SulphurAmount"></a></span></div>
                         </td>
-                        <td data-weight="17" class="element-cell hidden non-metal" id="Chlorine">
+                        <td data-atomic-number="17" class="element-cell hidden non-metal" id="Chlorine">
                             <div>Cl<span>#:&nbsp;<a id="ChlorineAmount"></a></span></div>
                         </td>
-                        <td data-weight="18" class="element-cell hidden inert-gass" id="Argon">
+                        <td data-atomic-number="18" class="element-cell hidden inert-gass" id="Argon">
                             <div>Ar<span>#:&nbsp;<a id="ArgonAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level4">
-                        <td data-weight="19" class="element-cell hidden metal" id="Potasium">
+                        <td data-atomic-number="19" class="element-cell hidden metal" id="Potasium">
                             <div>K<span>#:&nbsp;<a id="PotasiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="20" class="element-cell hidden metal" id="Calcium">
+                        <td data-atomic-number="20" class="element-cell hidden metal" id="Calcium">
                             <div>Ca<span>#:&nbsp;<a id="CalciumAmount"></a></span></div>
                         </td>
-                        <td data-weight="21" class="element-cell hidden metal" id="Scandium">
+                        <td data-atomic-number="21" class="element-cell hidden metal" id="Scandium">
                             <div>Sc<span>#:&nbsp;<a id="ScandiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="22" class="element-cell hidden metal" id="Titanium">
+                        <td data-atomic-number="22" class="element-cell hidden metal" id="Titanium">
                             <div>Ti<span>#:&nbsp;<a id="TitaniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="23" class="element-cell hidden metal" id="Vandium">
+                        <td data-atomic-number="23" class="element-cell hidden metal" id="Vandium">
                             <div>V<span>#:&nbsp;<a id="VandiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="24" class="element-cell hidden metal" id="Chromium">
+                        <td data-atomic-number="24" class="element-cell hidden metal" id="Chromium">
                             <div>Cr<span>#:&nbsp;<a id="ChromiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="25" class="element-cell hidden metal" id="Maganese">
+                        <td data-atomic-number="25" class="element-cell hidden metal" id="Maganese">
                             <div>Mn<span>#:&nbsp;<a id="MaganeseAmount"></a></span></div>
                         </td>
-                        <td data-weight="26" class="element-cell hidden metal" id="Iron">
+                        <td data-atomic-number="26" class="element-cell hidden metal" id="Iron">
                             <div>Fe<span>#:&nbsp;<a id="IronAmount"></a></span></div>
                         </td>
-                        <td data-weight="27" class="element-cell hidden metal" id="Cobalt">
+                        <td data-atomic-number="27" class="element-cell hidden metal" id="Cobalt">
                             <div>Co<span>#:&nbsp;<a id="CobaltAmount"></a></span></div>
                         </td>
-                        <td data-weight="28" class="element-cell hidden metal" id="Nickle">
+                        <td data-atomic-number="28" class="element-cell hidden metal" id="Nickle">
                             <div>Ni<span>#:&nbsp;<a id="NickleAmount"></a></span></div>
                         </td>
-                        <td data-weight="29" class="element-cell hidden metal" id="Copper">
+                        <td data-atomic-number="29" class="element-cell hidden metal" id="Copper">
                             <div>Cu<span>#:&nbsp;<a id="CopperAmount"></a></span></div>
                         </td>
-                        <td data-weight="30" class="element-cell hidden metal" id="Zinc">
+                        <td data-atomic-number="30" class="element-cell hidden metal" id="Zinc">
                             <div>Zn<span>#:&nbsp;<a id="ZincAmount"></a></span></div>
                         </td>
-                        <td data-weight="31" class="element-cell hidden metal" id="Gallium">
+                        <td data-atomic-number="31" class="element-cell hidden metal" id="Gallium">
                             <div>Ga<span>#:&nbsp;<a id="GalliumAmount"></a></span></div>
                         </td>
-                        <td data-weight="32" class="element-cell hidden semi-conductor" id="Germanium">
+                        <td data-atomic-number="32" class="element-cell hidden semi-conductor" id="Germanium">
                             <div>Ge<span>#:&nbsp;<a id="GermaniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="33" class="element-cell hidden semi-conductor" id="Arsenic">
+                        <td data-atomic-number="33" class="element-cell hidden semi-conductor" id="Arsenic">
                             <div>As<span>#:&nbsp;<a id="ArsenicAmount"></a></span></div>
                         </td>
-                        <td data-weight="34" class="element-cell hidden non-metal" id="Selenium">
+                        <td data-atomic-number="34" class="element-cell hidden non-metal" id="Selenium">
                             <div>Se<span>#:&nbsp;<a id="SeleniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="35" class="element-cell hidden non-metal" id="Bromine">
+                        <td data-atomic-number="35" class="element-cell hidden non-metal" id="Bromine">
                             <div>Br<span>#:&nbsp;<a id="BromineAmount"></a></span></div>
                         </td>
-                        <td data-weight="36" class="element-cell hidden inert-gass" id="Krypton">
+                        <td data-atomic-number="36" class="element-cell hidden inert-gass" id="Krypton">
                             <div>Kr<span>#:&nbsp;<a id="KryptonAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level5">
-                        <td data-weight="37" class="element-cell hidden metal" id="Rubidium">
+                        <td data-atomic-number="37" class="element-cell hidden metal" id="Rubidium">
                             <div>Rb<span>#:&nbsp;<a id="RubidiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="38" class="element-cell hidden metal" id="Strontium">
+                        <td data-atomic-number="38" class="element-cell hidden metal" id="Strontium">
                             <div>Sr<span>#:&nbsp;<a id="StrontiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="39" class="element-cell hidden metal" id="Yttrium">
+                        <td data-atomic-number="39" class="element-cell hidden metal" id="Yttrium">
                             <div>Y<span>#:&nbsp;<a id="YttriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="40" class="element-cell hidden metal" id="Zitconium">
+                        <td data-atomic-number="40" class="element-cell hidden metal" id="Zitconium">
                             <div>Zr<span>#:&nbsp;<a id="ZitconiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="41" class="element-cell hidden metal" id="Biobium">
+                        <td data-atomic-number="41" class="element-cell hidden metal" id="Biobium">
                             <div>Nb<span>#:&nbsp;<a id="BiobiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="42" class="element-cell hidden metal" id="Molybdenum">
+                        <td data-atomic-number="42" class="element-cell hidden metal" id="Molybdenum">
                             <div>Mo<span>#:&nbsp;<a id="MolybdenumAmount"></a></span></div>
                         </td>
-                        <td data-weight="43" class="element-cell hidden metal" id="Technetium">
+                        <td data-atomic-number="43" class="element-cell hidden metal" id="Technetium">
                             <div>Tc<span>#:&nbsp;<a id="TechnetiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="44" class="element-cell hidden metal" id="Ruthenium">
+                        <td data-atomic-number="44" class="element-cell hidden metal" id="Ruthenium">
                             <div>Ru<span>#:&nbsp;<a id="RutheniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="45" class="element-cell hidden metal" id="Rhodium">
+                        <td data-atomic-number="45" class="element-cell hidden metal" id="Rhodium">
                             <div>Rh<span>#:&nbsp;<a id="RhodiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="46" class="element-cell hidden metal" id="Palladium">
+                        <td data-atomic-number="46" class="element-cell hidden metal" id="Palladium">
                             <div>Pd<span>#:&nbsp;<a id="PalladiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="47" class="element-cell hidden metal" id="Silver">
+                        <td data-atomic-number="47" class="element-cell hidden metal" id="Silver">
                             <div>Ag<span>#:&nbsp;<a id="SilverAmount"></a></span></div>
                         </td>
-                        <td data-weight="48" class="element-cell hidden metal" id="Cadmium">
+                        <td data-atomic-number="48" class="element-cell hidden metal" id="Cadmium">
                             <div>Cd<span>#:&nbsp;<a id="CadmiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="49" class="element-cell hidden metal" id="Indium">
+                        <td data-atomic-number="49" class="element-cell hidden metal" id="Indium">
                             <div>In<span>#:&nbsp;<a id="IndiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="50" class="element-cell hidden metal" id="Tin">
+                        <td data-atomic-number="50" class="element-cell hidden metal" id="Tin">
                             <div>Sn<span>#:&nbsp;<a id="TinAmount"></a></span></div>
                         </td>
-                        <td data-weight="51" class="element-cell hidden semi-conductor" id="Antimony">
+                        <td data-atomic-number="51" class="element-cell hidden semi-conductor" id="Antimony">
                             <div>Sb<span>#:&nbsp;<a id="AntimonyAmount"></a></span></div>
                         </td>
-                        <td data-weight="52" class="element-cell hidden semi-conductor" id="Tellurium">
+                        <td data-atomic-number="52" class="element-cell hidden semi-conductor" id="Tellurium">
                             <div>Te<span>#:&nbsp;<a id="TelluriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="53" class="element-cell hidden non-metal" id="Iodine">
+                        <td data-atomic-number="53" class="element-cell hidden non-metal" id="Iodine">
                             <div>I<span>#:&nbsp;<a id="IodineAmount"></a></span></div>
                         </td>
-                        <td data-weight="54" class="element-cell hidden inert-gass" id="Xenon">
+                        <td data-atomic-number="54" class="element-cell hidden inert-gass" id="Xenon">
                             <div>Xe<span>#:&nbsp;<a id="XenonAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level6">
-                        <td data-weight="55" class="element-cell hidden metal" id="Cesium">
+                        <td data-atomic-number="55" class="element-cell hidden metal" id="Cesium">
                             <div>Cs<span>#:&nbsp;<a id="CesiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="56" class="element-cell hidden metal" id="Barium">
+                        <td data-atomic-number="56" class="element-cell hidden metal" id="Barium">
                             <div>Ba<span>#:&nbsp;<a id="BariumAmount"></a></span></div>
                         </td>
-                        <td data-weight="57" class="element-cell hidden metal" id="Lanthanum">
+                        <td data-atomic-number="57" class="element-cell hidden metal" id="Lanthanum">
                             <div>La<span>#:&nbsp;<a id="LanthanumAmount"></a></span></div>
                         </td>
-                        <td data-weight="72" class="element-cell hidden metal" id="Hafnium">
+                        <td data-atomic-number="72" class="element-cell hidden metal" id="Hafnium">
                             <div>Hf<span>#:&nbsp;<a id="HafniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="73" class="element-cell hidden metal" id="Tantalum">
+                        <td data-atomic-number="73" class="element-cell hidden metal" id="Tantalum">
                             <div>Ta<span>#:&nbsp;<a id="TantalumAmount"></a></span></div>
                         </td>
-                        <td data-weight="74" class="element-cell hidden metal" id="Tungsten">
+                        <td data-atomic-number="74" class="element-cell hidden metal" id="Tungsten">
                             <div>W<span>#:&nbsp;<a id="TungstenAmount"></a></span></div>
                         </td>
-                        <td data-weight="75" class="element-cell hidden metal" id="Rhenium">
+                        <td data-atomic-number="75" class="element-cell hidden metal" id="Rhenium">
                             <div>Re<span>#:&nbsp;<a id="RheniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="76" class="element-cell hidden metal" id="Osmium">
+                        <td data-atomic-number="76" class="element-cell hidden metal" id="Osmium">
                             <div>Os<span>#:&nbsp;<a id="OsmiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="77" class="element-cell hidden metal" id="Iridium">
+                        <td data-atomic-number="77" class="element-cell hidden metal" id="Iridium">
                             <div>Ir<span>#:&nbsp;<a id="IridiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="78" class="element-cell hidden metal" id="Platinum">
+                        <td data-atomic-number="78" class="element-cell hidden metal" id="Platinum">
                             <div>Pt<span>#:&nbsp;<a id="PlatinumAmount"></a></span></div>
                         </td>
-                        <td data-weight="79" class="element-cell hidden metal" id="Gold">
+                        <td data-atomic-number="79" class="element-cell hidden metal" id="Gold">
                             <div>Au<span>#:&nbsp;<a id="GoldAmount"></a></span></div>
                         </td>
-                        <td data-weight="80" class="element-cell hidden metal" id="Mercury">
+                        <td data-atomic-number="80" class="element-cell hidden metal" id="Mercury">
                             <div>Hg<span>#:&nbsp;<a id="MercuryAmount"></a></span></div>
                         </td>
-                        <td data-weight="81" class="element-cell hidden metal" id="Thallium">
+                        <td data-atomic-number="81" class="element-cell hidden metal" id="Thallium">
                             <div>Tl<span>#:&nbsp;<a id="ThalliumAmount"></a></span></div>
                         </td>
-                        <td data-weight="82" class="element-cell hidden metal" id="Lead">
+                        <td data-atomic-number="82" class="element-cell hidden metal" id="Lead">
                             <div>Pb<span>#:&nbsp;<a id="LeadAmount"></a></span></div>
                         </td>
-                        <td data-weight="83" class="element-cell hidden metal" id="Bismuth">
+                        <td data-atomic-number="83" class="element-cell hidden metal" id="Bismuth">
                             <div>Bi<span>#:&nbsp;<a id="BismuthAmount"></a></span></div>
                         </td>
-                        <td data-weight="84" class="element-cell hidden semi-conductor" id="Polonium">
+                        <td data-atomic-number="84" class="element-cell hidden semi-conductor" id="Polonium">
                             <div>Po<span>#:&nbsp;<a id="PoloniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="85" class="element-cell hidden semi-conductor" id="Astatine">
+                        <td data-atomic-number="85" class="element-cell hidden semi-conductor" id="Astatine">
                             <div>At<span>#:&nbsp;<a id="AstatineAmount"></a></span></div>
                         </td>
-                        <td data-weight="86" class="element-cell hidden inert-gass" id="Radon">
+                        <td data-atomic-number="86" class="element-cell hidden inert-gass" id="Radon">
                             <div>Rn<span>#:&nbsp;<a id="RadonAmount"></a></span></div>
                         </td>
                     </tr>
                     <tr id="Level7">
-                        <td data-weight="87" class="element-cell hidden metal" id="Francium">
+                        <td data-atomic-number="87" class="element-cell hidden metal" id="Francium">
                             <div>Fr<span>#:&nbsp;<a id="FranciumAmount"></a></span></div>
                         </td>
-                        <td data-weight="88" class="element-cell hidden metal" id="Radium">
+                        <td data-atomic-number="88" class="element-cell hidden metal" id="Radium">
                             <div>Ra<span>#:&nbsp;<a id="RadiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="89" class="element-cell hidden metal" id="Actinium">
+                        <td data-atomic-number="89" class="element-cell hidden metal" id="Actinium">
                             <div>Ac<span>#:&nbsp;<a id="ActiniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="104" class="element-cell hidden metal" id="Rutherfordium">
+                        <td data-atomic-number="104" class="element-cell hidden metal" id="Rutherfordium">
                             <div>Rf<span>#:&nbsp;<a id="RutherfordiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="105" class="element-cell hidden metal" id="Dubnium">
+                        <td data-atomic-number="105" class="element-cell hidden metal" id="Dubnium">
                             <div>Db<span>#:&nbsp;<a id="DubniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="106" class="element-cell hidden metal" id="Seabourgium">
+                        <td data-atomic-number="106" class="element-cell hidden metal" id="Seabourgium">
                             <div>Sg<span>#:&nbsp;<a id="SeabourgiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="107" class="element-cell hidden metal" id="Bohrium">
+                        <td data-atomic-number="107" class="element-cell hidden metal" id="Bohrium">
                             <div>Bh<span>#:&nbsp;<a id="BohriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="108" class="element-cell hidden metal" id="Hassium">
+                        <td data-atomic-number="108" class="element-cell hidden metal" id="Hassium">
                             <div>Hs<span>#:&nbsp;<a id="HassiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="109" class="element-cell hidden metal" id="Meitnerium">
+                        <td data-atomic-number="109" class="element-cell hidden metal" id="Meitnerium">
                             <div>Mt<span>#:&nbsp;<a id="MeitneriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="110" class="element-cell hidden metal" id="Darmstadium">
+                        <td data-atomic-number="110" class="element-cell hidden metal" id="Darmstadium">
                             <div>Ds<span>#:&nbsp;<a id="DarmstadiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="111" class="element-cell hidden metal" id="Roentgenium">
+                        <td data-atomic-number="111" class="element-cell hidden metal" id="Roentgenium">
                             <div>Rg<span>#:&nbsp;<a id="RoentgeniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="112" class="element-cell hidden metal" id="Ununbium">
+                        <td data-atomic-number="112" class="element-cell hidden metal" id="Ununbium">
                             <div>Cn<span>#:&nbsp;<a id="UnunbiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="113" class="element-cell hidden metal" id="Ununtrium">
+                        <td data-atomic-number="113" class="element-cell hidden metal" id="Ununtrium">
                             <div>Nh<span>#:&nbsp;<a id="UnuntriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="114" class="element-cell hidden metal" id="Ununqadium">
+                        <td data-atomic-number="114" class="element-cell hidden metal" id="Ununqadium">
                             <div>Fl<span>#:&nbsp;<a id="UnunqadiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="115" class="element-cell hidden metal" id="Ununpentium">
+                        <td data-atomic-number="115" class="element-cell hidden metal" id="Ununpentium">
                             <div>Mc<span>#:&nbsp;<a id="UnunpentiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="116" class="element-cell hidden metal" id="Ununhexium">
+                        <td data-atomic-number="116" class="element-cell hidden metal" id="Ununhexium">
                             <div>Lv<span>#:&nbsp;<a id="UnunhexiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="117" class="element-cell hidden semi-conductor" id="Ununseptium">
+                        <td data-atomic-number="117" class="element-cell hidden semi-conductor" id="Ununseptium">
                             <div>Ts<span>#:&nbsp;<a id="UnunseptiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="118" class="element-cell hidden inert-gass" id="Ununoctium">
+                        <td data-atomic-number="118" class="element-cell hidden inert-gass" id="Ununoctium">
                             <div>Og<span>#:&nbsp;<a id="UnunoctiumAmount"></a></span></div>
                         </td>
                     </tr>
@@ -358,46 +371,47 @@
                     </tr>
                     <tr id="Level9">
                         <td class="element-cell hidden none" id=""></td>
-                        <td data-weight="58" class="element-cell hidden lanthanide-or-actinides" id="Cerium">
+                        <td data-atomic-number="58" class="element-cell hidden lanthanide-or-actinides" id="Cerium">
                             <div>Ce<span>#:&nbsp;<a id="CeriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="59" class="element-cell hidden lanthanide-or-actinides" id="Praseodymium">
+                        <td data-atomic-number="59" class="element-cell hidden lanthanide-or-actinides"
+                            id="Praseodymium">
                             <div>Pr<span>#:&nbsp;<a id="PraseodymiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="60" class="element-cell hidden lanthanide-or-actinides" id="Neodynium">
+                        <td data-atomic-number="60" class="element-cell hidden lanthanide-or-actinides" id="Neodynium">
                             <div>Nd<span>#:&nbsp;<a id="NeodyniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="61" class="element-cell hidden lanthanide-or-actinides" id="Promethium">
+                        <td data-atomic-number="61" class="element-cell hidden lanthanide-or-actinides" id="Promethium">
                             <div>Pm<span>#:&nbsp;<a id="PromethiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="62" class="element-cell hidden lanthanide-or-actinides" id="Samarium">
+                        <td data-atomic-number="62" class="element-cell hidden lanthanide-or-actinides" id="Samarium">
                             <div>Sm<span>#:&nbsp;<a id="SamariumAmount"></a></span></div>
                         </td>
-                        <td data-weight="63" class="element-cell hidden lanthanide-or-actinides" id="Europium">
+                        <td data-atomic-number="63" class="element-cell hidden lanthanide-or-actinides" id="Europium">
                             <div>Eu<span>#:&nbsp;<a id="EuropiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="64" class="element-cell hidden lanthanide-or-actinides" id="Gadolinium">
+                        <td data-atomic-number="64" class="element-cell hidden lanthanide-or-actinides" id="Gadolinium">
                             <div>Gd<span>#:&nbsp;<a id="GadoliniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="65" class="element-cell hidden lanthanide-or-actinides" id="Terbium">
+                        <td data-atomic-number="65" class="element-cell hidden lanthanide-or-actinides" id="Terbium">
                             <div>Tb<span>#:&nbsp;<a id="TerbiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="66" class="element-cell hidden lanthanide-or-actinides" id="Dysptosium">
+                        <td data-atomic-number="66" class="element-cell hidden lanthanide-or-actinides" id="Dysptosium">
                             <div>Dy<span>#:&nbsp;<a id="DysptosiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="67" class="element-cell hidden lanthanide-or-actinides" id="Holmium">
+                        <td data-atomic-number="67" class="element-cell hidden lanthanide-or-actinides" id="Holmium">
                             <div>Ho<span>#:&nbsp;<a id="HolmiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="68" class="element-cell hidden lanthanide-or-actinides" id="Erbium">
+                        <td data-atomic-number="68" class="element-cell hidden lanthanide-or-actinides" id="Erbium">
                             <div>Er<span>#:&nbsp;<a id="ErbiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="69" class="element-cell hidden lanthanide-or-actinides" id="Thulium">
+                        <td data-atomic-number="69" class="element-cell hidden lanthanide-or-actinides" id="Thulium">
                             <div>Tm<span>#:&nbsp;<a id="ThuliumAmount"></a></span></div>
                         </td>
-                        <td data-weight="70" class="element-cell hidden lanthanide-or-actinides" id="Ytterbium">
+                        <td data-atomic-number="70" class="element-cell hidden lanthanide-or-actinides" id="Ytterbium">
                             <div>Yb<span>#:&nbsp;<a id="YtterbiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="71" class="element-cell hidden lanthanide-or-actinides" id="Lutetium">
+                        <td data-atomic-number="71" class="element-cell hidden lanthanide-or-actinides" id="Lutetium">
                             <div>Lu<span>#:&nbsp;<a id="LutetiumAmount"></a></span></div>
                         </td>
                         <td class="element-cell hidden none" id=""></td>
@@ -406,46 +420,51 @@
                     </tr>
                     <tr id="Level10">
                         <td class="element-cell hidden none" id=""></td>
-                        <td data-weight="90" class="element-cell hidden lanthanide-or-actinides" id="Thorium">
+                        <td data-atomic-number="90" class="element-cell hidden lanthanide-or-actinides" id="Thorium">
                             <div>Th<span>#:&nbsp;<a id="ThoriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="91" class="element-cell hidden lanthanide-or-actinides" id="Protactinium">
+                        <td data-atomic-number="91" class="element-cell hidden lanthanide-or-actinides"
+                            id="Protactinium">
                             <div>Pa<span>#:&nbsp;<a id="ProtactiniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="92" class="element-cell hidden lanthanide-or-actinides" id="Uranium">
+                        <td data-atomic-number="92" class="element-cell hidden lanthanide-or-actinides" id="Uranium">
                             <div>U<span>#:&nbsp;<a id="UraniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="93" class="element-cell hidden lanthanide-or-actinides" id="Neptunium">
+                        <td data-atomic-number="93" class="element-cell hidden lanthanide-or-actinides" id="Neptunium">
                             <div>Np<span>#:&nbsp;<a id="NeptuniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="94" class="element-cell hidden lanthanide-or-actinides" id="Plutonium">
+                        <td data-atomic-number="94" class="element-cell hidden lanthanide-or-actinides" id="Plutonium">
                             <div>Pu<span>#:&nbsp;<a id="PlutoniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="95" class="element-cell hidden lanthanide-or-actinides" id="Americium">
+                        <td data-atomic-number="95" class="element-cell hidden lanthanide-or-actinides" id="Americium">
                             <div>Am<span>#:&nbsp;<a id="AmericiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="96" class="element-cell hidden lanthanide-or-actinides" id="Curium">
+                        <td data-atomic-number="96" class="element-cell hidden lanthanide-or-actinides" id="Curium">
                             <div>Cm<span>#:&nbsp;<a id="CuriumAmount"></a></span></div>
                         </td>
-                        <td data-weight="97" class="element-cell hidden lanthanide-or-actinides" id="Berkelium">
+                        <td data-atomic-number="97" class="element-cell hidden lanthanide-or-actinides" id="Berkelium">
                             <div>Bk<span>#:&nbsp;<a id="BerkeliumAmount"></a></span></div>
                         </td>
-                        <td data-weight="98" class="element-cell hidden lanthanide-or-actinides" id="Californium">
+                        <td data-atomic-number="98" class="element-cell hidden lanthanide-or-actinides"
+                            id="Californium">
                             <div>Cf<span>#:&nbsp;<a id="CaliforniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="99" class="element-cell hidden lanthanide-or-actinides" id="Einsteinium">
+                        <td data-atomic-number="99" class="element-cell hidden lanthanide-or-actinides"
+                            id="Einsteinium">
                             <div>Es<span>#:&nbsp;<a id="EinsteiniumAmount"></a></span></div>
                         </td>
-                        <td data-weight="100" class="element-cell hidden lanthanide-or-actinides" id="Fermium">
+                        <td data-atomic-number="100" class="element-cell hidden lanthanide-or-actinides" id="Fermium">
                             <div>Fm<span>#:&nbsp;<a id="FermiumAmount"></a></span></div>
                         </td>
-                        <td data-weight="101" class="element-cell hidden lanthanide-or-actinides" id="Mendelevium">
+                        <td data-atomic-number="101" class="element-cell hidden lanthanide-or-actinides"
+                            id="Mendelevium">
                             <div>Md<span>#:&nbsp;<a id="MendeleviumAmount"></a></span></div>
                         </td>
-                        <td data-weight="102" class="element-cell hidden lanthanide-or-actinides" id="Nobelium">
+                        <td data-atomic-number="102" class="element-cell hidden lanthanide-or-actinides" id="Nobelium">
                             <div>No<span>#:&nbsp;<a id="NobeliumAmount"></a></span></div>
                         </td>
-                        <td data-weight="103" class="element-cell hidden lanthanide-or-actinides" id="Lawrencium">
+                        <td data-atomic-number="103" class="element-cell hidden lanthanide-or-actinides"
+                            id="Lawrencium">
                             <div>Lr<span>#:&nbsp;<a id="LawrenciumAmount"></a></span></div>
                         </td>
                         <td class="element-cell hidden none" id=""></td>
@@ -459,6 +478,28 @@
             </div>
             <div id="ChemistryLab">
                 THE LAB
+            </div>
+            <div id="Settings">
+                <div class="settings-group">
+                    <div class="setting-button">
+                        <button class="btn btn-danger btn-lg" id="Reset">Reset</button>
+                        <span class="setting-text">Reset the game and loose all of your progress</span>
+                    </div>
+                    <br />
+                    <div class="setting-button">
+                        <button class="btn btn-secondary btn-lg" id="ExportButton">Export</button>
+                        <span>Export your data for safe keeping</span>
+                        <br />
+                        <input type="text" class="setting-textinput" rows="1" id="ExportTextinput"></input>
+                    </div>
+                    <br />
+                    <div class="setting-button">
+                        <button class="btn btn-secondary btn-lg" id="ImportButton">Import</button>
+                        <span>Import your data from a backup</span>
+                        <br />
+                        <input type="text" class="setting-textinput" rows="1" id="ImportTextinput"></input>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="Right"></div>

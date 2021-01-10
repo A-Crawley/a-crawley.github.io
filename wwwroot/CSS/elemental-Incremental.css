@@ -71,6 +71,18 @@ body {
   left: 5px;
 }
 
+#SettingsButton {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+.header {
+  font-family: "Bree Serif", serif;
+  color: #322e3b;
+  text-align: center;
+}
+
 /* Element Styling */
 
 #ElementContainer {
@@ -91,9 +103,8 @@ body {
   width: 5%;
   height: 10%;
   text-align: left;
-  border: 1px solid black;
+  border: 2px solid rgba(0, 0, 0, 0.432);
 
-  -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
@@ -152,6 +163,42 @@ body {
 
 #TheField {
   display: none;
+}
+
+/* Settings Styles */
+
+#Settings {
+  display: none;
+  grid-template-areas:
+    "s s ."
+    "s s ."
+    ". . .";
+}
+
+.settings-group {
+  grid-area: s;
+  margin-left: 20px;
+  margin-top: 20px;
+  background-color: #322e3b27;
+  border-radius: 5px;
+}
+
+.setting-button {
+  margin-left: 10px;
+  margin-top: 10px;
+  width: 45%;
+  color: #322e3b;
+}
+
+.setting-button > button {
+  width: 25%;
+}
+
+.setting-textinput {
+  width: 100%;
+  margin-top: 5px;
+  resize: none;
+  font-size: large;
 }
 
 /* Bootstrap fixes */

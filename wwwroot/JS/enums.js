@@ -27,5 +27,6 @@ const ElementName = {
 const Tabs ={
     PeriodicTable: "PeriodicTable",
     ChemistryLab: "ChemistryLab",
-    TheField: "TheField"
+    TheField: "TheField",
+    Settings: "Settings"
 }
