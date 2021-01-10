@@ -4,7 +4,14 @@ body {
   margin: 0px;
   overflow: hidden;
   background-color: #e6e6e6;
-  color: aliceblue;
+  color: #322e3b;
+}
+
+.sign-off {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: smaller;
 }
 
 .counter-progress {
