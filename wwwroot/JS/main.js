@@ -21,7 +21,3 @@ function Ready(){
         engine.Start(elements);
     }
 }
-
-$.getJSON('/wwwroot/json/visitors.json', function(json){
-    console.log(json);
-})
