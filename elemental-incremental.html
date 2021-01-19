@@ -42,6 +42,8 @@
                 <button id="PeriodicTable" class="btn btn-primary">Periodic table <i class="fa fa-table"></i></button>
                 <button id="Field" class="btn btn-primary">The Field <i class="fa fa-envira"></i></button>
                 <button id="ChemLab" class="btn btn-primary">Chemistry Lab <i class="fa fa-flask"></i></button>
+                <button id="MarketButton" class="btn btn-primary">Market Place <i
+                        class="fa fa-shopping-cart"></i></button>
             </div>
 
             <button id="SettingsButton" class='btn btn-primary'>Settings <i class="fa fa-cog"></i></button>
@@ -482,10 +484,38 @@
                 </table>
             </div>
             <div id="TheField">
-                THE FIELD
+                <div class="field">
+                    <div id="Drills">
+                        <div id="HeliumDrill">
+                            <p>Helium Drill</p>
+                            <img src="/wwwroot/SVG/drill.svg" alt="Drill" class="drill-svg">
+                            <button class="btn unlock"><i class="fa fa-unlock-alt"></i> Buy $<a data-unlock-price=50
+                                    data-action="unlock|element|He">0.00</a></button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="ChemistryLab">
                 THE LAB
+            </div>
+            <div id="MarketPlace">
+                <div class="market-sell">
+                    <div class="market-element" id="SellHydrogen">
+                        <span>Hydrogen</span>
+                        <button class="btn btn-primary sell" data-sell-amount='1' data-sell-element='H'>Sell
+                            1</button>
+                        <button class="btn btn-primary sell" data-sell-amount='10' data-sell-element='H'>Sell
+                            10</button>
+                        <button class="btn btn-primary sell" data-sell-amount='100' data-sell-element='H'>Sell
+                            100</button>
+                        <button class="btn btn-primary sell" data-sell-amount='max' data-sell-element='H'>Sell
+                            Max</button>
+                    </div>
+                </div>
+                <div class="market-information">
+                    <span>$<a id="Money">0.00</a></span>
+                </div>
+                <div class="market-buy"></div>
             </div>
             <div id="Settings">
                 <div class="settings-group">

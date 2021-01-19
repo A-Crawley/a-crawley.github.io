@@ -172,6 +172,53 @@ body {
   display: none;
 }
 
+.unlock {
+  background-color: #9dbcff;
+  border: 1px solid rgb(68, 68, 255);
+}
+
+.drill-svg {
+  width: 50px;
+}
+
+/* Market Place Styles */
+
+#MarketPlace {
+  display: none;
+  grid-template-areas:
+    "s s i b b"
+    "s s i b b"
+    ". . . . .";
+  grid-template-columns: 20% 20% 20% 20% 20%;
+}
+
+.market-sell {
+  width: 100%;
+  grid-area: s;
+  margin: 5px;
+}
+
+.market-buy {
+  width: 100%;
+  grid-area: b;
+  margin: 5px;
+}
+
+.market-information {
+  width: 100%;
+  grid-area: i;
+  margin: 5px;
+  text-align: center;
+}
+
+.market-element {
+  width: 100%;
+}
+
+#Money {
+  text-align: center;
+}
+
 /* Settings Styles */
 
 #Settings {

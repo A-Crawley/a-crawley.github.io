@@ -28,5 +28,6 @@ const Tabs ={
     PeriodicTable: "PeriodicTable",
     ChemistryLab: "ChemistryLab",
     TheField: "TheField",
-    Settings: "Settings"
+    Settings: "Settings",
+    MarketPlace: "MarketPlace"
 }

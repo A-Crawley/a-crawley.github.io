@@ -7,6 +7,7 @@ class Engine{
         this.settings = {
             Debug: false
         };
+        this.money = 0.00;
         console.log("Engine Created...");
     }
 
@@ -15,6 +16,7 @@ class Engine{
         this.SetupElements(elementContainers);
         this.setUpPopOvers();
         this.SetupButtons();
+        this.SetupUnlocks();
         this.AutoSave();
 
         console.log("Starting...");
@@ -26,6 +28,7 @@ class Engine{
 
         this.elements = saveData.Elements;
         this.settings = saveData.Settings;
+        this.money = saveData.Money;
 
         this.elements.forEach(e => {
             e["Hide"] = () => temp.HideElement(e);
@@ -39,13 +42,66 @@ class Engine{
 
         this.setUpPopOvers();
         this.SetupButtons();
+        this.AddMoney(0);
+        this.SetupUnlocks();
         this.AutoSave();
 
         console.log("Resuming...");
     }
 
+    AddMoney(amount){
+        this.money += parseFloat(amount);
+        $("#Money").text(this.money.toFixed(2))
+    }
+
+    TakeMoney(amount){
+        this.money -= parseFloat(amount);
+        $("#Money").text(this.money.toFixed(2))
+    }
+
+    SetupUnlocks(){
+        var temp = this;
+
+        $.each($("#Drills").find('button'), function(i,e){
+            if (!$(e).attr('class').includes('unlock')) return;
+            var price = $($(e).find('a')[0]).attr('data-unlock-price');
+            $($(e).find('a')[0]).text(parseFloat(price).toFixed(2));
+            $(e).click(() => {
+                if (temp.money < parseFloat(price)) return;
+                temp.TakeMoney(price);
+                $(e).css("display","none");
+                temp.ButtonAction($($(e).find('a')[0]).attr('data-action'))
+            })
+        })
+    }
+
+    ButtonAction(string){
+        var arr = string.split("|");
+        var action = arr[0];
+
+        switch(action){
+            case "unlock":
+                this.UnlockAction(arr[1], arr[2]);
+                break;
+            default:
+                break;
+        }
+    }
+
+    UnlockAction(itemType, item){
+        switch(itemType){
+            case "element":
+                this.ConfigureElementVisibility(item, true);
+                break;
+            default:
+                break;
+        }
+    }
+
     // Sets up all the buttons
     SetupButtons(){
+        var temp = this;
+
         $("#PeriodicTable").addClass("active");
         $("#PeriodicTable").click(() => {
             if (this.activeTab === Tabs.PeriodicTable) return;
@@ -72,6 +128,15 @@ class Engine{
             this.activeTab = Tabs.TheField;
             this.HideTabs();
             this.ShowTab("#TheField");
+        });
+
+        $("#MarketButton").click(() => {
+            if (this.activeTab === Tabs.TheField) return;
+            this.RemoveActive();
+            $("#MarketButton").addClass("active");
+            this.activeTab = Tabs.TheField;
+            this.HideTabs();
+            this.ShowTab("#MarketPlace");
         });
 
         $("#SettingsButton").click(() => {
@@ -107,7 +172,32 @@ class Engine{
 
             $("#ImportTextinput").val("")
         });
+
+        $("#MarketButton").click(() => {
+            if (this.activeTab === Tabs.MarketPlace) return;
+            this.RemoveActive();
+            $("#MarketButton").addClass("active");
+            this.activeTab = Tabs.MarketPlace;
+            this.HideTabs();
+            this.ShowTab("#MarketPlace");
+        })
         
+        $.each($("#MarketPlace").find("button"), function(i,e){
+            if (!$(e).attr('class').includes('sell')) return;
+
+            $(e).click(() => {
+                var element = temp.elements.filter(el => el.Symbol === $(e).attr("data-sell-element"))[0];
+                var sellAmount = $(e).attr("data-sell-amount");
+                if (sellAmount === "max") {
+                    temp.AddMoney(parseInt(element.Amount) * parseFloat(element.SellPrice));
+                    $(element).trigger("amount-decrease", element.Amount, false); 
+                    return;
+                }
+                if (element < parseInt(sellAmount)) return;
+                $(element).trigger("amount-decrease", $(e).attr("data-sell-amount"), false);
+                temp.AddMoney(parseInt(sellAmount) * parseFloat(element.SellPrice));
+            })
+        })
     }
 
     ShowTab(id){
@@ -120,6 +210,7 @@ class Engine{
         $("#TheField").css('display','none');
         $("#ChemistryLab").css('display','none');
         $("#Settings").css('display','none');
+        $("#MarketPlace").css('display','none');
     }
 
     // Removes active flag from buttons
@@ -142,6 +233,7 @@ class Engine{
                 Description: $(e).attr("data-description"),
                 HtmlElement: `#${$(e).attr("id")}`,
                 Amount: 0,
+                SellPrice: 1,
                 Hidden: true
             };
 
@@ -165,12 +257,24 @@ class Engine{
 
             $(`#${e.Name}Amount`).text(e.Amount);
 
-            $($(e.HtmlElement).children()[0]).click(function() {
-                e.Amount++;
+            $(e).on('amount-increase', function(event,amount){
+                e.Amount += parseInt(amount);
                 $(`#${e.Name}Amount`).text(e.Amount);
                 $(e.HtmlElement).attr('data-content',temp.Content(e));
                 $(e.HtmlElement).popover('show');
-                temp.ConfigureElementVisibility(e);
+            })
+
+            $(e).on('amount-decrease', function(event,amount, showPopover){
+                e.Amount -= parseInt(amount);
+                $(`#${e.Name}Amount`).text(e.Amount);
+                $(e.HtmlElement).attr('data-content',temp.Content(e));
+                if (showPopover)
+                    $(e.HtmlElement).popover('show');
+            })
+            
+            
+            $($(e.HtmlElement).children()[0]).click(function() {
+                $(e).trigger('amount-increase', 1, true);
             })
         });
 
@@ -178,16 +282,15 @@ class Engine{
 
     }
 
-    ConfigureElementVisibility(element){
-        switch(element.Weight){
-            case 1:
-                if (element.Amount === 10)
-                    this.elements[1].Show();
-                break;
-            default:
-                break;
+    ConfigureElementVisibility(symbol, show){
+        var element = this.elements.filter(e => e.Symbol === symbol)[0];
+
+        if (show){
+            this.ShowElement(element);
+            return;
         }
 
+        this.HideElement(element);
     }
 
     // Standardizes the content in the popovers
@@ -232,7 +335,8 @@ class Engine{
     Export(){
         var saveData = {
             Elements: this.elements,
-            Settings: this.settings
+            Settings: this.settings,
+            Money: this.money
         };
 
         return btoa(JSON.stringify(saveData));
@@ -246,7 +350,8 @@ class Engine{
     Save(){
         var saveData = {
             Elements: this.elements,
-            Settings: this.settings
+            Settings: this.settings,
+            Money: this.money
         };
 
         localStorage.setItem('gameSaveData',JSON.stringify(saveData));
