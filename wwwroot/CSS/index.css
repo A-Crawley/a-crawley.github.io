@@ -25,7 +25,7 @@ body {
   width: 94.56px;
   height: 31px;
 
-  font-family: Sintony;
+  font-family: "Roboto", sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 24px;
@@ -54,15 +54,14 @@ body {
 
 .drop-down > div {
   position: relative;
-  font-family: "Roboto", sans-serif;
-  font-style: normal;
-  font-size: 18px;
   text-align: left;
   margin: 10px 2px 0 2px;
 }
 
 .drop-down > div > a {
   text-decoration: none;
+  font-family: "Roboto", sans-serif;
+  font-size: 18px;
   position: relative;
   color: rgba(0, 0, 0, 0);
 }
