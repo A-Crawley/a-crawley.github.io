@@ -164,6 +164,151 @@ body {
 
 #ChemistryLab {
   display: none;
+  grid-template-areas: "machines s s";
+}
+
+#Machines {
+  grid-area: machines;
+}
+
+.machine {
+  position: relative;
+  display: block;
+  background-color: #98c1ff;
+  border: 1px solid #526367;
+  border-radius: 5px;
+  width: 300px;
+  height: 104px;
+  margin: 5px;
+
+  font-size: 14px;
+}
+
+.machine-title {
+  top: 5px;
+  position: relative;
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 14px;
+  /* identical to box height */
+  text-align: center;
+
+  text-decoration-line: underline;
+  text-transform: uppercase;
+}
+
+.unlock-btn {
+  display: block;
+  position: relative;
+  background: #8cb5c2;
+  border: 1px solid #000000;
+  box-sizing: border-box;
+  border-radius: 5px;
+  width: 280px;
+  height: 66px;
+  margin: 10px;
+}
+
+.unlock-btn:hover {
+  background-color: #688791;
+  outline: none;
+}
+
+.machine-remove {
+  position: relative;
+  display: none;
+  float: left;
+  top: 10px;
+  width: 103px;
+  height: 62px;
+  padding: 0px;
+  margin: 0px;
+}
+
+.machine-add {
+  position: relative;
+  display: none;
+  float: left;
+  top: 10px;
+  left: 0px;
+  width: 103px;
+  height: 62px;
+  padding: 0px;
+  margin: 0px;
+}
+
+.machine-count {
+  position: relative;
+  display: none;
+  float: left;
+  text-align: center;
+  width: 90px;
+  padding: 10px;
+  margin-top: 15px;
+}
+
+.remove {
+  user-select: none;
+  position: relative;
+  display: flex;
+  background: #ffa8a8;
+  border: 1px solid #000000;
+  box-sizing: border-box;
+  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  margin: 2px;
+}
+
+.remove:hover {
+  background: #cf8888;
+}
+
+.add {
+  user-select: none;
+  position: relative;
+  display: flex;
+  background: #dfffcc;
+  border: 1px solid #000000;
+  box-sizing: border-box;
+  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 5px;
+  margin: 2px;
+}
+
+.add:hover {
+  background: #b3cea4;
+}
+
+.small {
+  float: right;
+  height: 40px;
+  width: 29px;
+}
+
+.small > span {
+  width: 100%;
+  text-align: center;
+  padding-top: 8px;
+}
+
+.large {
+  height: 20px;
+  width: 95px;
+}
+
+.large > span {
+  width: 100%;
+  text-align: center;
+}
+
+.remove-max {
+  margin-left: 4px;
+}
+
+.add-max {
+  margin-left: 4px;
 }
 
 /* The Field Styles */

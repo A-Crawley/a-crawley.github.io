@@ -20,6 +20,7 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KVKM1P3FKG"></script>
     <script>
@@ -488,15 +489,41 @@
                     <div id="Drills">
                         <div id="HeliumDrill">
                             <p>Helium Drill</p>
-                            <img src="/wwwroot/SVG/drill.svg" alt="Drill" class="drill-svg">
-                            <button class="btn unlock"><i class="fa fa-unlock-alt"></i> Buy $<a data-unlock-price=50
+                            <button class="btn unlock"><i class="fa fa-unlock-alt"></i> Buy $<a data-unlock-price=500
                                     data-action="unlock|element|He">0.00</a></button>
                         </div>
                     </div>
                 </div>
             </div>
             <div id="ChemistryLab">
-                THE LAB
+                <div id="Machines">
+                    <div id="Electrolysis" class="machine">
+                        <div class="machine-title">Electrolysis Machine</div>
+                        <button class="unlock-btn">UNLOCK $<a data-unlock-price=50
+                                data-action="unlock|element|He">00.00</a></button>
+                        <div class="machine-remove">
+                            <div class="remove-amount">
+                                <div class="remove small" data-remove-amount=1><span>-1</span></div>
+                                <div class="remove small" data-remove-amount=10><span>-10</span></div>
+                                <div class="remove small" data-remove-amount=100><span>-100</span></div>
+                            </div>
+                            <div class="remove-max">
+                                <div class="remove large" data-remove-max=true><span>- MAX</span></div>
+                            </div>
+                        </div>
+                        <div class="machine-count"><span>0</span></div>
+                        <div class="machine-add">
+                            <div class="add-amount">
+                                <div class="add small" data-add-amount=100><span>+100</span></div>
+                                <div class="add small" data-add-amount=10><span>+10</span></div>
+                                <div class="add small" data-add-amount=1><span>+1</span></div>
+                            </div>
+                            <div class="add-max">
+                                <div class="add large" data-add-max=true><span>+ MAX</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="MarketPlace">
                 <div class="market-sell">

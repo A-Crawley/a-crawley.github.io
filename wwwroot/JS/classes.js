@@ -7,6 +7,7 @@ class Engine{
         this.settings = {
             Debug: false
         };
+        this.machines = [];
         this.money = 0.00;
         console.log("Engine Created...");
     }
@@ -15,6 +16,7 @@ class Engine{
     Start(elementContainers){
         this.SetupElements(elementContainers);
         this.setUpPopOvers();
+        this.SetUpMachines();
         this.SetupButtons();
         this.SetupUnlocks();
         this.AutoSave();
@@ -29,6 +31,7 @@ class Engine{
         this.elements = saveData.Elements;
         this.settings = saveData.Settings;
         this.money = saveData.Money;
+        this.machines = saveData.Machines;
 
         this.elements.forEach(e => {
             e["Hide"] = () => temp.HideElement(e);
@@ -41,6 +44,7 @@ class Engine{
         })
 
         this.setUpPopOvers();
+        this.SetUpMachines();
         this.SetupButtons();
         this.AddMoney(0);
         this.SetupUnlocks();
@@ -198,6 +202,97 @@ class Engine{
                 temp.AddMoney(parseInt(sellAmount) * parseFloat(element.SellPrice));
             })
         })
+
+        $.each($("#Machines").find(".machine"), function(i,e){
+            let id = $(e).attr("id");
+
+            let unlock = $(`#${id}`).find(".unlock-btn")[0];
+
+            $(unlock).click(() => temp.UnlockMachine(id));
+
+            $.each($(e).find(".remove"), function(i,e){
+                if ($(e).attr("data-remove-max") == "true"){
+                    $(e).click(() => temp.RemoveMachineMax(id));
+                    return;
+                }
+
+                var amount = $(e).attr("data-remove-amount");
+                $(e).click(() => temp.RemoveMachine(id,amount));
+            });
+
+            $.each($(e).find(".add"), function(i,e){
+                if ($(e).attr("data-add-max") == "true"){
+                    $(e).click(() => temp.AddMachineMax(id));
+                    return;
+                }
+
+                var amount = $(e).attr("data-add-amount");
+                $(e).click(() => temp.AddMachine(id,amount));
+            });
+        });
+    }
+
+    SetUpMachines(){
+        var temp = this;
+        this.machines.forEach(machine => {
+            temp.UnlockMachine(machine.id);
+            temp.SetMachineCount(machine.id, machine.count);
+        });
+    }
+
+    SetMachineCount(id, count){
+        var element = $(`#${id}`);
+        var countElement = $(element.find(".machine-count")[0]).find("span");
+        $(countElement).text(count);
+    }
+
+    UnlockMachine(id){
+        if (this.machines == null || this.machines.length == 0 || !this.machines.filter(m => m.id == id)){
+            var machine = {
+                id: id,
+                count: 0
+            };
+            this.machines.push(machine);
+
+            this.AddMachine(id, 1);
+        }
+
+        var element = $(`#${id}`);
+        $(element.find(".unlock-btn")).css({"display": "none"});
+        $(element.find(".machine-remove")).css({"display": "block"})
+        $(element.find(".machine-count")).css({"display": "block"})
+        $(element.find(".machine-add")).css({"display": "block"})
+    }
+
+    RemoveMachine(id,amount){
+        var oldAmount = this.machines.filter(m => m.id == id)[0].count;
+
+        if (oldAmount - amount < 0){
+            this.machines = this.machines.map(m => m.id == id ? {...m, count: 0} : m);
+        }
+        else{
+            this.machines = this.machines.map(m => m.id == id ? {...m, count: m.count - parseInt(amount)} : m);
+        }
+        var newAmount = this.machines.filter(m => m.id == id)[0].count;
+        console.log(newAmount);
+        this.SetMachineCount(id, newAmount);
+        console.log(`Remove ${amount} ${id}'s`)
+    }
+
+    AddMachine(id,amount){
+        this.machines = this.machines.map(m => m.id == id ? {...m, count: m.count + parseInt(amount)} : m);
+        var newAmount = this.machines.filter(m => m.id == id)[0].count;
+        console.log(newAmount);
+        this.SetMachineCount(id, newAmount);
+        console.log(`Add ${amount} ${id}'s`)
+    }
+
+    RemoveMachineMax(id){
+        console.log(`Remove all ${id}'s`)
+    }
+
+    AddMachineMax(id){
+        console.log(`Add all ${id}'s`)
     }
 
     ShowTab(id){
@@ -351,7 +446,8 @@ class Engine{
         var saveData = {
             Elements: this.elements,
             Settings: this.settings,
-            Money: this.money
+            Money: this.money,
+            Machines: this.machines
         };
 
         localStorage.setItem('gameSaveData',JSON.stringify(saveData));
