@@ -74,7 +74,16 @@ body {
 .tab:hover > .drop-down {
   position: absolute;
   display: block;
-  animation-name: fill;
+}
+
+.fill-about {
+  animation-name: fill-about;
+  animation-duration: 200ms;
+  animation-fill-mode: forwards;
+}
+
+.fill-projects {
+  animation-name: fill-projects;
   animation-duration: 200ms;
   animation-fill-mode: forwards;
 }
@@ -85,7 +94,7 @@ body {
   animation-fill-mode: forwards;
 }
 
-@keyframes fill {
+@keyframes fill-about {
   0% {
     height: 0;
     width: 0;
@@ -93,6 +102,28 @@ body {
   100% {
     height: 70px;
     width: 100px;
+  }
+}
+
+@keyframes fill-work {
+  0% {
+    height: 0;
+    width: 0;
+  }
+  100% {
+    height: 70px;
+    width: auto;
+  }
+}
+
+@keyframes fill-projects {
+  0% {
+    height: 0;
+    width: 0;
+  }
+  100% {
+    height: 30px;
+    width: 150px;
   }
 }
 
