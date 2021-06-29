@@ -11,3 +11,4 @@ jobs:
       - name: Step 1 - Echo
         run: |
           echo "This will show the mask"
+          echo ${{secrets.API_KEY}}
