@@ -9,5 +9,7 @@ jobs:
     
     steps:
       - name: Step 1 - Echo
+        env: 
+          SECRET: ${{ secrets.API_KEY }}
         run: |
-          echo ${{ secrets.API_KEY }}
+          echo #SECRET
