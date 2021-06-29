@@ -9,7 +9,8 @@ jobs:
     
     steps:
       - name: Step 1 - Echo
-        env: 
-          SECRET: ${{ secrets.API_KEY }}
+      - shell: pwsh
+        env:
+          api_secret: ${{secrets.API_KEY}}
         run: |
-          echo #SECRET
+          echo "$api_secret"
