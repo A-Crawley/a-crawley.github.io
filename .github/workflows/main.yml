@@ -8,9 +8,14 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - name: Echo the key
-        env:
-          api_secret: ${{secrets.API_KEY}}
-        run: |
-          echo "This is a masked Key: "
-          echo $api_secret | sed -e 's/\(.\)/\1 /g'
+      - name: Find and Replace
+        # You may pin to the exact commit or the version.
+        # uses: jacobtomlinson/gha-find-replace@0dfd0777cc234ef6947ec1f20873c632114c4167
+        uses: jacobtomlinson/gha-find-replace@0.1.4
+        with:
+          # A regular expression of files to include in our find and replace
+          include: "contact_me.js"
+          # The string we want to replace
+          find: "${{ secrets.PAPI_KEY }}"
+          # The new string to replace with
+          replace: ${{ secrets.API_KEY }}
