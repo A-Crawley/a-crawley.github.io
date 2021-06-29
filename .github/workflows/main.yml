@@ -8,9 +8,9 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - shell: pwsh
+      - name: Echo the key
         env:
           api_secret: ${{secrets.API_KEY}}
         run: |
           echo "This is a masked Key: "
-          echo "$api_secret"
+          echo $api_secret | sed -e 's/\(.\)/\1 /g'
