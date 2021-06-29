@@ -8,7 +8,6 @@ jobs:
     runs-on: windows-latest
     
     steps:
-      - name: Step 1 - Echo
       - shell: pwsh
         env:
           api_secret: ${{secrets.API_KEY}}
