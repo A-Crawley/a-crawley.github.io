@@ -7,6 +7,7 @@ $(function () {
     submitSuccess: function ($form, event) {
       event.preventDefault(); // prevent default submit behaviour
       // get values from FORM
+      $("#spinner").show();
       var name = $("input#name").val();
       var message = $("textarea#message").val();
       // Check for white space in name for Success/Fail message
@@ -60,6 +61,7 @@ $(function () {
           $("input#name").val("");
           $("textarea#message").val("");
           $("#sendMessageButton").prop("disabled", false);
+          $("#spinner").hide();
         });
     },
     filter: function () {
