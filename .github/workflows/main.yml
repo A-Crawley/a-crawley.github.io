@@ -16,6 +16,6 @@ jobs:
           # A regular expression of files to include in our find and replace
           include: "contact_me.js"
           # The string we want to replace
-          find: "${{ secrets.PAPI_KEY }}"
+          find: "${{ secrets.API_KEY }}"
           # The new string to replace with
           replace: ${{ secrets.API_KEY }}
