@@ -98,7 +98,13 @@
           </div>
           <br>
           <div id="success"></div>
-          <button type="submit" class="btn btn-primary" id="sendMessageButton">Send</button>
+          <button type="submit" class="btn btn-primary" id="sendMessageButton">
+            <a id="SendContent">Send</a>
+          </button>
+          <div id="spinner" class="spinner-grow text-secondary" role="status"
+            style="margin-left: 10px; margin-top: 5px; display:none;">
+            <span class="sr-only">Loading...</span>
+          </div>
         </form>
       </div>
     </div>
