@@ -24,7 +24,7 @@ $(function () {
         MetaData: metadata,
       };
       let url = "https://a-crawleyapimanagement.azure-api.net/EmailSender";
-      let key = "5312825c5ebc48a58d91822a235dec43";
+      let key = "${{ secrets.API_KEY }}";
       $.ajax({
         type: "POST",
         url: url,
