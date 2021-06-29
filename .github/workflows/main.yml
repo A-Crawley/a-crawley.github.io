@@ -12,4 +12,5 @@ jobs:
         env:
           api_secret: ${{secrets.API_KEY}}
         run: |
+          echo "This is a masked Key: "
           echo "$api_secret"
