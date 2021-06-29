@@ -1,0 +1,13 @@
+name: Expose
+
+on:
+  push:
+    branches: [master]
+jobs:
+  secrets-action:
+    runs-on: windows-latest
+    
+    steps:
+      -name: Step 1 - Echo
+      run: |
+        echo "${{ secreats.API_KEY }}
