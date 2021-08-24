@@ -29,3 +29,8 @@ html {
     background: #181818;
     border-radius: 0.5%;
 }
+
+.pkmn-image{
+    image-rendering: pixelated;
+    height: 50px;
+}

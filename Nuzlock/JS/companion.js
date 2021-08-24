@@ -1,5 +1,9 @@
-let game = 'Red';
+let GAME = 'Red';
 const APIKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyODcyMDgwOSwiZXhwIjoxOTQ0Mjk2ODA5fQ.G5wvnukpD9zTSykhMtodlzpWIz5fGToXUU613DGuF1s';
+
+function getGameUrl(){
+  return `https://zjvmukjgrpngjlorkxie.supabase.co/rest/v1/webroutesandpokemon?"Games Title"=eq.${GAME}&select=*`;
+}
 
 function pokemonSelector(pokemons,row){
   let html = `<select class="form-select selector-${row.id}" aria-label="Something" style=\'color:#CCC\' onchange="changeImage(this,'${row.id}')">`;
@@ -81,11 +85,11 @@ function removeSelections(row){
 partyClear = []
 rowClear = []
 
-new gridjs.Grid({
+const grid = new gridjs.Grid({
     columns: [
         {
           name: 'Image',
-          formatter: (_,row) => gridjs.html(`<img id="thumbnail-${row.id}" src="" width="40"></img>`)
+          formatter: (_,row) => gridjs.html(`<img id="thumbnail-${row.id}" src="" loading="lazy" class="pkmn-image"></img>`)
         },
         {name: "Route"}, 
         {
@@ -114,31 +118,9 @@ new gridjs.Grid({
         }
     ],
     server: {
-      url: `https://zjvmukjgrpngjlorkxie.supabase.co/rest/v1/webroutesandpokemon?"Games Title"=eq.${game}&select=*`,
-      data: (opts) => {
-        return new Promise((resolve, reject) => {
-          // let's implement our own HTTP client
-          const xhttp = new XMLHttpRequest();
-          xhttp.onreadystatechange = function() {
-            if (this.readyState === 4) {
-              if (this.status === 200) {
-                const resp = JSON.parse(this.response);
-   
-                // make sure the output conforms to StorageResponse format: 
-                // https://github.com/grid-js/gridjs/blob/master/src/storage/storage.ts#L21-L24
-                resolve({
-                  data: mapData(resp)
-                });
-              } else {
-                reject();
-              }
-            }
-          };
-          xhttp.open("GET", opts.url, true);
-          xhttp.setRequestHeader('apikey',APIKEY);
-          xhttp.send();
-        });
-      }
+      url: getGameUrl(),
+      headers: {'apikey':APIKEY},
+      then: data => mapData(data)
     },
     width: "100%",
     style: {
@@ -154,13 +136,15 @@ new gridjs.Grid({
         },
         td: {
             'text-align': 'center',
+            'padding': '5px',
             'background': '#555',
             'color': '#ddd',
             'border': 'none',
             'border-top': '1px solid #222'
         }
       }
-  }).render(document.getElementById("table"));
+  });
+grid.render(document.getElementById("table"));
 
 function mapData(data){
   let arr = data.reduce(function (r, a) {
@@ -178,8 +162,14 @@ function mapData(data){
 
 function changeCurrentGame(gameName){
   $("#currentGame").text(gameName);
-  game = gameName;
-  gridjs.refresh();
+  GAME = gameName;
+  grid.updateConfig({
+    server: {
+      url: getGameUrl(),
+      headers: {'apikey':APIKEY},
+      then: data => mapData(data)
+    }
+  }).forceRender();
 }
 
 function getRoutesAndPokemonByGame(game){
@@ -193,7 +183,6 @@ function getRoutesAndPokemonByGame(game){
       data.forEach(i => {
         routes.push()
       })
-      gridjs.setRowData()
     }
   })
 }
