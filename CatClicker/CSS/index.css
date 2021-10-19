@@ -1,0 +1,74 @@
+:root {
+    --bg-colour: #FFFFFC;
+    --body-colour: #A0C4FF;
+    --main-border-colour: #002F7A;
+    --button-main: #FFC6FF;
+    --button-main-border: #FFADFF;
+    --button-main-hover: #FF99FF;
+}
+
+
+html, body{
+    overflow: visible;
+    background-color: var(--bg-colour);
+    margin: 0;
+}
+
+.container{
+    background-color: var(--body-colour);
+    width: 75vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    margin-left: 12.5vw;
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.4), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.header {
+    height: 10vh;
+}
+
+.heading {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  padding-top: 30px;
+  border-bottom: 3px solid black;
+}
+
+button{
+    background-color: var(--button-main);
+    border: none;
+    min-height: 50px;
+    min-width: 100px;
+    border-radius: 10px;
+    border: 2px solid var(--button-main-border);
+    margin: 5px
+}
+
+button:hover{
+    background-color: var(--button-main-hover);
+}
+
+.card{
+    background-color: #002F7A;
+    max-width: 200px;
+    min-height: 75px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+}
+
+.card-title{
+    text-align: center;
+}
+
+.card>span{
+    margin: 10px;
+    margin-left: 10px;
+    width: 100%;
+}
+
+.clicker-button{
+
+}
