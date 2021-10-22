@@ -19,7 +19,7 @@ $.ajax({
     success: (data) => {
         let side = true;
         data.forEach(d => {
-            timeline.append(template(side ? 'right' : 'left', d.title, d.content, d.author, d.date))
+            timeline.append(template(side ? 'right' : 'left', d.title, d.content, d.author, new Date(d.date).toLocaleDateString()))
             side = !side;
         })
     }
