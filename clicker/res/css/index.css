@@ -1,13 +1,3 @@
-:root{
-    --sidebar-colour: #1B3A4B;
-    --header-colour : #312244;
-    --background-colour: #065A60;
-
-    --nav-item: #272640;
-    --nav-item-hover: #2F2E4D;
-    --nav-item-click: #464573;
-}
-
 html body{
     overflow:hidden;
     background-color: var(--background-colour);
@@ -35,9 +25,9 @@ html body{
 }
 
 .nav{
-    display: felx;
+    display: flex;
     flex-direction:column;
-    height: 100%;
+    height: 90vh;
     width: 100%;
 }
 
@@ -54,6 +44,10 @@ html body{
 
 .nav-item:active{
     background-color: var(--nav-item-click);
+}
+
+.bottom{
+    margin-top: auto; 
 }
 
 .nav-item-content{
@@ -82,12 +76,16 @@ html body{
 }
 
 .tab{
+    display: flex;
+    flex-direction: row;
     width: 100%;
     height: 100%;
 }
 
 .card{
-    display: absolute;
+    display: grid;
+    grid-template-rows: 30% 65% 5%;
+    grid-template-areas: 'H' 'B' 'F';
     height: 400px;
     width: 300px;
     margin: 10px;
@@ -99,24 +97,30 @@ html body{
     background-color: whitesmoke;
 }
 
+.card-header{
+    grid-area: H;
+    display: block;
+    padding-top: 10px;
+    border-radius: 10px 10px 0 0;
+    background-color: whitesmoke;
+}
+
 .card-title{
     display: block;
     width: 100%;
-    padding-top: 10px;
     text-align: center;
 }
 
-.card-content{
+.card-body{
+    grid-area: B;
     display: block;
-    margin-top: 30px;
+    padding-top: 30px;
     margin-left: 10px;
     margin-right: 10px;
-    height: 70%;
 }
 
-.card-amount{
+.card-footer{
     display: block;
-    margin-top: 30px;
     margin-left: 10px;
     margin-right: 10px;
     text-align: right;

@@ -38,7 +38,10 @@ function changeTab(tabName){
 
 $('.nav-item').each((i,e) => {
     $(e).on('click', () => {
+        if ($(e).attr('data-tab') === 'timeline'){
+            window.location.href = `${window.location.origin}/clicker/timeline.html`;
+            return;
+        }
         changeTab($(e).attr('data-tab'));
-        console.log($(e).attr('data-tab'))
     })
 })
