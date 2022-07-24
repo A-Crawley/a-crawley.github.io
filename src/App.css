@@ -209,6 +209,39 @@ body {
   font-weight: bold;
 }
 
+.watermark {
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  color: #00000088;
+  z-index: 3;
+  user-select: none;
+}
+
+.watermark > p::before {
+  content: '\00A9\2800';
+}
+
+.links {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+}
+
+.links > a {
+  position: relative;
+}
+
+.links > a > img {
+  width: 30px;
+  opacity: 0.5;
+}
+
+.links > a:hover {
+  cursor: pointer;
+}
+
 @media only screen and (max-height: 900px){
   .cloud-high{
     margin-top: calc(100vh * 0.2);

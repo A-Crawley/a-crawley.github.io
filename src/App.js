@@ -111,6 +111,14 @@ function App() {
         })}
         <div className="spacer"></div>
       </div>
+      <div className="watermark">
+        <p>a-crawley 2022</p>
+      </div>
+      <div className="links">
+        <a href="https://github.com/A-Crawley" target="_blank" rel="noreferrer">
+          <img src="./GitHub-Mark-120px-plus.png" alt="github"/>
+        </a>
+      </div>
     </ThemeProvider>
   );
 }
