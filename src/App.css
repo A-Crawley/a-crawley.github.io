@@ -165,6 +165,7 @@ body {
   border-radius: 100vw;
   padding: 0 40px;
   width: 400px;
+  min-width: 500px;
   box-shadow: 0px -10px 20px -5px #00000033;
   right: 90px;
 }
@@ -174,6 +175,7 @@ body {
   z-index: 9;
   padding: 20px 30px;
   min-width: 560px;
+  width: 100%;
   background: var(--background-cloud);
   border-radius: 100vw;
   box-shadow: 0px 0px 40px 0px #00000033;
@@ -237,6 +239,7 @@ body {
   .content-title{
     right: auto;
     left: 90px;
+    min-width: auto;
   }
 
   .content-body{

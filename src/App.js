@@ -5,8 +5,11 @@ import {
   Container,
   Typography,
   Button,
+  getCardHeaderUtilityClass,
 } from "@mui/material";
 import "./App.css";
+import { createClient } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
 
 const theme = createTheme({
   palette: {
@@ -20,15 +23,27 @@ const theme = createTheme({
   },
 });
 
-const content = [
-  {
-    title: "Phrases",
-    body: "Wanted to make a small game simmilar to wordle.\nSo I made this...",
-    link: "https://a-crawley.com/phrases",
-  },
-];
-
 function App() {
+  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+  const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;
+  const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+  const [content, setContent] = useState(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data: things_i_made, error } = await supabaseClient.from('things_i_made').select('*').order('timestamp', { ascending: true });
+      return things_i_made;
+    } 
+
+    if (content === null) {
+      fetchData().then((data) => {
+        //console.log({data})
+        setContent(data);
+      })
+    }
+  }, [])
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -65,7 +80,7 @@ function App() {
         </Container>
       </div>
       <div className="content">
-        {content.map((c, i) => {
+        {content?.map((c, i) => {
           return (
             <div className="content-item" key={i}>
               <div>
@@ -76,13 +91,7 @@ function App() {
                 </div>
                 <div className="content-body">
                   <Typography variant="h6">
-                    {c.body.split('\n').map((c) => {
-                      return (
-                        <>
-                          {c}<br/>
-                        </>
-                      )
-                    })}
+                    {c.body}
                   </Typography>
                   <div className="content-link">
                   <Button href={c.link}
