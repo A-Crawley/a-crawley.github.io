@@ -1,7 +1,7 @@
-import { createState } from "./engine.ts";
+import { createState } from "../engine.ts";
 import { chooseTarget, paybackSeconds, runSimulation, STRATEGIES } from "./player.ts";
 import type { RunResult } from "./player.ts";
-import { itemDef } from "./engine.ts";
+import { itemDef } from "../engine.ts";
 
 describe("greedy player", () => {
   it("starts by saving for a forager", () => {

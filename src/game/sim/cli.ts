@@ -2,7 +2,7 @@
  * Prints a timeline for each play strategy. Run with: npm run sim
  * Uses Node's built-in TypeScript support, so imports carry .ts extensions.
  */
-import { ITEMS } from "./config.ts";
+import { ITEMS } from "../config.ts";
 import { runSimulation, STRATEGIES } from "./player.ts";
 import type { RunResult } from "./player.ts";
 
