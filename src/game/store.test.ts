@@ -49,6 +49,16 @@ describe("createGameStore", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it("replaces the whole state and tells subscribers", () => {
+    const { store } = setup();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    const replacement = createGameState(5);
+    store.replace(replacement);
+    expect(store.getState()).toBe(replacement);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("gives a stable state object between changes, as React expects", () => {
     const { store } = setup();
     expect(store.getState()).toBe(store.getState());
