@@ -18,25 +18,32 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: ["sans-serif", "Raleway"],
+    fontFamily: "sans-serif,Raleway",
   },
 });
+
+interface Project {
+  title: string;
+  body: string;
+  link: string;
+  timestamp: string;
+}
 
 // Created once at module load rather than on every render.
 const supabaseClient = createClient(
   import.meta.env.REACT_APP_SUPABASE_URL,
-  import.meta.env.REACT_APP_SUPABASE_KEY
+  import.meta.env.REACT_APP_SUPABASE_KEY,
 );
 
 function App() {
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState<Project[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
       const { data, error } = await supabaseClient
-        .from("things_i_made")
+        .from<Project>("things_i_made")
         .select("*")
         .order("timestamp", { ascending: true });
 
@@ -61,7 +68,7 @@ function App() {
       <CssBaseline />
       <div className="background">
         <Container
-          maxWidth={"true"}
+          maxWidth={false}
           sx={{
             padding: "0 !important",
             height: "100vh",
@@ -102,22 +109,20 @@ function App() {
                   </Typography>
                 </div>
                 <div className="content-body">
-                  <Typography variant="h6">
-                    {c.body}
-                  </Typography>
+                  <Typography variant="h6">{c.body}</Typography>
                   <div className="content-link">
-                  <Button href={c.link}
-                          target="_blank" 
-                          variant={'contained'}
-                          sx={{width: '200px'}}>
-                    <Typography>
-                      jump on over
-                    </Typography>
-                  </Button>
-                </div>
+                    <Button
+                      href={c.link}
+                      target="_blank"
+                      variant={"contained"}
+                      sx={{ width: "200px" }}
+                    >
+                      <Typography>jump on over</Typography>
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div></div>  
+              <div></div>
             </div>
           );
         })}
@@ -128,7 +133,7 @@ function App() {
       </div>
       <div className="links">
         <a href="https://github.com/A-Crawley" target="_blank" rel="noreferrer">
-          <img src="./GitHub-Mark-120px-plus.png" alt="github"/>
+          <img src="./GitHub-Mark-120px-plus.png" alt="github" />
         </a>
       </div>
     </ThemeProvider>

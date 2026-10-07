@@ -1,22 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway');
+@import url("https://fonts.googleapis.com/css2?family=Raleway");
 
-:root{
+:root {
   --cloud-speed: 40s;
-  --background: #FF9770;
-  --background-cloud: #FFE1D6;
-  --background-title: #83C5BE;
+  --background: #ff9770;
+  --background-cloud: #ffe1d6;
+  --background-title: #83c5be;
   --background-card: #00000000;
-  --background-logo: #FFCBB8;
+  --background-logo: #ffcbb8;
   --background-button: #ffb194;
   --background-button-hover: #fda88999;
   --content-start: calc(100vh + 100px);
 }
 
 body {
-  font-family: 'Raleway', sans-serif;
+  font-family: "Raleway", sans-serif;
 }
 
-.background{
+.background {
   position: absolute;
   height: 100vh;
   width: 100vw;
@@ -35,7 +35,7 @@ body {
   box-shadow: 0px 10px 40px 0px #00000033;
 }
 
-.cloud-small{
+.cloud-small {
   width: 250px;
   margin-top: -40px;
   box-shadow: none;
@@ -53,24 +53,24 @@ body {
   left: 75px;
 }
 
-.cloud-slow{
+.cloud-slow {
   animation-duration: calc(var(--cloud-speed) + 10s);
 }
 
-.cloud-med{
+.cloud-med {
   animation-duration: calc(var(--cloud-speed) + 5s);
 }
 
-.cloud-fast{
+.cloud-fast {
   animation-duration: calc(var(--cloud-speed));
 }
 
-.cloud-high{
+.cloud-high {
   margin-top: calc(100vh * 0.3);
   animation-delay: 0s;
 }
 
-.cloud-mid{
+.cloud-mid {
   margin-top: calc(100vh * 0.5);
   z-index: 1;
   animation-name: cloudmove-left;
@@ -79,7 +79,7 @@ body {
   right: -500px;
 }
 
-.cloud-low{
+.cloud-low {
   margin-top: calc(100vh * 0.7);
   animation-delay: 2s;
 }
@@ -116,8 +116,8 @@ body {
   width: 100vw;
   height: 100vh;
   overflow-y: scroll;
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
   z-index: 2;
 }
 
@@ -145,7 +145,7 @@ body {
   margin-top: var(--content-start);
 }
 
-.content-item:nth-child(even){
+.content-item:nth-child(even) {
   flex-direction: row-reverse;
 }
 
@@ -153,7 +153,7 @@ body {
   position: relative;
 }
 
-.content-item:nth-child(odd) > div > .content-title{
+.content-item:nth-child(odd) > div > .content-title {
   right: auto;
   left: 90px;
 }
@@ -197,12 +197,12 @@ body {
 
 .content-link > a {
   background: var(--background-button);
-  color: #FFFFFFdd;
+  color: #ffffffdd;
 }
 
 .content-link > a:hover {
   background: var(--background-button-hover);
-  color: #FFFFFF77;
+  color: #ffffff77;
 }
 
 .content-link > a > p {
@@ -219,7 +219,7 @@ body {
 }
 
 .watermark > p::before {
-  content: '\00A9\2800';
+  content: "\00A9\2800";
 }
 
 .links {
@@ -242,50 +242,50 @@ body {
   cursor: pointer;
 }
 
-@media only screen and (max-height: 900px){
-  .cloud-high{
+@media only screen and (max-height: 900px) {
+  .cloud-high {
     margin-top: calc(100vh * 0.2);
   }
-  
-  .cloud-mid{
+
+  .cloud-mid {
     margin-top: calc(100vh * 0.5);
   }
-  
-  .cloud-low{
+
+  .cloud-low {
     margin-top: calc(100vh * 0.8);
   }
 }
 
-@media only screen and (max-width: 1500px){
+@media only screen and (max-width: 1500px) {
   .content-item > div {
     width: auto;
   }
 
-  .content-item{
+  .content-item {
     display: block;
     max-width: 900px;
     margin: 20vh auto 0 auto;
   }
 }
 
-@media only screen and (max-width: 800px){
-  .content-title{
+@media only screen and (max-width: 800px) {
+  .content-title {
     right: auto;
     left: 90px;
     min-width: auto;
   }
 
-  .content-body{
+  .content-body {
     min-width: auto;
   }
 
-  .content-item{
-    width: 100%
+  .content-item {
+    width: 100%;
   }
 }
 
-@media only screen and (max-width: 600px){
-  .content-title{
+@media only screen and (max-width: 600px) {
+  .content-title {
     position: relative;
     right: auto;
     left: auto;
@@ -296,12 +296,12 @@ body {
     box-shadow: none;
   }
 
-  .content-item:nth-child(odd) > div > .content-title{
+  .content-item:nth-child(odd) > div > .content-title {
     right: auto;
     left: auto;
   }
 
-  .content-body{
+  .content-body {
     position: relative;
     top: auto;
     width: auto;
@@ -310,7 +310,7 @@ body {
     box-shadow: none;
   }
 
-  .content-item{
+  .content-item {
     width: 100%;
     border-radius: 0;
     background-color: var(--background-cloud);
@@ -319,22 +319,22 @@ body {
   }
 }
 
-@keyframes cloudmove-right{
+@keyframes cloudmove-right {
   from {
     left: -500px;
   }
 
   to {
-    left: calc(100vw + 100px)
+    left: calc(100vw + 100px);
   }
 }
 
-@keyframes cloudmove-left{
+@keyframes cloudmove-left {
   from {
     right: -500px;
   }
 
   to {
-    right: calc(100vw + 100px)
+    right: calc(100vw + 100px);
   }
 }
