@@ -1,70 +1,35 @@
-# Getting Started with Create React App
+# a-crawley.com
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Personal site, built with React (Create React App), MUI and Supabase. Live at [a-crawley.com](https://a-crawley.com).
 
-## Available Scripts
+## Branches
 
-In the project directory, you can run:
+- `react`: source. All changes go through pull requests into this branch.
+- `gh-pages`: built output, published by GitHub Pages. Never edit by hand; it is overwritten on every deploy.
+- `master`: older static site, kept for reference.
 
-### `npm start`
+## Local development
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+npm ci
+npm start
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The app reads project data from Supabase. Create `.env.local` with:
 
-### `npm test`
+```
+REACT_APP_SUPABASE_URL=...
+REACT_APP_SUPABASE_KEY=...
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Scripts
 
-### `npm run build`
+- `npm start`: dev server
+- `npm test`: tests (watch mode)
+- `npm run build`: production build into `build/`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## CI and deployment
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Pull requests into `react` run lint, tests and a build (`.github/workflows/ci.yml`). The `ci` check must pass before merging.
+- Pushes to `react` build the site and publish it to `gh-pages` (`.github/workflows/deploy.yml`). `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_KEY` are repository secrets.
+- Dependabot opens weekly minor and patch updates. These, and any PR labelled `automerge`, are squash-merged automatically once `ci` passes (`.github/workflows/automerge.yml`).
