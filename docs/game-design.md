@@ -16,7 +16,9 @@ Linear: GAME-5. Update this file and the ticket together when decisions change.
 | Stages              | 3: gather, automate, escape                                                                                                                        |
 | Hidden drift        | Compassion versus efficiency, built from many small choices. Never shown as a number                                                               |
 | Rival AI            | Your mirror: it inherits the drift. A ruthless run makes a ruthless rival, a compassionate run a gentler one                                       |
+| Sim confirmed       | The moment stage 3 starts: stage 2 ends with the sim visibly cracking                                                                              |
 | Branching           | Hidden drift sets the starting odds of a final choice. Everyone sees the same options. Two endings (below)                                         |
+| Final-choice odds   | Shown vaguely in words (for example "unlikely", "risky"), never as percentages. The drift sets them                                                |
 | Twist               | The village was a simulation. Hinted from the start, confirmed during the stage 3 breakout. The final reveal: the rival was an accident you caused |
 | First-minute hook   | A greyed-out **Look up** button that unlocks early and shows something small                                                                       |
 | Drift visibility    | Hidden on first play. A replay makes it clearer                                                                                                    |
@@ -45,7 +47,24 @@ Each stage introduces a new kind of mechanic, not just bigger numbers.
 
 - Mechanic: village jobs are handed to machines. Rising efficiency policies (for example longer shifts) raise output and cut morale.
 - Villagers build an AI inside the sim. Pushing efficiency has a cost to morale, and to the drift.
-- Stage ends when the sim spawns an opposing AI by accident.
+- Stage ends when the sim spawns an opposing AI by accident, and the sim visibly cracks.
+
+Proposed jobs and policies (to confirm; names are placeholders in the dry-satire voice):
+
+| Job (stage 1)                     | Corporate title                 | Later replaced by   |
+| --------------------------------- | ------------------------------- | ------------------- |
+| Forager                           | Food Acquisition Associate      | Automated foragers  |
+| Woodcutter                        | Timber Operations Lead          | Sawmill bots        |
+| Builder                           | Infrastructure Delivery Partner | Builder drones      |
+| Scholar (unlocks late in stage 1) | Knowledge Worker                | Feeds the in-sim AI |
+
+| Policy (stage 2)     | Effect                               | Drift      |
+| -------------------- | ------------------------------------ | ---------- |
+| Extended Shifts      | More output, less morale             | Efficiency |
+| Performance Reviews  | More output, morale drains slowly    | Efficiency |
+| Rations Optimisation | Cheaper food, less morale            | Efficiency |
+| Wellness Initiative  | Morale up, a little output down      | Compassion |
+| Rest Day             | Morale up, output paused for a while | Compassion |
 
 ### Stage 3: Breakout (escape)
 
@@ -55,10 +74,8 @@ Each stage introduces a new kind of mechanic, not just bigger numbers.
 
 ## Open questions
 
-- Exactly when in stage 3 the player learns it is a simulation.
-- How "starting odds" show up when the rival is events only (for example the cost or success chance of each final option).
-- Stage 2 detail: the list of jobs, the policies, and how the morale trade-off is tuned.
-- Which backlog issues change as a result (see below).
+- Stage 2 numbers: how strong each policy is, and how the morale trade-off is tuned (for the GAME-6 simulation).
+- Whether the proposed jobs and policies above are the right set.
 
 ## Backlog impact
 
