@@ -5,7 +5,6 @@ import {
   Container,
   Typography,
   Button,
-  getCardHeaderUtilityClass,
 } from "@mui/material";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
@@ -23,26 +22,39 @@ const theme = createTheme({
   },
 });
 
-function App() {
-  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-  const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;
-  const supabaseClient = createClient(supabaseUrl, supabaseKey);
+// Created once at module load rather than on every render.
+const supabaseClient = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_KEY
+);
 
+function App() {
   const [content, setContent] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: things_i_made, error } = await supabaseClient.from('things_i_made').select('*').order('timestamp', { ascending: true });
-      return things_i_made;
-    } 
+    let cancelled = false;
 
-    if (content === null) {
-      fetchData().then((data) => {
-        //console.log({data})
+    async function fetchData() {
+      const { data, error } = await supabaseClient
+        .from("things_i_made")
+        .select("*")
+        .order("timestamp", { ascending: true });
+
+      if (error) {
+        console.error("Failed to load things_i_made:", error);
+        return;
+      }
+      if (!cancelled) {
         setContent(data);
-      })
+      }
     }
-  }, [])
+
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
