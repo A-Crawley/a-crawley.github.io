@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [react]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Single stable job name so it can be marked as a required status check.
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx eslint src --ext .js
+
+      - name: Test
+        run: npm test -- --watchAll=false
+        env:
+          CI: true
+
+      - name: Build
+        run: npm run build
+        env:
+          # CRA fails the build on lint warnings when CI=true; lint runs above.
+          CI: false
+          REACT_APP_SUPABASE_URL: https://placeholder.supabase.co
+          REACT_APP_SUPABASE_KEY: placeholder
