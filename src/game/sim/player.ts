@@ -1,5 +1,5 @@
-import { CONFIG, ITEMS } from "./config.ts";
-import type { ItemDef, ItemId, Stage } from "./config.ts";
+import { CONFIG, ITEMS } from "../config.ts";
+import type { ItemDef, ItemId, Stage } from "../config.ts";
 import {
   advanceStage,
   buy,
@@ -15,8 +15,8 @@ import {
   ratesFor,
   startRestDay,
   step,
-} from "./engine.ts";
-import type { Rates, SimState } from "./engine.ts";
+} from "../engine.ts";
+import type { Rates, SimState } from "../engine.ts";
 
 /** Decides policies and rest days each second. */
 export interface Strategy {

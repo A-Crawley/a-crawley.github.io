@@ -1,0 +1,109 @@
+import { CONFIG } from "./config.ts";
+import { startRestDay } from "./engine.ts";
+import { buyItem, gatherFood, setPolicy, takeRestDay } from "./actions.ts";
+import { createGameState } from "./state.ts";
+
+const fresh = () => createGameState(0);
+
+describe("gatherFood", () => {
+  it("adds one click of food and leaves the original alone", () => {
+    const state = fresh();
+    const next = gatherFood(state);
+    expect(next.food).toBe(CONFIG.clickValue);
+    expect(state.food).toBe(0);
+  });
+
+  it("gives less food when morale is low", () => {
+    const state = fresh();
+    state.morale = 0;
+    expect(gatherFood(state).food).toBeCloseTo(CONFIG.clickValue * CONFIG.morale.outputFloor);
+  });
+
+  it("gives nothing on a rest day", () => {
+    const state = fresh();
+    startRestDay(state);
+    expect(gatherFood(state).food).toBe(0);
+  });
+});
+
+describe("buyItem", () => {
+  it("does nothing without enough resources", () => {
+    const state = fresh();
+    state.food = 9;
+    expect(buyItem(state, "forager")).toBe(state);
+  });
+
+  it("buys a unit and pays for it", () => {
+    const state = fresh();
+    state.food = 25;
+    const next = buyItem(state, "forager");
+    expect(next).not.toBe(state);
+    expect(next.owned.forager).toBe(1);
+    expect(next.food).toBe(15);
+    expect(state.owned.forager).toBe(0);
+  });
+
+  it("raises the price of the next unit", () => {
+    let state = fresh();
+    state.food = 1000;
+    state = buyItem(state, "forager");
+    const afterFirst = state.food;
+    state = buyItem(state, "forager");
+    expect(afterFirst - state.food).toBeCloseTo(10 * 1.12);
+  });
+
+  it("will not sell something that is not available in the current stage", () => {
+    const state = fresh();
+    state.wood = 1e6;
+    state.food = 1e6;
+    expect(buyItem(state, "sawmillBot")).toBe(state);
+    expect(buyItem(state, "research")).toBe(state);
+    expect(buyItem(state, "exploit")).toBe(state);
+  });
+
+  it("moves to stage 3 when the last research level is bought", () => {
+    const state = fresh();
+    state.stage = 2;
+    state.food = 1e9;
+    state.infra = 777;
+    state.owned.research = CONFIG.researchLevels - 1;
+    const next = buyItem(state, "research");
+    expect(next.stage).toBe(3);
+    expect(next.infra).toBe(0);
+  });
+});
+
+describe("setPolicy", () => {
+  it("switches a policy on and off", () => {
+    const on = setPolicy(fresh(), "extendedShifts", true);
+    expect(on.policies.extendedShifts).toBe(true);
+    expect(setPolicy(on, "extendedShifts", false).policies.extendedShifts).toBe(false);
+  });
+
+  it("does nothing when the policy is already in that state", () => {
+    const state = fresh();
+    expect(setPolicy(state, "rationsOptimisation", false)).toBe(state);
+  });
+});
+
+describe("takeRestDay", () => {
+  it("starts a rest day and then refuses another until the cooldown ends", () => {
+    const state = fresh();
+    const rested = takeRestDay(state);
+    expect(rested).not.toBe(state);
+    expect(rested.restUntil).toBeGreaterThan(0);
+    expect(takeRestDay(rested)).toBe(rested);
+  });
+});
+
+describe("a finished game", () => {
+  it("ignores every action", () => {
+    const state = fresh();
+    state.stage = 3;
+    state.owned.exploit = CONFIG.exploitsGoal;
+    state.food = 1e6;
+    expect(gatherFood(state)).toBe(state);
+    expect(buyItem(state, "forager")).toBe(state);
+    expect(takeRestDay(state)).toBe(state);
+  });
+});

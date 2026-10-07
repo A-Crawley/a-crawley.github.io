@@ -1,4 +1,4 @@
-import { milestoneMultiplier, unitCost } from "../economy.ts";
+import { milestoneMultiplier, unitCost } from "./economy.ts";
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemDef, ItemId, Stage } from "./config.ts";
 
@@ -103,8 +103,16 @@ export function globalMultiplier(state: SimState): number {
   return multiplier;
 }
 
-/** Output per second for a given set of owned counts. */
-export function ratesFor(state: SimState, owned: Counts = state.owned): Rates {
+/**
+ * Output per second for a given set of owned counts.
+ * The simulation models an always-clicking player, so it includes click income. The real game
+ * turns that off, because there each click is its own action.
+ */
+export function ratesFor(
+  state: SimState,
+  owned: Counts = state.owned,
+  includeClicks = true,
+): Rates {
   const { output, milestones, milestoneFactor } = CONFIG;
   const ms = (id: ItemId) => milestoneMultiplier(owned[id], milestones, milestoneFactor);
   const global = globalMultiplier({ ...state, owned });
@@ -113,7 +121,7 @@ export function ratesFor(state: SimState, owned: Counts = state.owned): Rates {
   const woodcutters = Math.max(0, owned.woodcutter - owned.sawmillBot);
   const builders = Math.max(0, owned.builder - owned.builderDrone);
 
-  const clicks = CONFIG.clicksPerSecond * CONFIG.clickValue;
+  const clicks = includeClicks ? CONFIG.clicksPerSecond * CONFIG.clickValue : 0;
   const food =
     (foragers * output.forager * ms("forager") +
       owned.autoForager * output.autoForager * ms("autoForager") +
@@ -167,9 +175,14 @@ export function startRestDay(state: SimState): void {
   state.restDays += 1;
 }
 
-/** Advance the simulation by `dt` seconds. */
-export function step(state: SimState, dt = 1): void {
-  const rates = ratesFor(state);
+/** Food from one click on "Gather food", after morale, policies and research. */
+export function foodPerClick(state: SimState): number {
+  return CONFIG.clickValue * globalMultiplier(state);
+}
+
+/** Advance by `dt` seconds. Pass `includeClicks = false` when clicks are real actions. */
+export function step(state: SimState, dt = 1, includeClicks = true): void {
+  const rates = ratesFor(state, state.owned, includeClicks);
   state.food += rates.food * dt;
   state.wood += rates.wood * dt;
   state.infra += rates.infra * dt;
