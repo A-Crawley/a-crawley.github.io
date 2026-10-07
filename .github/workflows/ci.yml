@@ -25,24 +25,20 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Lint
-        run: npx eslint src --ext .js
+        run: npm run lint
 
       - name: Test
-        run: npm test -- --watchAll=false
-        env:
-          CI: true
+        run: npm test
 
       - name: Build
         run: npm run build
         env:
-          # CRA fails the build on lint warnings when CI=true; lint runs above.
-          CI: false
           REACT_APP_SUPABASE_URL: https://placeholder.supabase.co
           REACT_APP_SUPABASE_KEY: placeholder
