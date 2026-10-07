@@ -13,6 +13,8 @@ export interface GameStore {
   tick(): void;
   /** Catch up to the current time, then apply a player action. */
   dispatch(action: GameAction): void;
+  /** Replace the whole state, for example with an imported save or a fresh game. */
+  replace(state: GameState): void;
 }
 
 export interface GameStoreOptions {
@@ -46,6 +48,9 @@ export function createGameStore(options: GameStoreOptions = {}): GameStore {
     dispatch(action) {
       // Bring the state up to date first, so the action happens at the moment the player did it.
       setState(action(tick(state, now())));
+    },
+    replace(next) {
+      setState(next);
     },
   };
 }

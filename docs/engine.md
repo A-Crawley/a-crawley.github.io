@@ -25,10 +25,24 @@ touches it through `src/hooks/useGame.ts`.
 - `useGame` refreshes every 250 ms and also ticks the moment a hidden tab becomes visible.
 - Clicks are real actions in the game. The simulation instead assumes two clicks a second.
 
+## Saving (GAME-10)
+
+| Module                    | Responsibility                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `save.ts`                 | Pure: serialise, Base64 export and import, version migration, strict validation                                      |
+| `storage.ts`              | `loadGame`, `saveGame`, `clearSave` over localStorage. They never throw                                              |
+| `useGame`                 | Loads on start, autosaves every 30 seconds and when the tab is hidden or closed, and offers export, import and reset |
+| `components/SaveControls` | Export (with copy), import (with error messages) and a confirmed reset                                               |
+
+- **Format:** the stored save is the `GameState` as JSON. The export is the same JSON, Base64 encoded, so it is safe to paste anywhere. The timestamp (`lastTickAt`) round-trips.
+- **Versions:** every save carries `version`. To change the state shape, bump `STATE_VERSION` in `state.ts` and add `MIGRATIONS[oldVersion]` in `save.ts`, returning the save in the new shape. Migrations run one version at a time. A save from a newer game is rejected, never guessed at.
+- **Validation:** a save must have exactly the right fields and ranges (known stage, non-negative counts, morale 0 to 100, every item present). Unknown fields are dropped. Anything else is rejected with a plain-words reason, and the current game is not touched.
+- **Corrupt saves:** a stored save that cannot be read is copied to `look-up:save-corrupt` before the game starts fresh, so an autosave cannot destroy it.
+- **Blocked storage:** every read and write is wrapped. The game still runs and `loadStatus` reports `"unavailable"`.
+- **Loading is offline progress:** loading or importing a save and then ticking replays the time since `lastTickAt`. GAME-13 decides the cap and how policies behave while away.
+
 ## For later tickets
 
-- **Save system (GAME-10):** `GameState` survives `JSON.stringify` and `structuredClone` unchanged. Bump
-  `STATE_VERSION` when the shape changes and migrate older saves.
 - **Offline progress (GAME-13):** a long `tick` already replays the gap in full. Open decisions: a cap, and
   whether policies such as Extended Shifts keep draining morale while the player is away.
 - **Bulk buying (GAME-12):** `buyItem` buys one unit. The closed-form helpers in `economy.ts` are ready for it.
