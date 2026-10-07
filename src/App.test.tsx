@@ -6,11 +6,15 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: () => ({
       select: () => ({
-        order: () =>
-          Promise.resolve({
-            data: [{ title: "Test project", body: "A thing I made", link: "https://example.com" }],
-            error: null,
-          }),
+        order: () => ({
+          overrideTypes: () =>
+            Promise.resolve({
+              data: [
+                { title: "Test project", body: "A thing I made", link: "https://example.com" },
+              ],
+              error: null,
+            }),
+        }),
       }),
     }),
   }),

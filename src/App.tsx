@@ -43,9 +43,10 @@ function App() {
 
     async function fetchData() {
       const { data, error } = await supabaseClient
-        .from<Project>("things_i_made")
+        .from("things_i_made")
         .select("*")
-        .order("timestamp", { ascending: true });
+        .order("timestamp", { ascending: true })
+        .overrideTypes<Project[], { merge: false }>();
 
       if (error) {
         console.error("Failed to load things_i_made:", error);
@@ -104,7 +105,7 @@ function App() {
             <div className="content-item" key={i}>
               <div>
                 <div className="content-title">
-                  <Typography variant="h2" align={"center"} fontWeight={"400"}>
+                  <Typography variant="h2" align={"center"} sx={{ fontWeight: 400 }}>
                     {c.title}
                   </Typography>
                 </div>
