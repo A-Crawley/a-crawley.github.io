@@ -18,9 +18,16 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: ["sans-serif", "Raleway"],
+    fontFamily: "sans-serif,Raleway",
   },
 });
+
+interface Project {
+  title: string;
+  body: string;
+  link: string;
+  timestamp: string;
+}
 
 // Created once at module load rather than on every render.
 const supabaseClient = createClient(
@@ -29,14 +36,14 @@ const supabaseClient = createClient(
 );
 
 function App() {
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState<Project[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
       const { data, error } = await supabaseClient
-        .from("things_i_made")
+        .from<Project>("things_i_made")
         .select("*")
         .order("timestamp", { ascending: true });
 
@@ -61,7 +68,7 @@ function App() {
       <CssBaseline />
       <div className="background">
         <Container
-          maxWidth={"true"}
+          maxWidth={false}
           sx={{
             padding: "0 !important",
             height: "100vh",
