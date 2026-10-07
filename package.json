@@ -19,6 +19,7 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "sim": "node src/game/sim/cli.ts",
     "lint": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
