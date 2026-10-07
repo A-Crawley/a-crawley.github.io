@@ -1,0 +1,24 @@
+import { render, screen } from "@testing-library/react";
+import { ResourceCounter } from "./ResourceCounter";
+
+describe("ResourceCounter", () => {
+  it("shows the label and a rounded-down amount", () => {
+    render(<ResourceCounter label="Food" value={12.9} />);
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("12");
+  });
+
+  it("shows the rate when there is one", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={1.25} />);
+    expect(screen.getByText("+1.2 per second")).toBeInTheDocument();
+  });
+
+  it("says so when nothing is arriving automatically", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={0} />);
+    expect(screen.getByText("Nothing arrives by itself yet")).toBeInTheDocument();
+  });
+
+  it("hides the rate line when no rate is given", () => {
+    render(<ResourceCounter label="Food" value={5} />);
+    expect(screen.queryByText(/per second/)).not.toBeInTheDocument();
+  });
+});
