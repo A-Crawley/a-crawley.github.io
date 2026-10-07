@@ -1,6 +1,6 @@
 # Look Up: game design outline (v1)
 
-Status: draft from the GAME-5 design interview. Items under "Open questions" are not decided.
+Status: v1 outline agreed in the GAME-5 design interview. Items under "Open questions" are tuning, handled in GAME-6.
 Linear: GAME-5. Update this file and the ticket together when decisions change.
 
 ## Decisions
@@ -20,7 +20,7 @@ Linear: GAME-5. Update this file and the ticket together when decisions change.
 | Branching           | Hidden drift sets the starting odds of a final choice. Everyone sees the same options. Two endings (below)                                         |
 | Final-choice odds   | Shown vaguely in words (for example "unlikely", "risky"), never as percentages. The drift sets them                                                |
 | Twist               | The village was a simulation. Hinted from the start, confirmed during the stage 3 breakout. The final reveal: the rival was an accident you caused |
-| First-minute hook   | A greyed-out **Look up** button that unlocks early and shows something small                                                                       |
+| First-minute hook   | A single **Gather food** button and a greyed-out **Look up** button that unlocks early and shows something small                                   |
 | Drift visibility    | Hidden on first play. A replay makes it clearer                                                                                                    |
 | Replay and prestige | None in v1. Prestige is added in a later version                                                                                                   |
 | Out of scope for v1 | Prestige and resets, sound and music, cloud saves or accounts                                                                                      |
@@ -49,22 +49,21 @@ Each stage introduces a new kind of mechanic, not just bigger numbers.
 - Villagers build an AI inside the sim. Pushing efficiency has a cost to morale, and to the drift.
 - Stage ends when the sim spawns an opposing AI by accident, and the sim visibly cracks.
 
-Proposed jobs and policies (to confirm; names are placeholders in the dry-satire voice):
+Jobs and policies (kept deliberately small; names are in the dry-satire voice):
 
-| Job (stage 1)                     | Corporate title                 | Later replaced by   |
-| --------------------------------- | ------------------------------- | ------------------- |
-| Forager                           | Food Acquisition Associate      | Automated foragers  |
-| Woodcutter                        | Timber Operations Lead          | Sawmill bots        |
-| Builder                           | Infrastructure Delivery Partner | Builder drones      |
-| Scholar (unlocks late in stage 1) | Knowledge Worker                | Feeds the in-sim AI |
+| Job (stage 1) | Corporate title                 | Later replaced by  |
+| ------------- | ------------------------------- | ------------------ |
+| Forager       | Food Acquisition Associate      | Automated foragers |
+| Woodcutter    | Timber Operations Lead          | Sawmill bots       |
+| Builder       | Infrastructure Delivery Partner | Builder drones     |
 
 | Policy (stage 2)     | Effect                               | Drift      |
 | -------------------- | ------------------------------------ | ---------- |
 | Extended Shifts      | More output, less morale             | Efficiency |
-| Performance Reviews  | More output, morale drains slowly    | Efficiency |
 | Rations Optimisation | Cheaper food, less morale            | Efficiency |
-| Wellness Initiative  | Morale up, a little output down      | Compassion |
 | Rest Day             | Morale up, output paused for a while | Compassion |
+
+The in-sim AI is built by a research project funded with resources, not by a separate job.
 
 ### Stage 3: Breakout (escape)
 
@@ -75,7 +74,7 @@ Proposed jobs and policies (to confirm; names are placeholders in the dry-satire
 ## Open questions
 
 - Stage 2 numbers: how strong each policy is, and how the morale trade-off is tuned (for the GAME-6 simulation).
-- Whether the proposed jobs and policies above are the right set.
+- The wording of log lines and the two ending screens.
 
 ## Backlog impact
 
