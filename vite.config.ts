@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
@@ -8,6 +9,13 @@ export default defineConfig({
   build: {
     // Same output folder the deploy workflow publishes.
     outDir: "build",
+    rollupOptions: {
+      // The landing page, plus the game at /game.html (linked from the site in GAME-14).
+      input: {
+        main: fileURLToPath(new URL("index.html", import.meta.url)),
+        game: fileURLToPath(new URL("game.html", import.meta.url)),
+      },
+    },
   },
   test: {
     environment: "jsdom",
