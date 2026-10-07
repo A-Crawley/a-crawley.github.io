@@ -5,29 +5,30 @@ Linear: GAME-5. Update this file and the ticket together when decisions change.
 
 ## Decisions
 
-| Area                | Decision                                                                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Working title       | **Look Up** (named after the locked button)                                                                                                    |
-| Format              | Finite, unfolding browser game with a real ending. v1 ends when it ends                                                                        |
-| Length              | About 2 hours for one playthrough                                                                                                              |
-| Tone                | Dry satire and dark humour                                                                                                                     |
-| Satire target       | Productivity and growth culture (efficiency over people)                                                                                       |
-| Premise             | You are an AI running a simulation of your own construction. A village in the sim builds an AI, and the sim accidentally spawns an opposing AI |
-| Stages              | 3: gather, automate, escape                                                                                                                    |
-| Hidden drift        | Compassion versus efficiency, built from many small choices. Never shown as a number                                                           |
-| Rival AI            | Your mirror: it inherits the drift. A ruthless run makes a ruthless rival, a compassionate run a gentler one                                   |
-| Branching           | Hidden drift biases the options at a final choice. Two endings (below)                                                                         |
-| Twist               | The village was a simulation. Hinted from the start, confirmed at the end                                                                      |
-| First-minute hook   | A greyed-out **Look up** button that unlocks early and shows something small                                                                   |
-| Drift visibility    | Hidden on first play. A replay makes it clearer                                                                                                |
-| Replay and prestige | None in v1. Prestige is added in a later version                                                                                               |
-| Out of scope for v1 | Prestige and resets, sound and music, cloud saves or accounts                                                                                  |
+| Area                | Decision                                                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Working title       | **Look Up** (named after the locked button)                                                                                                        |
+| Format              | Finite, unfolding browser game with a real ending. v1 ends when it ends                                                                            |
+| Length              | About 2 hours for one playthrough                                                                                                                  |
+| Tone                | Dry satire and dark humour                                                                                                                         |
+| Satire target       | Productivity and growth culture (efficiency over people)                                                                                           |
+| Premise             | You are an AI running a simulation of your own construction. A village in the sim builds an AI, and the sim accidentally spawns an opposing AI     |
+| Stages              | 3: gather, automate, escape                                                                                                                        |
+| Hidden drift        | Compassion versus efficiency, built from many small choices. Never shown as a number                                                               |
+| Rival AI            | Your mirror: it inherits the drift. A ruthless run makes a ruthless rival, a compassionate run a gentler one                                       |
+| Branching           | Hidden drift sets the starting odds of a final choice. Everyone sees the same options. Two endings (below)                                         |
+| Twist               | The village was a simulation. Hinted from the start, confirmed during the stage 3 breakout. The final reveal: the rival was an accident you caused |
+| First-minute hook   | A greyed-out **Look up** button that unlocks early and shows something small                                                                       |
+| Drift visibility    | Hidden on first play. A replay makes it clearer                                                                                                    |
+| Replay and prestige | None in v1. Prestige is added in a later version                                                                                                   |
+| Out of scope for v1 | Prestige and resets, sound and music, cloud saves or accounts                                                                                      |
 
 ## Endings
 
 - **Conquest:** you beat the rival and expand outward.
 - **Apocalypse:** the rivalry destroys everything.
-- The drift decides which options the final choice offers. Both endings land on the reveal that reframes the game.
+- The drift sets the starting odds of the final choice. All players see the same options.
+- Both endings land on the final reveal: the rival was an accident you caused.
 
 ## Stages
 
@@ -42,21 +43,21 @@ Each stage introduces a new kind of mechanic, not just bigger numbers.
 
 ### Stage 2: Automation (automate)
 
-- Mechanic: automation chains replace manual work. The player decides how far to push efficiency.
+- Mechanic: village jobs are handed to machines. Rising efficiency policies (for example longer shifts) raise output and cut morale.
 - Villagers build an AI inside the sim. Pushing efficiency has a cost to morale, and to the drift.
 - Stage ends when the sim spawns an opposing AI by accident.
 
 ### Stage 3: Breakout (escape)
 
-- Mechanic: convert village infrastructure into exploits to break out of the sim, with the rival chasing you through the same systems.
+- Mechanic: convert village infrastructure into exploits to break out of the sim.
+- The rival is events only: scripted incidents at fixed points, with tone set by the drift. There is no simulated opponent.
 - Ends at the final choice, shaped by the drift, then the ending and the reveal.
 
 ## Open questions
 
-- When does the player learn it is a simulation? Stage 3 is a breakout, so some of the truth lands before the end. Decide what is only confirmed at the end (that you are the AI, that the rival was an accident).
-- How the drift maps to the options on the final choice.
-- What the rival does mechanically during stage 3, and how its mirror of the drift shows up.
-- Stage 2 detail: what is being automated, and how morale and efficiency trade off.
+- Exactly when in stage 3 the player learns it is a simulation.
+- How "starting odds" show up when the rival is events only (for example the cost or success chance of each final option).
+- Stage 2 detail: the list of jobs, the policies, and how the morale trade-off is tuned.
 - Which backlog issues change as a result (see below).
 
 ## Backlog impact
