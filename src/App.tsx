@@ -32,7 +32,7 @@ interface Project {
 // Created once at module load rather than on every render.
 const supabaseClient = createClient(
   import.meta.env.REACT_APP_SUPABASE_URL,
-  import.meta.env.REACT_APP_SUPABASE_KEY
+  import.meta.env.REACT_APP_SUPABASE_KEY,
 );
 
 function App() {
@@ -109,22 +109,20 @@ function App() {
                   </Typography>
                 </div>
                 <div className="content-body">
-                  <Typography variant="h6">
-                    {c.body}
-                  </Typography>
+                  <Typography variant="h6">{c.body}</Typography>
                   <div className="content-link">
-                  <Button href={c.link}
-                          target="_blank" 
-                          variant={'contained'}
-                          sx={{width: '200px'}}>
-                    <Typography>
-                      jump on over
-                    </Typography>
-                  </Button>
-                </div>
+                    <Button
+                      href={c.link}
+                      target="_blank"
+                      variant={"contained"}
+                      sx={{ width: "200px" }}
+                    >
+                      <Typography>jump on over</Typography>
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <div></div>  
+              <div></div>
             </div>
           );
         })}
@@ -135,7 +133,7 @@ function App() {
       </div>
       <div className="links">
         <a href="https://github.com/A-Crawley" target="_blank" rel="noreferrer">
-          <img src="./GitHub-Mark-120px-plus.png" alt="github"/>
+          <img src="./GitHub-Mark-120px-plus.png" alt="github" />
         </a>
       </div>
     </ThemeProvider>

@@ -1,16 +1,14 @@
-import { render, screen } from '@testing-library/react';
-import { vi } from 'vitest';
-import App from './App';
+import { render, screen } from "@testing-library/react";
+import { vi } from "vitest";
+import App from "./App";
 
-vi.mock('@supabase/supabase-js', () => ({
+vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
     from: () => ({
       select: () => ({
         order: () =>
           Promise.resolve({
-            data: [
-              { title: 'Test project', body: 'A thing I made', link: 'https://example.com' },
-            ],
+            data: [{ title: "Test project", body: "A thing I made", link: "https://example.com" }],
             error: null,
           }),
       }),
@@ -18,8 +16,8 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-test('renders the logo and loaded projects', async () => {
+test("renders the logo and loaded projects", async () => {
   render(<App />);
-  expect(screen.getByText('AC')).toBeInTheDocument();
-  expect(await screen.findByText('Test project')).toBeInTheDocument();
+  expect(screen.getByText("AC")).toBeInTheDocument();
+  expect(await screen.findByText("Test project")).toBeInTheDocument();
 });
