@@ -30,3 +30,8 @@ test("watermark shows the current year", () => {
   render(<App />);
   expect(screen.getByText(`a-crawley ${new Date().getFullYear()}`)).toBeInTheDocument();
 });
+
+test("links to the game", () => {
+  render(<App />);
+  expect(screen.getByRole("link", { name: "Look Up" })).toHaveAttribute("href", "./game/");
+});

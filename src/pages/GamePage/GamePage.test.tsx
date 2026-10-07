@@ -33,6 +33,14 @@ describe("GamePage", () => {
     expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("0");
   });
 
+  it("has a way back to the home page", () => {
+    setup();
+    expect(screen.getByRole("link", { name: "Back to a-crawley.com" })).toHaveAttribute(
+      "href",
+      "../",
+    );
+  });
+
   it("counts clicks and offers the first job once there is enough food", async () => {
     const user = setup();
     for (let i = 0; i < 5; i++)

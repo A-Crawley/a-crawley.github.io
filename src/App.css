@@ -223,6 +223,9 @@ body {
 }
 
 .links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   position: absolute;
   top: 10px;
   right: 10px;
@@ -236,6 +239,19 @@ body {
 .links > a > img {
   width: 30px;
   opacity: 0.5;
+}
+
+.links > .game-link {
+  color: inherit;
+  font-family: sans-serif, Raleway;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.links > .game-link:hover,
+.links > .game-link:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .links > a:hover {

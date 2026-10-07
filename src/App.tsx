@@ -133,6 +133,9 @@ function App() {
         <p>a-crawley {new Date().getFullYear()}</p>
       </div>
       <div className="links">
+        <a className="game-link" href="./game/">
+          Look Up
+        </a>
         <a href="https://github.com/A-Crawley" target="_blank" rel="noreferrer">
           <img src="./GitHub-Mark-120px-plus.png" alt="github" />
         </a>
