@@ -24,8 +24,8 @@ const theme = createTheme({
 
 // Created once at module load rather than on every render.
 const supabaseClient = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_KEY
+  import.meta.env.REACT_APP_SUPABASE_URL,
+  import.meta.env.REACT_APP_SUPABASE_KEY
 );
 
 function App() {

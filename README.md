@@ -1,6 +1,6 @@
 # a-crawley.com
 
-Personal site, built with React (Create React App), MUI and Supabase. Live at [a-crawley.com](https://a-crawley.com).
+Personal site, built with React, Vite, MUI and Supabase. Live at [a-crawley.com](https://a-crawley.com).
 
 ## Branches
 
@@ -10,9 +10,11 @@ Personal site, built with React (Create React App), MUI and Supabase. Live at [a
 
 ## Local development
 
+Requires Node 22 or newer.
+
 ```
 npm ci
-npm start
+npm run dev
 ```
 
 The app reads project data from Supabase. Create `.env.local` with:
@@ -22,11 +24,15 @@ REACT_APP_SUPABASE_URL=...
 REACT_APP_SUPABASE_KEY=...
 ```
 
+(`VITE_`-prefixed names also work.)
+
 ## Scripts
 
-- `npm start`: dev server
-- `npm test`: tests (watch mode)
+- `npm run dev`: dev server
+- `npm test`: run tests once (Vitest)
+- `npm run lint`: ESLint
 - `npm run build`: production build into `build/`
+- `npm run preview`: serve the production build locally
 
 ## CI and deployment
 
