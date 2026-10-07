@@ -25,3 +25,8 @@ test("renders the logo and loaded projects", async () => {
   expect(screen.getByText("AC")).toBeInTheDocument();
   expect(await screen.findByText("Test project")).toBeInTheDocument();
 });
+
+test("watermark shows the current year", () => {
+  render(<App />);
+  expect(screen.getByText(`a-crawley ${new Date().getFullYear()}`)).toBeInTheDocument();
+});
