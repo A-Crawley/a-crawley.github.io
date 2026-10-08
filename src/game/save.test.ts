@@ -264,3 +264,34 @@ describe("the ending in a save", () => {
     }
   });
 });
+
+describe("achievements in a save", () => {
+  it("round-trips them, in order", () => {
+    const state = playedState();
+    state.achievements = ["first-hire", "ten-foragers", "stage-two"];
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 3 save by starting with none", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 3 };
+    delete old.achievements;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.version).toBe(STATE_VERSION);
+      expect(result.value.achievements).toEqual([]);
+    }
+  });
+
+  it("rejects achievements that are missing, not a list, unknown or repeated", () => {
+    for (const achievements of [
+      undefined,
+      "first-hire",
+      3,
+      ["nope"],
+      ["first-hire", "first-hire"],
+    ]) {
+      expect(validateState({ ...raw(), achievements }).ok).toBe(false);
+    }
+  });
+});

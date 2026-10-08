@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { breakOut, buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "../game/actions.ts";
+import { withSettled } from "../game/settle.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { AwaySummary } from "../game/offline.ts";
@@ -138,7 +139,7 @@ export function useGame(options?: UseGameOptions): UseGame {
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
     lookUp: useCallback(() => store.dispatch(lookUp), [store]),
     breakOut: useCallback(() => {
-      store.dispatch((s) => breakOut(s, random()));
+      store.dispatch((s) => withSettled(breakOut(s, random())));
       saveGame(store.getState(), storage);
     }, [store, storage, random]),
     exportSave: useCallback(() => {
