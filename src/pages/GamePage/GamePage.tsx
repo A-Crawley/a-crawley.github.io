@@ -19,6 +19,7 @@ import {
   canRest,
   foodPerClick,
   isAvailable,
+  isHungry,
   isJob,
   isResting,
   isWalkingOut,
@@ -56,6 +57,7 @@ import { ProjectProgress } from "../../components/ProjectProgress";
 import { ResourceCounter } from "../../components/ResourceCounter";
 import { SaveControls } from "../../components/SaveControls";
 import { ShopItem } from "../../components/ShopItem";
+import { VillagePanel } from "../../components/VillagePanel";
 
 const SECTIONS: ReadonlyArray<{ title: string; ids: readonly ItemId[] }> = [
   { title: "Jobs", ids: ["forager", "woodcutter", "builder"] },
@@ -204,10 +206,14 @@ export function GamePage({ options }: GamePageProps) {
                 />
               )}
               {unlocked("village") && (
-                <Typography variant="body2" color="text.secondary">
-                  {state.population} villagers, {unemployed(state)} without a job.{" "}
-                  {bedsOf(state.owned)} beds.
-                </Typography>
+                <VillagePanel
+                  population={state.population}
+                  beds={bedsOf(state.owned)}
+                  unemployed={unemployed(state)}
+                  foodMade={rates.food}
+                  foodEaten={upkeepPerSecond(state)}
+                  hungry={isHungry(state)}
+                />
               )}
               {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (
                 <Box sx={{ display: "flex", justifyContent: "flex-end" }}>

@@ -458,12 +458,15 @@ describe("GamePage village", () => {
     expect(screen.getAllByText(/Nobody is free to take the job/).length).toBeGreaterThan(0);
   });
 
-  it("shows how many villagers and beds there are once there is a job", () => {
+  it("shows the village panel once there is a job", () => {
     setupWith((s) => {
       s.owned.forager = 2;
       s.population = 5;
     });
-    expect(screen.getByText(/5 villagers, 3 without a job\. 10 beds\./)).toBeInTheDocument();
+    const panel = screen.getByRole("region", { name: "Village" });
+    expect(panel).toHaveTextContent("Villagers5");
+    expect(panel).toHaveTextContent("Without a job3");
+    expect(panel).toHaveTextContent("Beds10");
   });
 
   it("offers a hut once the village is nearly out of beds, and builds it", async () => {
@@ -475,7 +478,9 @@ describe("GamePage village", () => {
     expect(screen.getByRole("heading", { name: "Housing" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Build Hut" }));
     expect(screen.getByRole("heading", { name: /Hut/ })).toHaveTextContent("× 1");
-    expect(screen.getByText(/10 villagers, 0 without a job\. 15 beds\./)).toBeInTheDocument();
+    const panel = screen.getByRole("region", { name: "Village" });
+    expect(panel).toHaveTextContent("Beds15");
+    expect(panel).toHaveTextContent("Without a job0");
   });
 
   it("keeps housing out of sight while there is plenty of room", () => {
@@ -484,5 +489,15 @@ describe("GamePage village", () => {
       s.food = 500;
     });
     expect(screen.queryByRole("heading", { name: "Housing" })).not.toBeInTheDocument();
+  });
+
+  it("says so in the village panel when the village goes hungry", () => {
+    setupWith((s) => {
+      s.owned.woodcutter = 3;
+      s.population = 3;
+      s.shortfallSeconds = 12;
+    });
+    expect(screen.getByRole("region", { name: "Village" })).toHaveTextContent("Hungry");
+    expect(screen.getByText(/eating faster than it is fed/)).toBeInTheDocument();
   });
 });

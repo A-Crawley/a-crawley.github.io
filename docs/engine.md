@@ -162,4 +162,5 @@ The village has people. They are what the jobs are made of, and the beds are wha
 - **Away:** `catchUp` calls `tick` with `{ hunger: false }`, so a shortfall costs no morale and no villagers. The
   stock stays at nothing.
 - **Display:** the Food counter shows what is left after the villagers eat (`netFoodRate`), and the log warns at
-  the three stages of hunger.
+  the three stages of hunger. The `VillagePanel` (revealed by the `village` unlock) shows population against beds,
+  who is free to hire, and whether the village is fed, in words.
