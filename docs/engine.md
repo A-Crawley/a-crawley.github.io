@@ -60,7 +60,7 @@ touches it through `src/hooks/useGame.ts`.
 - **Cap: 8 hours** (`MAX_AWAY_SECONDS`). Only the first 8 hours are replayed, with the same step-by-step `tick` as normal play, so stage changes work. Time beyond the cap is dropped: play resumes from now and the lost time does not come back.
 - **One path for every case.** A closed tab, a hidden tab and an old imported save all look the same, a state whose `lastTickAt` is long ago. While the tab is hidden `useGame` does not tick; on return (or on load) the store catches up straight away.
 - **The summary:** `AwaySummary` (time away, time counted, whether capped, food, wood and infrastructure gained, policies that ended, stage before and after) is kept in the store until the player dismisses it (`getAway`, `dismissAway`). Two unseen summaries merge. It is not saved. `AwaySummaryDialog` shows it.
-- **Achievements and unlocks** during catch-up: there are none yet. What the shop reveals is derived from state, so it just appears. GAME-17 should record achievements from the state after `catchUp`, not from events.
+- **Unlocks during catch-up:** `tick` settles unlocks after every step, so an 8-hour absence unlocks things in the right order and nothing is missed (see Unlocks). GAME-17 should record achievements from the state after `catchUp`, not from events.
 - **Balance note:** 8 hours of output is far more than the whole game's 2 hours of play, so a long absence can fund a lot on return. Flagged for GAME-18; an offline efficiency multiplier is the usual lever.
 
 ## Number formatting (GAME-8)
@@ -73,3 +73,29 @@ touches it through `src/hooks/useGame.ts`.
 - Handles everything up to `Number.MAX_VALUE`; `Infinity` shows as "∞"; zero, negatives and NaN show as "0".
 - The choice is saved separately from the game, under `look-up:settings` (`settings.ts`, `useSettings`), so importing a save or resetting the game does not change it. A bad or unknown value falls back to the default, field by field.
 - Not routed through it, on purpose: durations (`formatDuration`), percentages, the morale value and the per-unit output text in the shop (all under 100 a second, which every notation writes the same way).
+
+## Unlocks (GAME-15)
+
+The interface is the progression system. `unlocks.ts` holds `UNLOCKS`, a list of `{ id, when(state), log? }`. When `when` is true the id is added to `state.unlocked` (saved, in the order it happened) and never removed, so spending the resource that revealed something does not hide it again.
+
+- **Where they are settled:** `applyUnlocks` runs after every `tick` step and every action, and `withUnlocks` runs when the store starts or replaces its state (a loaded or imported save). One long gap therefore unlocks in the right order.
+- **UI:** `GamePage` shows a panel only when `isUnlocked(state, id)`. Shop items are greyed (disabled) as soon as they unlock and active once affordable.
+- **Pacing:** `unlocks.test.ts` replays the greedy prototype player through stages 1 and 2 and checks the order, that the Look up button wakes and Project Horizon appears within the first minutes, and that no gap between unlocks passes 30 minutes. A person plays slower than the bot, so the real gaps are longer.
+- **Log:** an unlock with a `log` line adds it to the village log after the count-based lines, in unlock order.
+- **Action-driven unlocks:** `lookedUp` has no threshold; the `lookUp` action sets it (`unlock(state, id)`).
+- **Save version 2:** adds `unlocked`. The 1 to 2 migration starts it empty and the store settles what the player has already earned. An unknown or repeated id makes the save invalid.
+- **Adding one:** add an id to `UnlockId`, a def to `UNLOCKS` (keep it in expected order), gate the UI on it, add a threshold test. No save change is needed while the shape stays the same.
+
+| Unlock                                              | Threshold                                                                        |
+| --------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `item:<id>`                                         | Item is on sale this stage and the player owns one or holds half its first price |
+| `wood`, `infra`                                     | First wood or infrastructure, or the job that makes it                           |
+| `morale`                                            | First hire                                                                       |
+| `lookUp`                                            | 5 foragers                                                                       |
+| `lookedUp`                                          | The first press of Look up                                                       |
+| `policy:rationsOptimisation`, `policy:restDay`      | 10 jobs                                                                          |
+| `bulkBuying`                                        | 10 of any one item                                                               |
+| `horizon`, `horizonHalf`, `rumours`                 | Stage 1 infrastructure at 2%, 50%, 85% of the goal                               |
+| `stage2`, `policy:extendedShifts`                   | Stage 2 starts                                                                   |
+| `researchStarted`, `researchHalf`, `researchNearly` | 1, half, all but 2 research levels                                               |
+| `stage3`                                            | Stage 3 starts                                                                   |

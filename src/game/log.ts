@@ -1,5 +1,6 @@
 import { itemDef } from "./engine.ts";
 import type { GameState } from "./state.ts";
+import { UNLOCKS } from "./unlocks.ts";
 
 export interface LogLine {
   /** Stable, so React keeps each line in place as new ones arrive. */
@@ -61,5 +62,10 @@ export function logLines(state: GameState): LogLine[] {
     "builder-hired",
     `${BUILDER_TITLE} hired. Nobody can say what is being built, only that it is on schedule.`,
   );
+  // Reveal lines come last, in the order the player met them.
+  for (const id of state.unlocked) {
+    const log = UNLOCKS.find((unlock) => unlock.id === id)?.log;
+    if (log) lines.push({ id: `unlock:${id}`, text: log });
+  }
   return lines;
 }

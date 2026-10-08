@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { buyItem, gatherFood, setPolicy, takeRestDay } from "../game/actions.ts";
+import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "../game/actions.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { AwaySummary } from "../game/offline.ts";
@@ -37,6 +37,7 @@ export interface UseGame {
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
   setPolicy(policy: keyof Policies, on: boolean): void;
   takeRestDay(): void;
+  lookUp(): void;
   /** The current game as a copy-and-paste save string. */
   exportSave(): string;
   /** Replace the game with a pasted save. A bad save is reported and the current game is kept. */
@@ -130,6 +131,7 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store],
     ),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
+    lookUp: useCallback(() => store.dispatch(lookUp), [store]),
     exportSave: useCallback(() => {
       store.tick();
       return exportSave(store.getState());

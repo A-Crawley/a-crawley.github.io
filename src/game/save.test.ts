@@ -200,3 +200,30 @@ describe("validation", () => {
     expect(validateState(save).ok).toBe(true);
   });
 });
+
+describe("unlocks in a save", () => {
+  it("round-trips the unlocks, in order", () => {
+    const state = playedState();
+    state.unlocked = ["item:forager", "morale", "lookUp", "lookedUp"];
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 1 save by starting with no unlocks", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 1 };
+    delete old.unlocked;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.version).toBe(STATE_VERSION);
+      expect(result.value.unlocked).toEqual([]);
+      expect(result.value.owned.forager).toBe(40);
+    }
+  });
+
+  it("rejects unlocks that are missing, not a list, unknown or repeated", () => {
+    for (const unlocked of [undefined, "lookUp", 3, ["nonsense"], ["lookUp", "lookUp"], [1]]) {
+      const save = { ...raw(), unlocked };
+      expect(validateState(save).ok).toBe(false);
+    }
+  });
+});

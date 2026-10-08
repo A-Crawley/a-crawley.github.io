@@ -51,4 +51,29 @@ describe("logLines", () => {
     expect(text.some((t) => t.includes("Timber Operations Lead"))).toBe(true);
     expect(text.some((t) => t.includes("Infrastructure Delivery Partner"))).toBe(true);
   });
+
+  it("adds a line for each reveal, in the order they happened", () => {
+    const state = createGameState(0);
+    state.unlocked = ["morale", "lookUp", "lookedUp"];
+    const reveals = logLines(state).filter((line) => line.id.startsWith("unlock:"));
+    expect(reveals.map((line) => line.id)).toEqual([
+      "unlock:morale",
+      "unlock:lookUp",
+      "unlock:lookedUp",
+    ]);
+  });
+
+  it("stays quiet about unlocks that have no line of their own", () => {
+    const state = createGameState(0);
+    state.unlocked = ["item:forager", "wood"];
+    expect(ids(state)).toEqual(["day-one"]);
+  });
+
+  it("announces the second and third stage", () => {
+    const state = createGameState(0);
+    state.unlocked = ["stage2", "policy:extendedShifts", "stage3"];
+    const text = logLines(state).map((line) => line.text);
+    expect(text.some((t) => t.startsWith("Machines arrive"))).toBe(true);
+    expect(text.some((t) => t.includes("seam"))).toBe(true);
+  });
 });

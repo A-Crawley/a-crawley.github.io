@@ -2,6 +2,8 @@ import { ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { STATE_VERSION } from "./state.ts";
 import type { GameState } from "./state.ts";
+import { isUnlockId } from "./unlocks.ts";
+import type { UnlockId } from "./unlocks.ts";
 
 export type SaveResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -15,9 +17,12 @@ type Migration = (save: RawSave) => RawSave;
  * Migrations from one save version to the next, keyed by the version they upgrade FROM.
  * When the state shape changes: bump STATE_VERSION in state.ts and add `MIGRATIONS[oldVersion]`
  * here, returning the save in the new shape. Never edit an old migration.
- * (Version 1 is the first release, so there is nothing to migrate from yet.)
  */
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+export const MIGRATIONS: Readonly<Record<number, Migration>> = {
+  // 1 -> 2: unlocks are saved. An old save starts with none; the game settles the ones the
+  // player has already earned (from what they own) as soon as it loads the save.
+  1: (save) => ({ ...save, version: 2, unlocked: [] }),
+};
 
 function isRecord(value: unknown): value is RawSave {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -112,6 +117,13 @@ export function validateState(raw: unknown): SaveResult<GameState> {
     policies[field] = value;
   }
 
+  if (!Array.isArray(raw.unlocked)) return fail("unlocked");
+  const unlocked: UnlockId[] = [];
+  for (const id of raw.unlocked as unknown[]) {
+    if (!isUnlockId(id) || unlocked.includes(id)) return fail("unlocked");
+    unlocked.push(id);
+  }
+
   return {
     ok: true,
     value: {
@@ -132,6 +144,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       walkoutReadyAt: raw.walkoutReadyAt as number,
       walkouts: raw.walkouts as number,
       restDays: raw.restDays as number,
+      unlocked,
     },
   };
 }

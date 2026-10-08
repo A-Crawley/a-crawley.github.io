@@ -1,7 +1,8 @@
 import { CONFIG } from "./config.ts";
 import { startRestDay } from "./engine.ts";
-import { buyItem, gatherFood, setPolicy, takeRestDay } from "./actions.ts";
+import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "./actions.ts";
 import { createGameState } from "./state.ts";
+import { withUnlocks } from "./unlocks.ts";
 
 const fresh = () => createGameState(0);
 
@@ -164,5 +165,51 @@ describe("buyItem with a quantity", () => {
     const next = buyItem(state, "research", "max");
     expect(next.owned.research).toBe(CONFIG.researchLevels);
     expect(next.stage).toBe(3);
+  });
+});
+
+describe("unlocking while playing", () => {
+  it("unlocks the first job when a click brings enough food", () => {
+    let state = fresh();
+    state.food = 4.5;
+    expect(state.unlocked).toEqual([]);
+    state = gatherFood(state);
+    expect(state.unlocked).toContain("item:forager");
+  });
+
+  it("unlocks what a purchase earns, such as morale after the first hire", () => {
+    const state = fresh();
+    state.food = 10;
+    const next = buyItem(state, "forager");
+    expect(next.unlocked).toContain("morale");
+    expect(state.unlocked).toEqual([]);
+  });
+
+  it("keeps an item on offer after the food that revealed it is spent", () => {
+    const state = fresh();
+    state.food = 25;
+    state.owned.forager = 1;
+    let next = withUnlocks(state);
+    expect(next.unlocked).toContain("item:woodcutter");
+    next = buyItem(next, "forager", 1);
+    expect(next.food).toBeLessThan(20);
+    expect(next.unlocked).toContain("item:woodcutter");
+  });
+});
+
+describe("lookUp", () => {
+  it("does nothing while the button is still locked", () => {
+    const state = fresh();
+    expect(lookUp(state)).toBe(state);
+  });
+
+  it("records the first look once the button works, and ignores later looks", () => {
+    const state = fresh();
+    state.owned.forager = 5;
+    const ready = withUnlocks(state);
+    const looked = lookUp(ready);
+    expect(looked.unlocked).toContain("lookedUp");
+    expect(ready.unlocked).not.toContain("lookedUp");
+    expect(lookUp(looked)).toBe(looked);
   });
 });

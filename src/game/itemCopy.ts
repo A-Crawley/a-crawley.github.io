@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.ts";
-import type { Currency, ItemId } from "./config.ts";
+import type { Currency, ItemId, Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
 import { formatRate } from "./format.ts";
 
@@ -69,3 +69,18 @@ export const POLICY_LABELS: Record<keyof Policies, string> = {
   extendedShifts: "Extended Shifts",
   rationsOptimisation: "Rations Optimisation",
 };
+
+/**
+ * What the player sees when they look up, by stage. Small and slightly wrong: the village's sky has
+ * a number in it that should not be there. It counts the seconds the player has been in the sim.
+ */
+export function sighting(stage: Stage, seconds: number): string {
+  const count = Math.floor(seconds);
+  if (stage === 1) {
+    return `A number hangs in the sky: ${count}. Nobody else seems to see it. It goes up by one every second.`;
+  }
+  if (stage === 2) {
+    return `The number in the sky reads ${count}. Someone has started calling it a KPI.`;
+  }
+  return `The number in the sky reads ${count}. It no longer looks like a count. It looks like a countdown.`;
+}

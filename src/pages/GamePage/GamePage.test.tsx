@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
 import { createGameState } from "../../game/state.ts";
@@ -99,6 +99,7 @@ describe("GamePage shop", () => {
   it("buys ten at once with ×10 and shows the price of ten", async () => {
     const user = setupWith((s) => {
       s.food = 1000;
+      s.unlocked.push("bulkBuying");
     });
     await user.click(screen.getByRole("button", { name: "×10" }));
     const hire = screen.getByRole("button", { name: "Hire 10 × Food Acquisition Associate" });
@@ -112,6 +113,7 @@ describe("GamePage shop", () => {
   it("buys as many as it can with Max", async () => {
     const user = setupWith((s) => {
       s.food = 100;
+      s.unlocked.push("bulkBuying");
     });
     await user.click(screen.getByRole("button", { name: "Max" }));
     await user.click(screen.getByRole("button", { name: "Hire 6 × Food Acquisition Associate" }));
@@ -123,6 +125,7 @@ describe("GamePage shop", () => {
   it("does not let a bulk purchase through that it can't pay for", async () => {
     const user = setupWith((s) => {
       s.food = 100;
+      s.unlocked.push("bulkBuying");
     });
     await user.click(screen.getByRole("button", { name: "×100" }));
     expect(
@@ -140,6 +143,7 @@ describe("GamePage shop", () => {
 
   it("lets the player switch policies and take a rest day once they are offered", async () => {
     const user = setupWith((s) => {
+      s.stage = 2;
       s.owned.forager = 10;
     });
     expect(screen.getByRole("heading", { name: "Policies" })).toBeInTheDocument();
@@ -192,6 +196,7 @@ describe("GamePage notation", () => {
   it("lets the player change how numbers are written, everywhere at once", async () => {
     const user = setupWith((s) => {
       s.food = 2_500_000;
+      s.unlocked.push("bulkBuying");
       s.owned.forager = 1;
     });
     expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("2.5M");
@@ -205,5 +210,86 @@ describe("GamePage notation", () => {
     expect(screen.getByRole("button", { name: /Hire 100 × Food Acquisition/ })).toHaveTextContent(
       /e\d/,
     );
+  });
+});
+
+describe("GamePage unlocks", () => {
+  it("wakes the Look up button after a few foragers, and shows something small when pressed", async () => {
+    const user = setupWith((s) => {
+      s.owned.forager = 5;
+    });
+    const button = screen.getByRole("button", { name: "Look up" });
+    expect(button).not.toHaveAttribute("aria-disabled");
+    expect(screen.getByText("Something is different about the sky.")).toBeInTheDocument();
+    await user.click(button);
+    expect(screen.getByText(/A number hangs in the sky: \d+\./)).toBeInTheDocument();
+    expect(screen.getByText(/Someone looked up\. They are not saying/)).toBeInTheDocument();
+  });
+
+  it("keeps Look up greyed out with fewer than five foragers", () => {
+    setupWith((s) => {
+      s.owned.forager = 4;
+    });
+    expect(screen.getByRole("button", { name: "Look up" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
+  it("introduces the policies one at a time", () => {
+    setupWith((s) => {
+      s.owned.forager = 10;
+    });
+    expect(screen.getByRole("switch", { name: "Rations Optimisation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Take a rest day" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Extended Shifts" })).not.toBeInTheDocument();
+  });
+
+  it("adds Extended Shifts when the machines arrive", () => {
+    setupWith((s) => {
+      s.stage = 2;
+      s.owned.forager = 10;
+    });
+    expect(screen.getByRole("switch", { name: "Extended Shifts" })).toBeInTheDocument();
+  });
+
+  it("hides the quantity selector until something has been hired ten times", () => {
+    setupWith((s) => {
+      s.food = 100;
+      s.owned.forager = 9;
+    });
+    expect(screen.queryByRole("button", { name: "×10" })).not.toBeInTheDocument();
+  });
+
+  it("shows the quantity selector once an item reaches ten", () => {
+    setupWith((s) => {
+      s.food = 100;
+      s.owned.forager = 10;
+    });
+    expect(screen.getByRole("button", { name: "×10" })).toBeInTheDocument();
+  });
+
+  it("shows Project Horizon once infrastructure is being built, and not before", () => {
+    setupWith((s) => {
+      s.owned.forager = 5;
+    });
+    expect(screen.queryByRole("heading", { name: "Project Horizon" })).not.toBeInTheDocument();
+    cleanup();
+    setupWith((s) => {
+      s.owned.forager = 5;
+      s.infra = 6750;
+    });
+    expect(screen.getByRole("heading", { name: "Project Horizon" })).toBeInTheDocument();
+    expect(screen.getByText("50% complete")).toBeInTheDocument();
+  });
+
+  it("tracks the research project in stage 2", () => {
+    setupWith((s) => {
+      s.stage = 2;
+      s.owned.research = 15;
+    });
+    expect(screen.queryByRole("heading", { name: "Project Horizon" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Accidental Intelligence" })).toBeInTheDocument();
+    expect(screen.getByText("50% complete")).toBeInTheDocument();
   });
 });
