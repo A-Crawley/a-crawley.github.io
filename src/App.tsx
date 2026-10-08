@@ -7,7 +7,7 @@ import {
   Button,
 } from "@mui/material";
 import "./App.css";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseClient } from "./data/supabaseClient";
 import { useEffect, useState } from "react";
 
 const theme = createTheme({
@@ -29,12 +29,6 @@ interface Project {
   timestamp: string;
 }
 
-// Created once at module load rather than on every render.
-const supabaseClient = createClient(
-  import.meta.env.REACT_APP_SUPABASE_URL,
-  import.meta.env.REACT_APP_SUPABASE_KEY,
-);
-
 function App() {
   const [content, setContent] = useState<Project[] | null>(null);
 
@@ -42,6 +36,11 @@ function App() {
     let cancelled = false;
 
     async function fetchData() {
+      const supabaseClient = getSupabaseClient();
+      if (!supabaseClient) {
+        console.warn("Supabase is not configured, so the project list is empty.");
+        return;
+      }
       const { data, error } = await supabaseClient
         .from("things_i_made")
         .select("*")
