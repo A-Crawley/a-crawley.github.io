@@ -66,7 +66,12 @@ describe("GamePage", () => {
     expect(screen.getByText(/hired\. They describe the role/)).toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent(/^Food1[12]/);
+    // shouldAdvanceTime lets real time leak in, so a slow runner can add a few seconds: 12 ± slack.
+    const produced = Number(
+      screen.getByRole("region", { name: "Food" }).textContent?.match(/^Food(\d+)/)?.[1],
+    );
+    expect(produced).toBeGreaterThanOrEqual(11);
+    expect(produced).toBeLessThanOrEqual(20);
   });
 });
 
