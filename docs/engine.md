@@ -231,3 +231,21 @@ a list of ids (`GameState.upgrades`, save version 9).
 An upgrade is revealed (`upgrade:<id>` unlock) once it applies and the player holds half its price,
 and stays. A test checks that every upgrade changes something visible. The sim bot buys only the
 three output upgrades, when they pay back within 10 minutes.
+
+## Developer tools
+
+Open the game with `/game/?dev=1` to turn them on (remembered on that device; `?dev=0` or the
+"Turn off developer tools" button turns them off). They appear as a "Developer tools" section at the
+bottom and change the real save, so export it first if it matters. Nothing shows for anyone else.
+
+- **Skip time** (`skipTime`): plays 1 min, 10 min or 1 hour of game time as if you had been watching.
+- **Let a bot play** (`autoplay`): the simulation's greedy player (efficient, balanced or
+  compassionate) plays on from the current state for 10 minutes, to the start of stage 2 or 3, or to
+  the final choice. A whole game takes under a second. Use it to get to the part you want to test.
+- **Give**: more food and wood, 10 villagers (with beds), full morale and a rest day ready.
+- **Set the drift**: compassionate, neutral or efficient, to check each ending's odds without
+  playing for them.
+- **Readout**: game time, stage, villagers and beds, idle hands, morale, drift, net food, caps.
+
+The logic is in `src/game/dev.ts` (pure, tested); the flag is in `src/game/devMode.ts`. The tools
+mark nothing on the save, so achievements earned with them are real as far as the game knows.

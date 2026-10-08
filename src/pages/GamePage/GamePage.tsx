@@ -20,6 +20,8 @@ import {
   retrainCost,
   staffedOperators,
   capOf,
+  compassionIndex,
+  netFoodRate,
   canRest,
   foodPerClick,
   isAvailable,
@@ -71,6 +73,18 @@ import { ShopItem } from "../../components/ShopItem";
 import { UpgradeList } from "../../components/UpgradeList";
 import { isUpgradeAvailable, upgradeDef, UPGRADES } from "../../game/upgrades.ts";
 import type { UpgradeId } from "../../game/upgrades.ts";
+import { DevTools } from "../../components/DevTools";
+import {
+  addVillagers,
+  autoplay,
+  BOT_NAMES,
+  grantResources,
+  refreshVillage,
+  setDriftKind,
+  skipTime,
+} from "../../game/dev.ts";
+import type { BotName } from "../../game/dev.ts";
+import { readDevMode, DEV_KEY } from "../../game/devMode.ts";
 import { VillagePanel } from "../../components/VillagePanel";
 import { WorkforcePanel } from "../../components/WorkforcePanel";
 
@@ -85,14 +99,18 @@ const SECTIONS: ReadonlyArray<{ title: string; ids: readonly ItemId[] }> = [
 export interface GamePageProps {
   /** Passed to `useGame`. Tests use it to control the clock and storage. */
   options?: UseGameOptions;
+  /** Force developer tools on or off. Defaults to the address and the saved choice. */
+  dev?: boolean;
 }
 
 /** The game screen. A container: it owns the game state and wires it into presentational parts. */
-export function GamePage({ options }: GamePageProps) {
+export function GamePage({ options, dev }: GamePageProps) {
   const game = useGame(options);
   const { settings, setNotation } = useSettings(options?.storage);
   const { state } = game;
   const [quantity, setQuantity] = useState<BuyQuantity>(1);
+  const [devMode, setDevMode] = useState(() => dev ?? readDevMode(window.location.search));
+  const [bot, setBot] = useState<BotName>("balanced");
   const rates = ratesFor(state, state.owned, false);
   // What is on screen comes from the saved unlocks, so it survives a reload.
   const unlocked = (id: Parameters<typeof isUnlocked>[1]) => isUnlocked(state, id);
@@ -126,6 +144,24 @@ export function GamePage({ options }: GamePageProps) {
     earned: state.achievements.includes(a.id),
   }));
   const phase = phaseOf(state);
+  const devReadout = [
+    { label: "Game time", value: formatDuration(state.time) },
+    { label: "Stage", value: String(state.stage) },
+    {
+      label: "Villagers",
+      value: `${state.population} of ${bedsOf(state.owned, state.upgrades)} beds`,
+    },
+    { label: "Idle hands", value: String(idleHands(state)) },
+    { label: "Morale", value: state.morale.toFixed(1) },
+    {
+      label: "Drift",
+      value: `${Math.round(state.drift)} (compassion ${compassionIndex(state.drift).toFixed(2)})`,
+    },
+    { label: "Food per second, net", value: netFoodRate(state).toFixed(2) },
+    { label: "Food cap", value: String(Math.round(capOf(state, "food"))) },
+    { label: "Wood cap", value: String(Math.round(capOf(state, "wood"))) },
+    { label: "Walkouts", value: String(state.walkouts) },
+  ];
   const stats = endStats(state);
   const statRows = [
     { label: "Time played", value: formatDuration(stats.seconds) },
@@ -391,6 +427,47 @@ export function GamePage({ options }: GamePageProps) {
               <NotationPicker value={settings.notation} onChange={setNotation} />
             </AccordionDetails>
           </Accordion>
+          {devMode && (
+            <Accordion disableGutters variant="outlined">
+              <AccordionSummary>Developer tools</AccordionSummary>
+              <AccordionDetails>
+                <DevTools
+                  readout={devReadout}
+                  bots={BOT_NAMES}
+                  bot={bot}
+                  onBotChange={(name) => setBot(name as BotName)}
+                  onSkip={(seconds) => game.apply((s) => skipTime(s, seconds))}
+                  onPlay={(goal) =>
+                    game.apply((s) =>
+                      autoplay(
+                        s,
+                        bot,
+                        goal === "ten-minutes"
+                          ? { kind: "seconds", seconds: 600 }
+                          : goal === "stage-2"
+                            ? { kind: "stage", stage: 2 }
+                            : goal === "stage-3"
+                              ? { kind: "stage", stage: 3 }
+                              : { kind: "choice" },
+                      ),
+                    )
+                  }
+                  onGrant={() => game.apply(grantResources)}
+                  onRefresh={() => game.apply(refreshVillage)}
+                  onVillagers={() => game.apply((s) => addVillagers(s, 10))}
+                  onDrift={(kind) => game.apply((s) => setDriftKind(s, kind))}
+                  onTurnOff={() => {
+                    try {
+                      window.localStorage.removeItem(DEV_KEY);
+                    } catch {
+                      // Nothing to clear when storage is blocked.
+                    }
+                    setDevMode(false);
+                  }}
+                />
+              </AccordionDetails>
+            </Accordion>
+          )}
           <Accordion disableGutters variant="outlined">
             <AccordionSummary>Save and reset</AccordionSummary>
             <AccordionDetails>
