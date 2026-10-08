@@ -20,6 +20,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "sim": "node src/game/sim/cli.ts",
+    "sim:village": "node src/game/sim/village-cli.ts",
     "lint": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
