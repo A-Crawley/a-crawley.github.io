@@ -405,3 +405,21 @@ describe("displaced workers in a save", () => {
     expect(validateState({ ...raw(), operators: -1 }).ok).toBe(false);
   });
 });
+
+describe("upgrades in a save", () => {
+  it("upgrades a version 8 save with none bought", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 8 };
+    delete old.upgrades;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.upgrades).toEqual([]);
+  });
+
+  it("round-trips bought upgrades and rejects unknown or repeated ones", () => {
+    const state = playedState();
+    state.upgrades = ["betterBaskets", "rootCellar"];
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+    expect(validateState({ ...raw(), upgrades: ["nope"] }).ok).toBe(false);
+    expect(validateState({ ...raw(), upgrades: ["rootCellar", "rootCellar"] }).ok).toBe(false);
+    expect(validateState({ ...raw(), upgrades: "rootCellar" }).ok).toBe(false);
+  });
+});

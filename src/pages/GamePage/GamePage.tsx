@@ -11,12 +11,13 @@ import {
   Typography,
 } from "@mui/material";
 import { TOUCH_TARGET } from "../../theme";
-import { CONFIG, DISPLACED, ITEMS } from "../../game/config.ts";
+import { CONFIG, ITEMS } from "../../game/config.ts";
 import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
   BUY_QUANTITIES,
   bedsOf,
   idleHands,
+  retrainCost,
   staffedOperators,
   capOf,
   canRest,
@@ -67,6 +68,9 @@ import { ProjectProgress } from "../../components/ProjectProgress";
 import { ResourceCounter } from "../../components/ResourceCounter";
 import { SaveControls } from "../../components/SaveControls";
 import { ShopItem } from "../../components/ShopItem";
+import { UpgradeList } from "../../components/UpgradeList";
+import { isUpgradeAvailable, upgradeDef, UPGRADES } from "../../game/upgrades.ts";
+import type { UpgradeId } from "../../game/upgrades.ts";
 import { VillagePanel } from "../../components/VillagePanel";
 import { WorkforcePanel } from "../../components/WorkforcePanel";
 
@@ -99,6 +103,17 @@ export function GamePage({ options }: GamePageProps) {
     defs: section.ids
       .map((id) => ITEMS.find((def) => def.id === id))
       .filter((def): def is ItemDef => def !== undefined && visible(def)),
+  }));
+  const offeredUpgrades = UPGRADES.filter((def) =>
+    isUpgradeAvailable(state, def) ? unlocked(`upgrade:${def.id}`) : false,
+  ).map((def) => ({
+    id: def.id,
+    name: def.label,
+    description: def.description,
+    effect: def.effect,
+    cost: def.cost,
+    currency: CURRENCY_NAME[def.currency],
+    affordable: state[def.currency] >= def.cost,
   }));
   const policies = CONFIG.policies;
   const news = useNewAchievements(state.achievements, game.away !== null);
@@ -226,7 +241,7 @@ export function GamePage({ options }: GamePageProps) {
               {unlocked("village") && (
                 <VillagePanel
                   population={state.population}
-                  beds={bedsOf(state.owned)}
+                  beds={bedsOf(state.owned, state.upgrades)}
                   unemployed={unemployed(state)}
                   foodMade={rates.food}
                   foodEaten={upkeepPerSecond(state)}
@@ -237,8 +252,8 @@ export function GamePage({ options }: GamePageProps) {
                 <WorkforcePanel
                   idle={idleHands(state)}
                   operators={staffedOperators(state)}
-                  retrainCost={DISPLACED.retrainFood}
-                  canRetrain={state.food >= DISPLACED.retrainFood}
+                  retrainCost={retrainCost(state)}
+                  canRetrain={state.food >= retrainCost(state)}
                   onRedeploy={game.redeploy}
                   onRetrain={game.retrain}
                   onRelease={game.release}
@@ -288,6 +303,13 @@ export function GamePage({ options }: GamePageProps) {
                     </Box>
                   </Box>
                 ),
+              )}
+              {(offeredUpgrades.length > 0 || state.upgrades.length > 0) && (
+                <UpgradeList
+                  items={offeredUpgrades}
+                  bought={state.upgrades.map((id) => upgradeDef(id).label)}
+                  onBuy={(id) => game.buyUpgrade(id as UpgradeId)}
+                />
               )}
               {(unlocked("policy:rationsOptimisation") ||
                 unlocked("policy:restDay") ||

@@ -1,5 +1,7 @@
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
+import { isUpgradeAvailable, UPGRADES } from "./upgrades.ts";
+import type { UpgradeId } from "./upgrades.ts";
 import { bedsOf, capOf, costOf, idleHands, isAvailable } from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
@@ -25,6 +27,7 @@ export const LOOK_UP_AFTER_FORAGERS = 5;
 
 export type UnlockId =
   | `item:${ItemId}`
+  | `upgrade:${UpgradeId}`
   | "wood"
   | "infra"
   | "village"
@@ -145,14 +148,23 @@ const ITEM_UNLOCKS: readonly UnlockDef[] = ITEMS.map((def) => ({
     return (
       state[def.currency] >= costOf(state, def) * REVEAL_FRACTION &&
       // Beds are only worth offering once the village is nearly full.
-      (def.beds === undefined || bedsOf(state.owned) - state.population <= HOUSING_REVEAL_FREE_BEDS)
+      (def.beds === undefined ||
+        bedsOf(state.owned, state.upgrades) - state.population <= HOUSING_REVEAL_FREE_BEDS)
     );
   },
+}));
+
+/** An upgrade is offered once it applies and the player has half its price, then stays offered. */
+const UPGRADE_UNLOCKS: readonly UnlockDef[] = UPGRADES.map((def) => ({
+  id: `upgrade:${def.id}` as const,
+  when: (state) =>
+    isUpgradeAvailable(state, def) && state[def.currency] >= def.cost * REVEAL_FRACTION,
 }));
 
 /** Every unlock, in the order the player is expected to meet them. */
 export const UNLOCKS: readonly UnlockDef[] = [
   ...ITEM_UNLOCKS,
+  ...UPGRADE_UNLOCKS,
   {
     id: "wood",
     when: (s) => s.wood > 0 || s.owned.woodcutter > 0,
@@ -168,7 +180,8 @@ export const UNLOCKS: readonly UnlockDef[] = [
   },
   {
     id: "housing",
-    when: (s) => s.owned.hut > 0 || s.owned.house > 0 || bedsOf(s.owned) - s.population <= 0,
+    when: (s) =>
+      s.owned.hut > 0 || s.owned.house > 0 || bedsOf(s.owned, s.upgrades) - s.population <= 0,
     log: "The village has run out of beds. A working group has been formed to look at sleeping.",
   },
   {
