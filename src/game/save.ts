@@ -1,4 +1,4 @@
-import { ITEMS } from "./config.ts";
+import { ITEMS, VILLAGE } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { STATE_VERSION } from "./state.ts";
 import type { GameState } from "./state.ts";
@@ -31,7 +31,28 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 3 -> 4: achievements are saved. An old save starts with none; the store awards the ones it has
   // already earned as soon as it loads the save.
   3: (save) => ({ ...save, version: 4, achievements: [] }),
+  // 4 -> 5: the village has people and beds. An old save gets a few spare hands on top of its jobs,
+  // and enough houses for everyone, so nobody is homeless on the day the update arrives.
+  4: migratePopulation,
 };
+
+function migratePopulation(save: RawSave): RawSave {
+  const owned = isRecord(save.owned) ? save.owned : {};
+  const count = (id: string) => (typeof owned[id] === "number" ? (owned[id] as number) : 0);
+  const population = Math.max(
+    VILLAGE.startPopulation,
+    count("forager") + count("woodcutter") + count("builder") + 2,
+  );
+  const house = ITEMS.find((def) => def.id === "house");
+  const houses = Math.max(0, Math.ceil((population - VILLAGE.startBeds) / (house?.beds ?? 25)));
+  return {
+    ...save,
+    version: 5,
+    population,
+    arrivalTimer: 0,
+    owned: { ...owned, hut: 0, house: houses },
+  };
+}
 
 function isRecord(value: unknown): value is RawSave {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -81,6 +102,7 @@ const NON_NEGATIVE_FIELDS = [
   "walkouts",
   "restDays",
   "lastTickAt",
+  "arrivalTimer",
 ] as const;
 
 const POLICY_FIELDS = ["extendedShifts", "rationsOptimisation"] as const;
@@ -109,6 +131,10 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   }
   if (!isFiniteNumber(raw.drift)) return fail("drift");
   if (!isFiniteNumber(raw.morale) || raw.morale < 0 || raw.morale > 100) return fail("morale");
+
+  if (!isFiniteNumber(raw.population) || !Number.isInteger(raw.population) || raw.population < 0) {
+    return fail("population");
+  }
 
   if (!isRecord(raw.owned)) return fail("owned");
   const owned = {} as Record<ItemId, number>;
@@ -167,6 +193,8 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       walkoutReadyAt: raw.walkoutReadyAt as number,
       walkouts: raw.walkouts as number,
       restDays: raw.restDays as number,
+      population: raw.population,
+      arrivalTimer: raw.arrivalTimer as number,
       unlocked,
       ending,
       achievements,

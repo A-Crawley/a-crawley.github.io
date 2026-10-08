@@ -2,6 +2,7 @@ import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemDef } from "./config.ts";
 import {
   advanceStage,
+  bedsOf,
   bulkCostOf,
   buy,
   buyMany,
@@ -12,6 +13,7 @@ import {
   costOf,
   createState,
   idleVillagers,
+  isAvailable,
   isFinished,
   isResting,
   itemDef,
@@ -21,6 +23,7 @@ import {
   ratesFor,
   startRestDay,
   step,
+  unemployed,
 } from "./engine.ts";
 import type { SimState } from "./engine.ts";
 
@@ -296,6 +299,7 @@ describe("bulk buying", () => {
 
   it("can afford exactly the budget it has", () => {
     const state = createState();
+    state.population = 20;
     const forager = itemDef("forager");
     state.food = bulkCostOf(state, forager, 10);
     expect(maxAffordableOf(state, forager)).toBe(10);
@@ -342,5 +346,70 @@ describe("bulk buying", () => {
     buyMany(state, forager, 10);
     expect(state.owned.forager).toBe(10);
     expect(state.food).toBeCloseTo(1000 - expected, 9);
+  });
+});
+
+describe("the village", () => {
+  it("starts with a few people and ten beds", () => {
+    const state = createState();
+    expect(state.population).toBe(3);
+    expect(bedsOf(state.owned)).toBe(10);
+    expect(unemployed(state)).toBe(3);
+  });
+
+  it("gains a villager every few seconds while there is a free bed", () => {
+    const state = createState();
+    for (let i = 0; i < 4; i++) step(state);
+    expect(state.population).toBe(4);
+    for (let i = 0; i < 8; i++) step(state);
+    expect(state.population).toBe(6);
+  });
+
+  it("stops at the number of beds, and starts again when a hut is built", () => {
+    const state = createState();
+    for (let i = 0; i < 200; i++) step(state);
+    expect(state.population).toBe(10);
+    state.owned.hut = 1;
+    for (let i = 0; i < 40; i++) step(state);
+    expect(state.population).toBe(15);
+  });
+
+  it("counts a villager as free again when a machine takes over the job", () => {
+    const state = createState();
+    state.population = 5;
+    state.owned.forager = 5;
+    expect(unemployed(state)).toBe(0);
+    state.owned.autoForager = 2;
+    expect(unemployed(state)).toBe(2);
+  });
+
+  it("never reports a negative number of free villagers", () => {
+    const state = createState();
+    state.owned.forager = 50;
+    expect(unemployed(state)).toBe(0);
+  });
+
+  it("limits job purchases to the free villagers, but not machines", () => {
+    const state = createState();
+    expect(purchaseLimit(state, itemDef("forager"))).toBe(3);
+    state.stage = 2;
+    expect(purchaseLimit(state, itemDef("autoForager"))).toBe(Infinity);
+  });
+
+  it("offers houses only to a village of 25, and keeps offering them once built", () => {
+    const state = createState();
+    expect(isAvailable(state, itemDef("house"))).toBe(false);
+    state.population = 25;
+    expect(isAvailable(state, itemDef("house"))).toBe(true);
+    state.population = 10;
+    state.owned.house = 1;
+    expect(isAvailable(state, itemDef("house"))).toBe(true);
+  });
+
+  it("adds up beds from every kind of housing", () => {
+    const state = createState();
+    state.owned.hut = 2;
+    state.owned.house = 3;
+    expect(bedsOf(state.owned)).toBe(10 + 2 * 5 + 3 * 25);
   });
 });

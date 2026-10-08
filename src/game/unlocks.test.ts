@@ -1,9 +1,10 @@
 import { buyItem, gatherFood } from "./actions.ts";
 import { CONFIG } from "./config.ts";
 import { canAfford } from "./engine.ts";
-import { chooseTarget, STRATEGIES } from "./sim/player.ts";
+import { chooseNext, STRATEGIES } from "./sim/player.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
+import { logLines } from "./log.ts";
 import { tick } from "./tick.ts";
 import {
   applyUnlocks,
@@ -221,7 +222,7 @@ describe("through play", () => {
       state = tick(state, now);
       for (let i = 0; i < CONFIG.clicksPerSecond; i++) state = gatherFood(state);
       for (;;) {
-        const target = chooseTarget(state);
+        const target = chooseNext(state).item;
         if (!target || !canAfford(state, target)) break;
         const next = buyItem(state, target.id);
         if (next === state) break;
@@ -256,7 +257,8 @@ describe("through play", () => {
     }
     // Early on, something new turns up within the first few minutes.
     expect(at("lookUp")).toBeLessThan(5 * 60);
-    expect(at("horizon")).toBeLessThan(10 * 60);
+    // Beds now compete with builders for the early food and wood, so Horizon comes a little later.
+    expect(at("horizon")).toBeLessThan(15 * 60);
     // Nothing leaves a gap of more than half an hour once the game is under way (a perfect bot
     // plays far faster than a person, so a person only sees these later).
     const times = [...metAt.values()].sort((a, b) => a - b);
@@ -308,3 +310,29 @@ function stateWith(
   Object.assign(state.owned, owned);
   return state;
 }
+
+describe("housing reveal", () => {
+  it("is offered once the village is nearly full and there is food to pay for it", () => {
+    const state = fresh();
+    state.food = 60;
+    state.population = 5;
+    expect(withUnlocks(state).unlocked).not.toContain("item:hut");
+    state.population = 9;
+    expect(withUnlocks(state).unlocked).toContain("item:hut");
+  });
+
+  it("logs the first time the village runs out of beds, once", () => {
+    const state = fresh();
+    state.population = 10;
+    const next = withUnlocks(state);
+    expect(next.unlocked).toContain("housing");
+    expect(logLines(next).some((line) => /run out of beds/.test(line.text))).toBe(true);
+  });
+
+  it("shows the village line from the first job", () => {
+    const state = fresh();
+    expect(withUnlocks(state).unlocked).not.toContain("village");
+    state.owned.forager = 1;
+    expect(withUnlocks(state).unlocked).toContain("village");
+  });
+});

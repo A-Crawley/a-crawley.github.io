@@ -15,6 +15,8 @@ export interface ShopItemProps {
   /** What one unit produces, e.g. "0.4 food per second". */
   output: string;
   affordable: boolean;
+  /** Why it can't be bought even when the player could pay, e.g. nobody free to hire. */
+  blockedReason?: string;
   onBuy: () => void;
 }
 
@@ -29,6 +31,7 @@ export function ShopItem({
   currency,
   output,
   affordable,
+  blockedReason,
   onBuy,
 }: ShopItemProps) {
   const format = useNumberFormat();
@@ -59,6 +62,11 @@ export function ShopItem({
         <Typography variant="body2" color="text.secondary">
           Makes {output}
         </Typography>
+        {blockedReason && (
+          <Typography variant="body2" color="secondary.main">
+            {blockedReason}
+          </Typography>
+        )}
       </Box>
       <Button
         variant="contained"

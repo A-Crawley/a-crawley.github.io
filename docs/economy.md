@@ -122,6 +122,15 @@ Peak population is 171 to 177, all of it in stage 1. No run goes hungry.
 `VILLAGE` in `src/game/sim/village.ts`: start 3 villagers and 10 beds; upkeep 0.15; Rations upkeep ×0.7;
 arrival every 4 s with fewer than 2 idle; hunger grace 20 s; Hut and House as above.
 
+### Landed in the engine (GAME-23, GAME-25)
+
+Population, arrivals and housing are now in the game itself, not a wrapper, and `npm run sim` includes them.
+Arrivals changed from the prototype: villagers now fill every free bed (one per 4 s), rather than following demand,
+so bulk buying still works and the player decides the size of the village by building beds. Without upkeep yet
+(GAME-24) the three strategies finish in 123 (balanced), 122 (efficient) and 126 (compassionate) minutes, with a
+peak population of 185 to 195, 4 to 6 minutes of waiting for villagers and 1 to 3 minutes of waiting with every bed
+full. Upkeep will add to these; the prototype put it at about 6 to 8 minutes.
+
 ### Open for the later tickets
 
 - Population loss when starving (GAME-24) is not modelled: no run goes hungry, so it never triggers.
