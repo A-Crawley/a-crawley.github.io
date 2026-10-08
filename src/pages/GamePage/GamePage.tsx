@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { TOUCH_TARGET } from "../../theme";
 import { CONFIG, ITEMS } from "../../game/config.ts";
 import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
@@ -112,7 +113,12 @@ export function GamePage({ options }: GamePageProps) {
           <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
             Look Up
           </Typography>
-          <Link href="../" color="text.secondary" underline="hover">
+          <Link
+            href="../"
+            color="text.secondary"
+            underline="hover"
+            sx={{ display: "inline-flex", alignItems: "center", minHeight: TOUCH_TARGET }}
+          >
             Back to a-crawley.com
           </Link>
         </Box>

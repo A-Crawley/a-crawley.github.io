@@ -25,4 +25,9 @@ describe("EventLog", () => {
     render(<EventLog title="Village log" lines={[]} />);
     expect(within(screen.getByRole("log")).queryAllByRole("listitem")).toHaveLength(0);
   });
+
+  it("keeps a real list inside the live region", () => {
+    render(<EventLog title="Village log" lines={[{ id: "a", text: "One." }]} />);
+    expect(within(screen.getByRole("log")).getByRole("list")).toBeInTheDocument();
+  });
 });
