@@ -20,24 +20,25 @@ export function EventLog({ title, lines }: EventLogProps) {
         {title}
       </Typography>
       <Box
-        component="ul"
         role="log"
         aria-labelledby="event-log-title"
         aria-live="polite"
         aria-relevant="additions"
-        sx={{ m: 0, p: 0, mt: 1 }}
+        sx={{ mt: 1 }}
       >
-        {newestFirst.map((line, index) => (
-          <Typography
-            key={line.id}
-            component="li"
-            variant="body2"
-            color={index === 0 ? "text.primary" : "text.secondary"}
-            sx={{ listStyle: "none", py: 0.5 }}
-          >
-            {line.text}
-          </Typography>
-        ))}
+        <Box component="ul" sx={{ m: 0, p: 0 }}>
+          {newestFirst.map((line, index) => (
+            <Typography
+              key={line.id}
+              component="li"
+              variant="body2"
+              color={index === 0 ? "text.primary" : "text.secondary"}
+              sx={{ listStyle: "none", py: 0.5 }}
+            >
+              {line.text}
+            </Typography>
+          ))}
+        </Box>
       </Box>
     </Box>
   );

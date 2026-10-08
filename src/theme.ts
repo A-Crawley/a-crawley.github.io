@@ -3,15 +3,19 @@ import { createTheme } from "@mui/material/styles";
 /** Hides content visually but keeps it available to screen readers. */
 export const visuallyHidden = {
   position: "absolute",
-  width: 1,
-  height: 1,
-  margin: -1,
+  // Explicit px: in `sx`, a bare 1 means 100%, which made this wider than the screen.
+  width: "1px",
+  height: "1px",
+  margin: "-1px",
   padding: 0,
   overflow: "hidden",
   clip: "rect(0 0 0 0)",
   whiteSpace: "nowrap",
   border: 0,
 } as const;
+
+/** Smallest height, in px, of anything the player taps. */
+export const TOUCH_TARGET = 44;
 
 /**
  * Theme for the game. A dusk-lit village: deep blue-green ground, warm lamplight for the things the
@@ -30,5 +34,13 @@ export const gameTheme = createTheme({
   typography: {
     fontFamily: '"Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif',
     button: { textTransform: "none", fontWeight: 600 },
+  },
+  components: {
+    // Every control is at least 44 px tall, the size a thumb can hit reliably.
+    MuiButton: { styleOverrides: { root: { minHeight: TOUCH_TARGET } } },
+    MuiToggleButton: {
+      styleOverrides: { root: { minHeight: TOUCH_TARGET, minWidth: TOUCH_TARGET } },
+    },
+    MuiFormControlLabel: { styleOverrides: { root: { minHeight: TOUCH_TARGET } } },
   },
 });
