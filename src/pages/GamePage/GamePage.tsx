@@ -4,6 +4,7 @@ import {
   AccordionSummary,
   Alert,
   Box,
+  Link,
   Stack,
   Typography,
 } from "@mui/material";
@@ -38,9 +39,14 @@ export function GamePage({ options }: GamePageProps) {
 
   return (
     <Box component="main" sx={{ maxWidth: 560, mx: "auto", px: 2, py: 3 }}>
-      <Typography component="h1" variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-        Look Up
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 2 }}>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
+          Look Up
+        </Typography>
+        <Link href="../" color="text.secondary" underline="hover">
+          Back to a-crawley.com
+        </Link>
+      </Box>
       <Stack spacing={3}>
         {game.loadStatus === "corrupt" && (
           <Alert severity="warning">

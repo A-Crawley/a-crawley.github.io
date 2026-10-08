@@ -10,10 +10,10 @@ export default defineConfig({
     // Same output folder the deploy workflow publishes.
     outDir: "build",
     rollupOptions: {
-      // The landing page, plus the game at /game.html (linked from the site in GAME-14).
+      // The landing page, plus the game at /game/ (linked from the home page).
       input: {
         main: fileURLToPath(new URL("index.html", import.meta.url)),
-        game: fileURLToPath(new URL("game.html", import.meta.url)),
+        game: fileURLToPath(new URL("game/index.html", import.meta.url)),
       },
     },
   },
