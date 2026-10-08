@@ -1,3 +1,4 @@
+import { CONFIG } from "./config.ts";
 import type { Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
 import { isFinished } from "./engine.ts";
@@ -18,6 +19,8 @@ export interface AwaySummary {
   countedSeconds: number;
   /** True when the away time went over the cap, so some of it did not count. */
   capped: boolean;
+  /** How fast the village worked while away, as a fraction of normal (see CONFIG.offlineRate). */
+  rate: number;
   /** What the village produced. Never negative. */
   gained: { food: number; wood: number; infra: number };
   /** Policies that were on when the player left and were switched off. */
@@ -41,6 +44,8 @@ const POLICY_KEYS: ReadonlyArray<keyof Policies> = ["extendedShifts", "rationsOp
  *   morale or pushes the hidden drift. Nobody is there to run them.
  * - Without policies, morale can't fall low enough for a walkout (even with every villager laid
  *   off it settles around 50), so nothing like that happens while away.
+ * - Away time is credited at CONFIG.offlineRate (a quarter), so 8 hours away is 2 hours of village
+ *   time. This keeps a long absence from skipping a game meant to take about 2 hours.
  * - At most MAX_AWAY_SECONDS is replayed, using the same step-by-step `tick`, so morale, walkouts
  *   and stage changes all work as they do when playing. Time beyond the cap is dropped, not saved
  *   up for later.
@@ -60,7 +65,9 @@ export function catchUp(state: GameState, now: number): CatchUp {
   const policiesEnded = POLICY_KEYS.filter((key) => departed.policies[key]);
   for (const key of policiesEnded) departed.policies[key] = false;
 
-  const returned = tick(departed, state.lastTickAt + countedSeconds * 1000);
+  // The village works at a fraction of normal speed while nobody is watching.
+  const creditedSeconds = countedSeconds * CONFIG.offlineRate;
+  const returned = tick(departed, state.lastTickAt + creditedSeconds * 1000);
   // Time past the cap is let go, and play resumes from now.
   returned.lastTickAt = Math.max(now, returned.lastTickAt);
 
@@ -70,6 +77,7 @@ export function catchUp(state: GameState, now: number): CatchUp {
       awaySeconds,
       countedSeconds,
       capped: awaySeconds > MAX_AWAY_SECONDS,
+      rate: CONFIG.offlineRate,
       gained: {
         food: Math.max(0, returned.food - state.food),
         wood: Math.max(0, returned.wood - state.wood),
@@ -88,6 +96,7 @@ export function mergeAway(earlier: AwaySummary, later: AwaySummary): AwaySummary
     awaySeconds: earlier.awaySeconds + later.awaySeconds,
     countedSeconds: earlier.countedSeconds + later.countedSeconds,
     capped: earlier.capped || later.capped,
+    rate: later.rate,
     gained: {
       food: earlier.gained.food + later.gained.food,
       wood: earlier.gained.wood + later.gained.wood,

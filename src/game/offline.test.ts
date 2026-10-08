@@ -7,6 +7,7 @@ import { tick } from "./tick.ts";
 
 const START = 1_700_000_000_000;
 const at = (seconds: number) => START + seconds * 1000;
+const RATE = CONFIG.offlineRate;
 
 function village(): GameState {
   const state = createGameState(START);
@@ -44,13 +45,15 @@ describe("catchUp: being away", () => {
     const seconds = 2 * 60 * 60;
     const { state: after, away } = catchUp(state, at(seconds));
     const rates = ratesFor(state, state.owned, false);
-    expect(after.food).toBeCloseTo(rates.food * seconds, 3);
-    expect(after.wood).toBeCloseTo(rates.wood * seconds, 3);
-    expect(after.infra).toBeCloseTo(rates.infra * seconds, 3);
+    // Away time is credited at a fraction of normal speed.
+    expect(after.food).toBeCloseTo(rates.food * seconds * RATE, 3);
+    expect(after.wood).toBeCloseTo(rates.wood * seconds * RATE, 3);
+    expect(after.infra).toBeCloseTo(rates.infra * seconds * RATE, 3);
     expect(away).toMatchObject({
       awaySeconds: seconds,
       countedSeconds: seconds,
       capped: false,
+      rate: RATE,
       stageFrom: 1,
       stageTo: 1,
     });
@@ -67,7 +70,10 @@ describe("catchUp: being away", () => {
     // No morale or drift cost, and no bonus output either.
     expect(after.morale).toBe(100);
     expect(after.drift).toBe(0);
-    expect(after.food).toBeCloseTo(ratesFor(village(), village().owned, false).food * 3600, 3);
+    expect(after.food).toBeCloseTo(
+      ratesFor(village(), village().owned, false).food * 3600 * RATE,
+      3,
+    );
   });
 
   it("lists only the policies that were actually on", () => {
@@ -86,6 +92,29 @@ describe("catchUp: being away", () => {
   });
 });
 
+describe("catchUp: the offline rate", () => {
+  it("is a quarter, so a long absence cannot skip the game", () => {
+    expect(RATE).toBe(0.25);
+  });
+
+  it("credits a fraction of the time away, in game time as well as output", () => {
+    const state = village();
+    const { state: after } = catchUp(state, at(4000));
+    expect(after.time).toBeCloseTo(4000 * RATE, 5);
+  });
+
+  it("takes four times as long away to earn what playing earns", () => {
+    const played = tick(village(), at(1000));
+    const away = catchUp(village(), at(4000)).state;
+    expect(away.food).toBeCloseTo(played.food, 3);
+  });
+
+  it("makes 8 hours away worth 2 hours of village time", () => {
+    const { state: after } = catchUp(village(), at(MAX_AWAY_SECONDS));
+    expect(after.time).toBeCloseTo(2 * 60 * 60, 3);
+  });
+});
+
 describe("catchUp: the cap", () => {
   it("counts exactly the cap when the gap is exactly the cap", () => {
     const { away } = catchUp(village(), at(MAX_AWAY_SECONDS));
@@ -96,7 +125,7 @@ describe("catchUp: the cap", () => {
     const state = village();
     const { state: after, away } = catchUp(state, at(3 * MAX_AWAY_SECONDS));
     const rates = ratesFor(state, state.owned, false);
-    expect(after.food).toBeCloseTo(rates.food * MAX_AWAY_SECONDS, 2);
+    expect(after.food).toBeCloseTo(rates.food * MAX_AWAY_SECONDS * RATE, 2);
     expect(away).toMatchObject({
       awaySeconds: 3 * MAX_AWAY_SECONDS,
       countedSeconds: MAX_AWAY_SECONDS,
@@ -157,7 +186,9 @@ describe("catchUp: things that happen while away", () => {
     state.policies.extendedShifts = true;
     const off = structuredClone(state);
     off.policies.extendedShifts = false;
-    const reference = tick(off, at(5000));
+    // The village is credited RATE × 5000 seconds, then play resumes from now.
+    const reference = tick(off, at(5000 * RATE));
+    reference.lastTickAt = at(5000);
     const { state: after } = catchUp(state, at(5000));
     expect(after).toEqual(reference);
   });

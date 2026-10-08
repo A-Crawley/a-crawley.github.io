@@ -14,7 +14,7 @@ truth, this page explains the model and records what it showed.
 - **Jobs (stage 1):** Forager (food, costs food), Woodcutter (wood, costs food), Builder (infrastructure, costs wood).
 - **Machines (stage 2):** Automated forager (costs food), Sawmill bot and Builder drone (cost wood). Each takes over one villager's job. The laid-off villager stops producing and drains morale.
 - **Morale:** recovers 2% of the gap to 100 per second. Output scales from ×0.5 at 0 morale to ×1 at 100. Below 30, a walkout halves output for 45 seconds and resets morale to 45, with a 120 second cooldown.
-- **Policies:** Extended Shifts (×1.35 output, drains morale, drifts to efficiency), Rations Optimisation (food prices ×0.8, drains morale, drifts to efficiency), Rest Day (output stops for 30 seconds, morale +30, drifts to compassion, 150 second cooldown).
+- **Policies:** Extended Shifts (×1.35 output, drains morale, drifts to efficiency), Rations Optimisation (food prices ×0.8, drains morale, drifts to efficiency), Rest Day (output stops for 8 seconds, morale +30, drifts to compassion, 150 second cooldown).
 - **Stage goals:** stage 1 ends at 13,500 infrastructure. Stage 2 ends after 30 research levels (paid in food). The sim cracks and infrastructure resets to zero. Stage 3 ends after 22 exploits (paid in infrastructure).
 - **Drift and odds:** raw drift points (negative is efficiency) become a compassion index from 0 to 1. Conquest odds are 15% plus 70% times that index, so a compassionate run meets a gentler rival.
 - **The player:** buys whichever item pays back fastest, waiting until it is affordable. Payback values each currency per stage (infrastructure is worth nothing in stage 2, food barely matters in stage 3). Once the best item pays back slower than 400 seconds (stage 2) or 300 seconds (stage 3), the player saves for the stage-ending purchase instead.
@@ -25,7 +25,7 @@ truth, this page explains the model and records what it showed.
 | ------------- | ------- | ------- | ------- | ------- | -------- | ---------- | ------------- |
 | Efficient     | 63 min  | 38 min  | 20 min  | 121 min | 29       | 16%        | 26%           |
 | Balanced      | 59 min  | 45 min  | 18 min  | 122 min | 0        | 39%        | 42%           |
-| Compassionate | 85 min  | 54 min  | 21 min  | 159 min | 0        | 90%        | 78%           |
+| Compassionate | 72 min  | 45 min  | 8 min   | 124 min | 0        | 81%        | 72%           |
 
 Target split was 60 / 40 / 20 minutes. The balanced run lands at 59 / 45 / 18. The longest wait between
 purchases is just under 5 minutes (stage 2, compassionate) and under 3.5 minutes in stage 3.
@@ -43,14 +43,21 @@ purchases is just under 5 minutes (stage 2, compassionate) and under 3.5 minutes
 - **Unemployment needs a cap.** Uncapped, laid-off villagers drove morale to zero in every run. It is capped at
   1 morale per second.
 
-## Findings for the balance pass (GAME-18)
+## Balance pass (GAME-18)
 
-- **Efficiency is not rewarded.** The efficient run takes as long as the balanced run (121 versus 122 minutes) and
-  suffers 29 walkouts. Either efficiency should be clearly faster, or that is the joke: grinding people gets you
-  nowhere. Decide which.
-- **Compassion is expensive.** It adds about 37 minutes, mostly in stage 1 where rest days pause income. Possibly
-  too much of a penalty for the "good" path.
-- **Stage 1 is 170+ purchases** and is the longest stage in every run. Check it is not a long stretch of near-identical decisions.
-- The greedy player ignores morale. A smarter player (or manual playtesting) may manage morale better than these
-  three strategies.
-- Rest day behaviour is untested against a real player's attention: the model assumes it is always used at the optimal moment.
+Decisions (Andrew), with what changed:
+
+- **Efficiency is not a faster way to play.** Efficient and balanced runs finish within 1% of each other (121.4 and 121.7 minutes). That is deliberate: grinding people gets you walkouts (29 in the efficient run) and the worst odds at the exit (26% Conquest), not a better time. A test keeps the two within 5%.
+- **Kindness costs no extra time.** The first prototype made a fully compassionate run 159 minutes against 122 balanced, mostly from 30 second rest days. Rest days now stop output for 8 seconds, giving 124 minutes (+2%), and Conquest odds of 72%. A test keeps compassionate within 5% of balanced.
+- **Away time counts at 25%** (`CONFIG.offlineRate`), up to the 8 hour cap. Eight hours away is worth 2 hours of village time, so a long absence helps but cannot skip the game. The "welcome back" dialog says the village worked at reduced speed.
+- **Length:** every strategy lands between 121 and 124 minutes; a test keeps all of them between 105 and 140.
+- **Pacing:** the longest wait between purchases is 275 seconds (stage 2). A test keeps it under 6 minutes. No tier is dead, and every item is bought in every strategy.
+
+Parameters live in `src/game/config.ts`; the comments there explain the changed values.
+
+### Still open (needs a person at the keyboard)
+
+- **Stage split:** compassionate play spends 72 / 45 / 8 minutes in the three stages, against 59 / 45 / 18 for balanced. Stage 3 is short for kind play. Worth watching in a hand playthrough.
+- **Stage 1 is 170+ purchases** and the longest stage in every run. Check by hand that it is not a stretch of near-identical decisions.
+- The greedy player ignores morale and always uses rest days at the best moment, so a real player's times will be longer. The ticket's "simulated and hand-played timelines agree" check is not done: nobody has played a full run by hand yet.
+- Offline rate and rest day length are tuned against the greedy player. A real player's feel is the test.

@@ -72,6 +72,27 @@ describe("full playthrough", () => {
     expect(results.balanced.conquestOdds).toBeGreaterThan(results.efficient.conquestOdds);
   });
 
+  // GAME-18 decisions: efficiency is not a faster way to play (that is the joke: grinding people gets
+  // you nowhere, and costs you the ending), and kindness costs no extra time.
+  it("does not make efficient play faster than balanced play, nor slower", () => {
+    const ratio = results.efficient.totalSeconds / results.balanced.totalSeconds;
+    expect(ratio).toBeGreaterThan(0.95);
+    expect(ratio).toBeLessThan(1.05);
+  });
+
+  it("lets compassionate play finish within 5% of balanced play", () => {
+    const ratio = results.compassionate.totalSeconds / results.balanced.totalSeconds;
+    expect(ratio).toBeGreaterThan(0.95);
+    expect(ratio).toBeLessThan(1.05);
+  });
+
+  it("keeps every strategy close to the 2 hour target", () => {
+    for (const result of Object.values(results)) {
+      expect(result.totalSeconds / 60).toBeGreaterThan(105);
+      expect(result.totalSeconds / 60).toBeLessThan(140);
+    }
+  });
+
   it("makes the efficient strategy suffer walkouts and the compassionate one rest", () => {
     expect(results.efficient.walkouts).toBeGreaterThan(0);
     expect(results.compassionate.restDays).toBeGreaterThan(0);
