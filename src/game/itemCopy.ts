@@ -11,7 +11,11 @@ export interface ItemCopy {
   output: string;
 }
 
-/** The words on the shop for each item. The numbers come from CONFIG so they can't drift. */
+/**
+ * The words on the shop for each item. The numbers come from CONFIG so they can't drift. Per-unit
+ * outputs are all under 100 a second, which every notation writes the same way, so they don't
+ * need the player's notation.
+ */
 export const ITEM_COPY: Record<ItemId, ItemCopy> = {
   forager: {
     action: "Hire",

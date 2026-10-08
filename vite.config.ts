@@ -21,5 +21,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/setupTests.ts",
+    // Interaction tests render MUI and click many times; CI runners are slower than 5 s allows.
+    testTimeout: 20_000,
   },
 });

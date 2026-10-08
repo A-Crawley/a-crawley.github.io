@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NotationProvider } from "../NotationProvider";
 import { AwaySummaryDialog } from "./AwaySummaryDialog";
 import type { AwaySummary } from "../../game/offline.ts";
 
@@ -82,5 +83,16 @@ describe("AwaySummaryDialog", () => {
     render(<AwaySummaryDialog summary={base} onClose={onClose} />);
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("writes the gains in the chosen notation", () => {
+    render(
+      <NotationProvider notation="scientific">
+        <AwaySummaryDialog summary={base} onClose={() => {}} />
+      </NotationProvider>,
+    );
+    expect(screen.getByRole("list", { name: "Gained while away" })).toHaveTextContent(
+      "Food+3.20e3",
+    );
   });
 });

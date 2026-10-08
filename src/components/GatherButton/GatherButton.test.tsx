@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NotationProvider } from "../NotationProvider";
 import { GatherButton } from "./GatherButton";
 
 describe("GatherButton", () => {
@@ -34,5 +35,15 @@ describe("GatherButton", () => {
     const button = screen.getByRole("button", { name: "Gather food" });
     for (let i = 0; i < 20; i++) await userEvent.click(button);
     expect(screen.getAllByText("+1")).toHaveLength(6);
+  });
+
+  it("writes the pop-up in the chosen notation", async () => {
+    render(
+      <NotationProvider notation="scientific">
+        <GatherButton label="Gather food" gain={5000} onGather={() => {}} />
+      </NotationProvider>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Gather food" }));
+    expect(screen.getByText("+5.00e3")).toBeInTheDocument();
   });
 });

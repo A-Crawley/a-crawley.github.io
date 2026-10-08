@@ -1,5 +1,5 @@
 import { Box, Button, Typography } from "@mui/material";
-import { formatAmount } from "../../game/format.ts";
+import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 
 export interface ShopItemProps {
   name: string;
@@ -31,6 +31,7 @@ export function ShopItem({
   affordable,
   onBuy,
 }: ShopItemProps) {
+  const format = useNumberFormat();
   return (
     <Box
       component="li"
@@ -49,7 +50,7 @@ export function ShopItem({
         <Typography component="h3" sx={{ fontWeight: 700 }}>
           {name}{" "}
           <Typography component="span" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-            × {owned}
+            × {format.amount(owned)}
           </Typography>
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -77,7 +78,7 @@ export function ShopItem({
         {actionLabel}
         {count > 1 ? ` ×${count}` : ""}
         <Typography component="span" variant="caption">
-          {formatAmount(cost)} {currency}
+          {format.amount(cost)} {currency}
         </Typography>
       </Button>
     </Box>
