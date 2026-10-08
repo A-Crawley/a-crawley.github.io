@@ -23,6 +23,7 @@ import {
   isHungry,
   isJob,
   isResting,
+  moraleDrivers,
   isWalkingOut,
   quotePurchase,
   ratesFor,
@@ -30,7 +31,13 @@ import {
   upkeepPerSecond,
 } from "../../game/engine.ts";
 import type { BuyQuantity } from "../../game/engine.ts";
-import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS, sighting } from "../../game/itemCopy.ts";
+import {
+  CURRENCY_NAME,
+  ITEM_COPY,
+  MORALE_DRIVER_LABELS,
+  POLICY_LABELS,
+  sighting,
+} from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
@@ -190,6 +197,10 @@ export function GamePage({ options }: GamePageProps) {
               {unlocked("morale") && (
                 <MoraleMeter
                   morale={state.morale}
+                  reasons={moraleDrivers(state).map((d) => ({
+                    label: MORALE_DRIVER_LABELS[d.id],
+                    lifting: d.perSecond > 0,
+                  }))}
                   status={
                     isResting(state) ? "resting" : isWalkingOut(state) ? "walkout" : undefined
                   }

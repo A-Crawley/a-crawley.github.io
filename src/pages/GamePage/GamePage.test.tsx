@@ -532,3 +532,14 @@ describe("GamePage storage", () => {
     expect(screen.getByRole("region", { name: "Food" })).not.toHaveTextContent("Store");
   });
 });
+
+describe("GamePage morale reasons", () => {
+  it("says why morale is falling", () => {
+    setupWith((s) => {
+      s.owned.forager = 3;
+      s.population = 10;
+      s.food = 100;
+    });
+    expect(screen.getByRole("region", { name: "Morale" })).toHaveTextContent("Falling: Crowded");
+  });
+});

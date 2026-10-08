@@ -35,4 +35,25 @@ describe("MoraleMeter", () => {
     rerender(<MoraleMeter morale={50} status="walkout" />);
     expect(screen.getByText(/Walkout/)).toBeInTheDocument();
   });
+
+  it("names the top two reasons morale is moving, falling and rising apart", () => {
+    render(
+      <MoraleMeter
+        morale={70}
+        reasons={[
+          { label: "Hungry", lifting: false },
+          { label: "Well fed", lifting: true },
+          { label: "Crowded", lifting: false },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Falling: Hungry")).toBeInTheDocument();
+    expect(screen.getByText("Rising: Well fed")).toBeInTheDocument();
+    expect(screen.queryByText(/Crowded/)).not.toBeInTheDocument();
+  });
+
+  it("shows no reasons line when nothing is moving it", () => {
+    render(<MoraleMeter morale={100} />);
+    expect(screen.queryByText(/Falling|Rising/)).not.toBeInTheDocument();
+  });
 });

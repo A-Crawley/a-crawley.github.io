@@ -16,6 +16,8 @@ function village(): GameState {
   state.owned.builder = 2;
   // A full village, so nobody arrives and the upkeep stays the same while time passes.
   state.population = 10;
+  state.owned.hut = 1; // a spare bed: being full would dent morale
+  state.arrivalTimer = -Infinity;
   // Room for everything made while away; storage has its own tests.
   state.owned.granary = 200;
   state.owned.woodshed = 200;

@@ -168,3 +168,10 @@ builds storage and still loses a little to the ceiling: runs went from 124.5 / 1
 (efficient / balanced / compassionate) to 126.7 / 131.6 / 136.0, compassionate 3.3% over balanced
 (guard is 5%). A real player who builds storage will land at or under the old numbers. Offline,
 a long absence now fills the store and stops: the stores are what you come back to.
+
+## Morale drivers (GAME-28)
+
+First pass at 0.1/s crowding and 0.05/s overdue rest (starting at 15 min) made compassionate 7.5%
+slower than balanced and the run 143 min. Lowered to 0.04/s and 0.02/s (from 20 min): run lengths
+125.0 / 129.8 / 134.1 min (efficient / balanced / compassionate), compassionate 3.3% over balanced.
+The efficient bot still walks out about 30 times, as before: extended shifts dominate its morale.
