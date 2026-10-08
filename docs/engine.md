@@ -62,3 +62,14 @@ touches it through `src/hooks/useGame.ts`.
 - **The summary:** `AwaySummary` (time away, time counted, whether capped, food, wood and infrastructure gained, policies that ended, stage before and after) is kept in the store until the player dismisses it (`getAway`, `dismissAway`). Two unseen summaries merge. It is not saved. `AwaySummaryDialog` shows it.
 - **Achievements and unlocks** during catch-up: there are none yet. What the shop reveals is derived from state, so it just appears. GAME-17 should record achievements from the state after `catchUp`, not from events.
 - **Balance note:** 8 hours of output is far more than the whole game's 2 hours of play, so a long absence can fund a lot on return. Flagged for GAME-18; an offline efficiency multiplier is the usual lever.
+
+## Number formatting (GAME-8)
+
+`formatAmount(value, notation)` and `formatRate(perSecond, notation)` in `format.ts` are the only places numbers are turned into text for resources. Components get them through `useNumberFormat()`, which reads the player's notation from context (`NotationProvider`), so no component needs to be told which notation to use.
+
+- **Notations:** `short` (1.2K, 3.4M, 5B, 6T, then 1aa, 1ab ... 1az, 1ba ...), `scientific` (1.23e45) and `engineering` (123.45e3).
+- Below 1,000 every notation shows the plain whole number. Amounts always round down, so the display never promises more than the player has. Scientific and engineering use two decimals, short uses one.
+- Rates round to nearest: `<0.01` for the tiniest, two decimals below 1 (0.03), one decimal below 100, then as an amount.
+- Handles everything up to `Number.MAX_VALUE`; `Infinity` shows as "∞"; zero, negatives and NaN show as "0".
+- The choice is saved separately from the game, under `look-up:settings` (`settings.ts`, `useSettings`), so importing a save or resetting the game does not change it. A bad or unknown value falls back to the default, field by field.
+- Not routed through it, on purpose: durations (`formatDuration`), percentages, the morale value and the per-unit output text in the shop (all under 100 a second, which every notation writes the same way).

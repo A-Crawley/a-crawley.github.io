@@ -182,3 +182,23 @@ describe("GamePage while away", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage notation", () => {
+  it("lets the player change how numbers are written, everywhere at once", async () => {
+    const user = setupWith((s) => {
+      s.food = 2_500_000;
+      s.owned.forager = 1;
+    });
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("2.5M");
+
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    await user.click(screen.getByRole("radio", { name: /Scientific/ }));
+
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("2.50e6");
+    // The shop price follows too (the next forager costs about 11 food, so use ×100 to get a big one).
+    await user.click(screen.getByRole("button", { name: "×100" }));
+    expect(screen.getByRole("button", { name: /Hire 100 × Food Acquisition/ })).toHaveTextContent(
+      /e\d/,
+    );
+  });
+});

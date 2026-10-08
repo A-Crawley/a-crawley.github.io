@@ -9,7 +9,8 @@ import {
   ListItem,
   Typography,
 } from "@mui/material";
-import { formatAmount, formatDuration } from "../../game/format.ts";
+import { formatDuration } from "../../game/format.ts";
+import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 import { POLICY_LABELS } from "../../game/itemCopy.ts";
 import type { AwaySummary } from "../../game/offline.ts";
 
@@ -27,6 +28,7 @@ const GAINS = [
 
 /** "While you were away": how long, what the village made, and anything that changed. */
 export function AwaySummaryDialog({ summary, onClose }: AwaySummaryDialogProps) {
+  const format = useNumberFormat();
   // Keep showing the last summary while the dialog fades out, so it doesn't go blank.
   const [shown, setShown] = useState(summary);
   if (summary && summary !== shown) setShown(summary);
@@ -57,7 +59,7 @@ export function AwaySummaryDialog({ summary, onClose }: AwaySummaryDialogProps) 
             {gains.map(({ key, label }) => (
               <ListItem key={key} disableGutters sx={{ justifyContent: "space-between" }}>
                 <span>{label}</span>
-                <strong>+{formatAmount(shown.gained[key])}</strong>
+                <strong>+{format.amount(shown.gained[key])}</strong>
               </ListItem>
             ))}
           </List>

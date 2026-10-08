@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Box, Button } from "@mui/material";
-import { formatAmount } from "../../game/format.ts";
+import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 
 export interface GatherButtonProps {
   label: string;
@@ -18,6 +18,7 @@ const MAX_POPS = 6;
 
 /** The main button. Each click floats a "+N" up from it; the pop-ups are decoration only. */
 export function GatherButton({ label, gain, onGather }: GatherButtonProps) {
+  const format = useNumberFormat();
   const [pops, setPops] = useState<Pop[]>([]);
   const nextId = useRef(0);
 
@@ -62,7 +63,7 @@ export function GatherButton({ label, gain, onGather }: GatherButtonProps) {
               "@media (prefers-reduced-motion: reduce)": { animationDuration: "0.01s" },
             }}
           >
-            +{formatAmount(gain)}
+            +{format.amount(gain)}
           </Box>
         ))}
       </Box>

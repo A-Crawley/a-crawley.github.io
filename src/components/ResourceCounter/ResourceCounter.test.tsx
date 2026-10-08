@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { NotationProvider } from "../NotationProvider";
 import { ResourceCounter } from "./ResourceCounter";
 
 describe("ResourceCounter", () => {
@@ -26,5 +27,16 @@ describe("ResourceCounter", () => {
     render(<ResourceCounter label="Wood" value={42} perSecond={0.5} size="small" />);
     expect(screen.getByRole("region", { name: "Wood" })).toHaveTextContent("42");
     expect(screen.getByText("+0.5 per second")).toBeInTheDocument();
+  });
+
+  it("writes the amount and rate in the chosen notation", () => {
+    render(
+      <NotationProvider notation="scientific">
+        <ResourceCounter label="Food" value={1_234_567} perSecond={12_500} />
+      </NotationProvider>,
+    );
+    const region = screen.getByRole("region", { name: "Food" });
+    expect(region).toHaveTextContent("1.23e6");
+    expect(region).toHaveTextContent("+1.25e4 per second");
   });
 });

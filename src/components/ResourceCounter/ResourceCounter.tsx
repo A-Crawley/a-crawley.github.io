@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import { formatAmount, formatRate } from "../../game/format.ts";
+import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 
 export interface ResourceCounterProps {
   label: string;
@@ -12,6 +12,7 @@ export interface ResourceCounterProps {
 
 /** A resource name, how much the player has, and how fast it is growing. */
 export function ResourceCounter({ label, value, perSecond, size = "large" }: ResourceCounterProps) {
+  const format = useNumberFormat();
   return (
     <Box component="section" aria-label={label}>
       <Typography variant="body1" color="text.secondary">
@@ -25,11 +26,13 @@ export function ResourceCounter({ label, value, perSecond, size = "large" }: Res
             : { fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.2 }
         }
       >
-        {formatAmount(value)}
+        {format.amount(value)}
       </Typography>
       {perSecond !== undefined && (
         <Typography variant="body1" color="text.secondary">
-          {perSecond > 0 ? `+${formatRate(perSecond)} per second` : "Nothing arrives by itself yet"}
+          {perSecond > 0
+            ? `+${format.rate(perSecond)} per second`
+            : "Nothing arrives by itself yet"}
         </Typography>
       )}
     </Box>

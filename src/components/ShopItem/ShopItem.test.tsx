@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NotationProvider } from "../NotationProvider";
 import { ShopItem } from "./ShopItem";
 import type { ShopItemProps } from "./ShopItem";
 
@@ -77,5 +78,21 @@ describe("ShopItem with a bigger purchase", () => {
       </ul>,
     );
     expect(screen.getByRole("button", { name: "Build Sawmill bot" })).toBeInTheDocument();
+  });
+});
+
+describe("ShopItem notation", () => {
+  it("writes the cost and the owned count in the chosen notation", () => {
+    render(
+      <NotationProvider notation="engineering">
+        <ul>
+          <ShopItem {...base} owned={2500} cost={1_234_567} />
+        </ul>
+      </NotationProvider>,
+    );
+    expect(screen.getByRole("button", { name: /Hire/ })).toHaveTextContent("1.23e6 food");
+    expect(screen.getByRole("heading", { name: /Food Acquisition Associate/ })).toHaveTextContent(
+      "× 2.50e3",
+    );
   });
 });
