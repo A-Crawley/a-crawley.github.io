@@ -194,6 +194,28 @@ export const VILLAGE = {
   },
 } as const;
 
+/**
+ * What can be done with the villagers machines have displaced (GAME-29). Drift is raw points;
+ * positive is compassion, so redeploying and retraining are small and releasing is a bigger step
+ * the other way.
+ */
+export const DISPLACED = {
+  /** Food to retrain one idle villager as a machine operator. */
+  retrainFood: 250,
+  /** Output bonus on all machines when every machine has an operator (scaled by coverage). */
+  operatorBonus: 0.25,
+  /** Food per second from one villager doing odd jobs. A real hire makes 0.4 and grows with milestones. */
+  oddJobFood: 0.15,
+  /** Morale lost per second per villager on odd jobs, up to `oddJobDrainCap`: work, but not a career. */
+  oddJobDrain: 0.03,
+  oddJobDrainCap: 0.8,
+  redeployDrift: 15,
+  retrainDrift: 40,
+  releaseDrift: -120,
+  /** Morale lost, once, each time someone is released. */
+  releaseMorale: 8,
+} as const;
+
 export const CONFIG = {
   /** Fully active play: clicks per second on "Gather food", and food per click. */
   clicksPerSecond: 2,

@@ -1,4 +1,4 @@
-import { CONFIG, ITEMS, STORAGE, VILLAGE } from "./config.ts";
+import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import type { ItemDef } from "./config.ts";
 import {
   advanceStage,
@@ -14,6 +14,7 @@ import {
   conquestOdds,
   costOf,
   createState,
+  idleHands,
   idleVillagers,
   isAvailable,
   isFinished,
@@ -27,6 +28,9 @@ import {
   purchaseLimit,
   quotePurchase,
   ratesFor,
+  redeployOne,
+  releaseOne,
+  retrainOne,
   startRestDay,
   step,
   unemployed,
@@ -681,5 +685,118 @@ describe("morale drivers", () => {
     state.arrivalTimer = -Infinity;
     for (let i = 0; i < 120; i++) step(state, 1, false);
     expect(state.morale).toBeLessThan(100);
+  });
+});
+
+describe("displaced workers", () => {
+  /** Ten foragers, six of them replaced by machines, in a village of exactly ten. */
+  function displaced(): SimState {
+    const state = createState();
+    state.owned.forager = 10;
+    state.owned.autoForager = 6;
+    state.owned.hut = 1;
+    state.population = 10;
+    state.food = 1000;
+    state.stage = 2;
+    return state;
+  }
+
+  it("counts the villagers machines replaced as idle hands", () => {
+    expect(idleHands(displaced())).toBe(6);
+  });
+
+  it("redeploys one to odd jobs: free, a little food, a nudge towards compassion", () => {
+    const state = displaced();
+    const before = ratesFor(state, state.owned, false).food;
+    expect(redeployOne(state)).toBe(true);
+    expect(idleHands(state)).toBe(5);
+    expect(state.redeployed).toBe(1);
+    expect(state.drift).toBe(DISPLACED.redeployDrift);
+    expect(ratesFor(state, state.owned, false).food).toBeGreaterThan(before);
+  });
+
+  it("retrains one for food: they run machines, which then make more", () => {
+    const state = displaced();
+    const before = ratesFor(state, state.owned, false).food;
+    expect(retrainOne(state)).toBe(true);
+    expect(state.food).toBe(1000 - DISPLACED.retrainFood);
+    expect(idleHands(state)).toBe(5);
+    expect(state.drift).toBe(DISPLACED.retrainDrift);
+    expect(ratesFor(state, state.owned, false).food).toBeGreaterThan(before);
+  });
+
+  it("gives machines up to the operator bonus once every machine has an operator", () => {
+    const state = displaced();
+    state.owned.forager = 6; // only machines make food
+    state.operators = 6;
+    const full = ratesFor(state, state.owned, false).food;
+    state.operators = 0;
+    const none = ratesFor(state, state.owned, false).food;
+    expect(full / none).toBeCloseTo(1 + DISPLACED.operatorBonus, 5);
+    state.operators = 100; // more operators than idle villagers adds nothing
+    expect(ratesFor(state, state.owned, false).food).toBeCloseTo(full, 8);
+  });
+
+  it("won't retrain without the food", () => {
+    const state = displaced();
+    state.food = DISPLACED.retrainFood - 1;
+    expect(retrainOne(state)).toBe(false);
+    expect(state.operators).toBe(0);
+  });
+
+  it("releases one: they stop eating, morale drops once, the drift moves to efficiency", () => {
+    const state = displaced();
+    state.morale = 100;
+    const eaten = upkeepPerSecond(state);
+    expect(releaseOne(state)).toBe(true);
+    expect(state.population).toBe(9);
+    expect(upkeepPerSecond(state)).toBeLessThan(eaten);
+    expect(state.morale).toBe(100 - DISPLACED.releaseMorale);
+    expect(state.drift).toBe(DISPLACED.releaseDrift);
+    expect(idleHands(state)).toBe(5);
+  });
+
+  it("does nothing when nobody is idle", () => {
+    const state = createState();
+    state.owned.forager = 3;
+    state.population = 3;
+    expect(redeployOne(state)).toBe(false);
+    expect(retrainOne(state)).toBe(false);
+    expect(releaseOne(state)).toBe(false);
+    expect(state.drift).toBe(0);
+  });
+
+  it("holds off new arrivals while people are waiting for something to do", () => {
+    const state = displaced();
+    state.owned.hut = 3; // plenty of free beds
+    state.arrivalTimer = VILLAGE.arrivalSeconds;
+    step(state, 1, false);
+    expect(state.population).toBe(10);
+    for (let i = 0; i < 6; i++) redeployOne(state);
+    state.arrivalTimer = VILLAGE.arrivalSeconds;
+    step(state, 1, false);
+    expect(state.population).toBe(11);
+  });
+
+  it("drains morale for idle hands, but less once they are on odd jobs, and not at all as operators", () => {
+    const drain = (change: (s: SimState) => void) => {
+      const state = displaced();
+      state.food = 5000;
+      change(state);
+      return -moraleDrivers(state).find((d) => d.id === "idle")!.perSecond;
+    };
+    const idle = drain(() => {});
+    const odd = drain((s) => {
+      while (redeployOne(s));
+    });
+    expect(odd).toBeGreaterThan(0);
+    expect(odd).toBeLessThan(idle);
+    const operators = createState();
+    operators.owned.forager = 10;
+    operators.owned.autoForager = 6;
+    operators.population = 10;
+    operators.stage = 2;
+    operators.operators = 6;
+    expect(moraleDrivers(operators).some((d) => d.id === "idle")).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
-import { bedsOf, capOf, costOf, isAvailable } from "./engine.ts";
+import { bedsOf, capOf, costOf, idleHands, isAvailable } from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import type { GameState } from "./state.ts";
@@ -30,6 +30,7 @@ export type UnlockId =
   | "village"
   | "housing"
   | "storage"
+  | "workforce"
   | "morale"
   | "policy:rationsOptimisation"
   | "policy:restDay"
@@ -178,6 +179,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
       s.food >= capOf(s, "food") * STORAGE_REVEAL_FRACTION ||
       s.wood >= capOf(s, "wood") * STORAGE_REVEAL_FRACTION,
     log: "The village has more than it can keep. A storage review has been scheduled for the harvest, which has already happened.",
+  },
+  {
+    id: "workforce",
+    when: (s) => idleHands(s) > 0 || s.operators > 0 || s.redeployed > 0 || s.released > 0,
+    log: "Machines have taken some jobs. Those affected are between opportunities, a phrase HR was keeping for the occasion.",
   },
   {
     id: "morale",

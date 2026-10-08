@@ -1,6 +1,17 @@
 import { CONFIG } from "./config.ts";
 import { bedsOf, capOf, startRestDay, unemployed } from "./engine.ts";
-import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "./actions.ts";
+import {
+  buyItem,
+  canRetrain,
+  gatherFood,
+  lookUp,
+  redeploy,
+  release,
+  retrain,
+  setPolicy,
+  takeRestDay,
+} from "./actions.ts";
+import { logLines } from "./log.ts";
 import { createGameState } from "./state.ts";
 import { withUnlocks } from "./unlocks.ts";
 
@@ -288,5 +299,52 @@ describe("storage and clicking", () => {
     const next = buyItem(state, "granary");
     expect(next.owned.granary).toBe(1);
     expect(next.wood).toBeLessThan(100);
+  });
+});
+
+describe("displaced workers", () => {
+  function withIdle() {
+    const state = createGameState(0);
+    state.stage = 2;
+    state.owned.forager = 10;
+    state.owned.autoForager = 4;
+    state.owned.hut = 1;
+    state.population = 10;
+    state.food = 1000;
+    return state;
+  }
+
+  it("redeploys, retrains and releases, each on a copy", () => {
+    const state = withIdle();
+    expect(redeploy(state).redeployed).toBe(1);
+    expect(retrain(state).operators).toBe(1);
+    expect(release(state).released).toBe(1);
+    expect(state.redeployed + state.operators + state.released).toBe(0);
+  });
+
+  it("returns the same state when nobody is idle", () => {
+    const state = createGameState(0);
+    expect(redeploy(state)).toBe(state);
+    expect(retrain(state)).toBe(state);
+    expect(release(state)).toBe(state);
+  });
+
+  it("returns the same state when retraining can't be paid for", () => {
+    const state = withIdle();
+    state.food = 0;
+    expect(canRetrain(state)).toBe(false);
+    expect(retrain(state)).toBe(state);
+  });
+
+  it("reveals the workforce panel and logs each choice", () => {
+    const state = withUnlocks(withIdle());
+    expect(state.unlocked).toContain("workforce");
+    const text = (s: typeof state) =>
+      logLines(s)
+        .map((l) => l.text)
+        .join("\n");
+    expect(text(release(state))).toContain("released");
+    expect(text(retrain(state))).toContain("retrained");
+    expect(text(redeploy(state))).toContain("lateral");
   });
 });

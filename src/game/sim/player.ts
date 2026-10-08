@@ -1,4 +1,4 @@
-import { CONFIG, ITEMS } from "../config.ts";
+import { CONFIG, DISPLACED, ITEMS } from "../config.ts";
 import type { ItemDef, ItemId, Stage } from "../config.ts";
 import {
   advanceStage,
@@ -14,6 +14,10 @@ import {
   isFinished,
   isJob,
   isResting,
+  redeployOne,
+  releaseOne,
+  retrainOne,
+  idleHands,
   ratesFor,
   startRestDay,
   step,
@@ -35,6 +39,9 @@ export const STRATEGIES: readonly Strategy[] = [
     decide(state) {
       state.policies.extendedShifts = true;
       state.policies.rationsOptimisation = true;
+      // Odd jobs while there is work to hire for; once the breakout starts nobody is paid to wait.
+      if (state.stage >= 3) while (releaseOne(state));
+      else while (idleHands(state) > 0) redeployOne(state);
     },
   },
   {
@@ -45,6 +52,8 @@ export const STRATEGIES: readonly Strategy[] = [
       else if (state.morale < 50) state.policies.extendedShifts = false;
       state.policies.rationsOptimisation = false;
       if (state.morale < 45 && canRest(state)) startRestDay(state);
+      // A free hand is a free hire.
+      while (idleHands(state) > 0) redeployOne(state);
     },
   },
   {
@@ -54,6 +63,11 @@ export const STRATEGIES: readonly Strategy[] = [
       state.policies.extendedShifts = false;
       state.policies.rationsOptimisation = false;
       if (canRest(state) && !isResting(state)) startRestDay(state);
+      // Retrain when there is food to spare, else find the displaced a job.
+      while (idleHands(state) > 0) {
+        if (state.food >= 2 * DISPLACED.retrainFood && retrainOne(state)) continue;
+        redeployOne(state);
+      }
     },
   },
 ];

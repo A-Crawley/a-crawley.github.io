@@ -1,5 +1,5 @@
 import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
-import { CONFIG, ITEMS, STORAGE, VILLAGE } from "./config.ts";
+import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import type { Currency, ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
@@ -32,6 +32,11 @@ export interface SimState {
   arrivalTimer: number;
   /** Consecutive seconds the village has gone without enough food. Zero when it is fed. */
   shortfallSeconds: number;
+  /** Idle villagers retrained to run machines. Never more than the idle pool. */
+  operators: number;
+  /** Idle villagers moved into jobs, and let go, over the whole run. */
+  redeployed: number;
+  released: number;
 }
 
 export interface Rates {
@@ -75,6 +80,9 @@ export function createState(): SimState {
     population: VILLAGE.startPopulation,
     arrivalTimer: 0,
     shortfallSeconds: 0,
+    operators: 0,
+    redeployed: 0,
+    released: 0,
   };
 }
 
@@ -105,10 +113,74 @@ export function bedsOf(owned: Counts): number {
   return beds;
 }
 
+/** Operators actually at a machine: never more than the villagers machines have displaced. */
+export function staffedOperators(state: SimState): number {
+  return staffedBy(state.owned, state.operators);
+}
+
+function staffedBy(owned: Counts, operators: number): number {
+  return Math.min(operators, idleVillagers(owned));
+}
+
 /** Villagers without a job: free to be hired, and including those a machine replaced. */
 export function unemployed(state: SimState): number {
   const working = jobsHeld(state.owned) - idleVillagers(state.owned);
-  return Math.max(0, state.population - working);
+  return Math.max(0, state.population - working - placedOf(state));
+}
+
+/** Displaced villagers doing odd jobs: free to place, but they make far less than a real hire. */
+export function oddJobbers(state: SimState): number {
+  const spare = idleVillagers(state.owned) - staffedBy(state.owned, state.operators);
+  return Math.max(0, Math.min(state.redeployed, spare));
+}
+
+/** Displaced villagers who have been given something to do, as operators or on odd jobs. */
+function placedOf(state: SimState): number {
+  return staffedBy(state.owned, state.operators) + oddJobbers(state);
+}
+
+/**
+ * Villagers a machine displaced who are still waiting for something to do: not operators, not
+ * hired elsewhere, not let go. These are the ones the player can redeploy, retrain or release.
+ */
+export function idleHands(state: SimState): number {
+  const displaced = idleVillagers(state.owned) - placedOf(state);
+  return Math.max(0, Math.min(displaced, unemployed(state)));
+}
+
+/** Put an idle villager on odd jobs, for free. Returns false when nobody is idle. */
+export function redeployOne(state: SimState): boolean {
+  if (idleHands(state) === 0) return false;
+  state.redeployed += 1;
+  state.drift += DISPLACED.redeployDrift;
+  return true;
+}
+
+/** Turn an idle villager into a machine operator for food. Returns false when it can't be done. */
+export function retrainOne(state: SimState): boolean {
+  if (idleHands(state) === 0 || state.food < DISPLACED.retrainFood) return false;
+  state.food -= DISPLACED.retrainFood;
+  state.operators += 1;
+  state.drift += DISPLACED.retrainDrift;
+  return true;
+}
+
+/** Let an idle villager go. Returns false when nobody is idle. */
+export function releaseOne(state: SimState): boolean {
+  if (idleHands(state) === 0) return false;
+  state.population -= 1;
+  state.released += 1;
+  state.morale = Math.max(0, state.morale - DISPLACED.releaseMorale);
+  state.drift += DISPLACED.releaseDrift;
+  return true;
+}
+
+/** Output multiplier on every machine: operators help, in proportion to how many machines they cover. */
+function operatorFactor(owned: Counts, operators: number): number {
+  const machines = owned.autoForager + owned.sawmillBot + owned.builderDrone;
+  if (machines === 0) return 1;
+  const coverage = Math.min(1, staffedBy(owned, operators) / machines);
+  return 1 + DISPLACED.operatorBonus * coverage;
 }
 
 /**
@@ -177,19 +249,22 @@ export function ratesFor(
   const woodcutters = Math.max(0, owned.woodcutter - owned.sawmillBot);
   const builders = Math.max(0, owned.builder - owned.builderDrone);
 
+  const operated = operatorFactor(owned, state.operators);
+  const odd = oddJobbers({ ...state, owned }) * DISPLACED.oddJobFood;
   const clicks = includeClicks ? CONFIG.clicksPerSecond * CONFIG.clickValue : 0;
   const food =
     (foragers * output.forager * ms("forager") +
-      owned.autoForager * output.autoForager * ms("autoForager") +
+      owned.autoForager * output.autoForager * ms("autoForager") * operated +
+      odd +
       clicks) *
     global;
   const wood =
     (woodcutters * output.woodcutter * ms("woodcutter") +
-      owned.sawmillBot * output.sawmillBot * ms("sawmillBot")) *
+      owned.sawmillBot * output.sawmillBot * ms("sawmillBot") * operated) *
     global;
   const infra =
     (builders * output.builder * ms("builder") +
-      owned.builderDrone * output.builderDrone * ms("builderDrone")) *
+      owned.builderDrone * output.builderDrone * ms("builderDrone") * operated) *
     global;
 
   return { food, wood, infra };
@@ -406,10 +481,9 @@ export function moraleDrivers(state: SimState, strain = true): MoraleDriver[] {
     add("hungry", -VILLAGE.hunger.moraleDrainPerSecond);
   }
   if (state.stage >= 2) {
-    add(
-      "idle",
-      -Math.min(m.unemployedDrainPerSecond * idleVillagers(state.owned), m.unemployedDrainCap),
-    );
+    const idle = Math.min(m.unemployedDrainPerSecond * idleHands(state), m.unemployedDrainCap);
+    const odd = Math.min(DISPLACED.oddJobDrain * oddJobbers(state), DISPLACED.oddJobDrainCap);
+    add("idle", -Math.min(idle + odd, m.unemployedDrainCap));
   }
   const freeBeds = bedsOf(state.owned) - state.population;
   if (strain && jobsHeld(state.owned) > 0) {
@@ -473,6 +547,8 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
   const fed = state.shortfallSeconds < HUNGRY_NOTICE_SECONDS;
   if (
     fed &&
+    // Nobody new moves in while people displaced by machines are still waiting for work.
+    idleHands(state) === 0 &&
     state.arrivalTimer >= VILLAGE.arrivalSeconds &&
     state.population < bedsOf(state.owned)
   ) {

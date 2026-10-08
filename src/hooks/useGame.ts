@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { breakOut, buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "../game/actions.ts";
+import {
+  breakOut,
+  buyItem,
+  gatherFood,
+  lookUp,
+  redeploy,
+  release,
+  retrain,
+  setPolicy,
+  takeRestDay,
+} from "../game/actions.ts";
 import { withSettled } from "../game/settle.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
@@ -40,6 +50,12 @@ export interface UseGame {
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
   setPolicy(policy: keyof Policies, on: boolean): void;
   takeRestDay(): void;
+  /** Give an idle villager odd jobs, for free. */
+  redeploy(): void;
+  /** Pay food to turn an idle villager into a machine operator. */
+  retrain(): void;
+  /** Let an idle villager go. */
+  release(): void;
   lookUp(): void;
   /** Make the final choice. Rolled once and saved straight away, so a reload cannot change it. */
   breakOut(): void;
@@ -137,6 +153,9 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store],
     ),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
+    redeploy: useCallback(() => store.dispatch(redeploy), [store]),
+    retrain: useCallback(() => store.dispatch(retrain), [store]),
+    release: useCallback(() => store.dispatch(release), [store]),
     lookUp: useCallback(() => store.dispatch(lookUp), [store]),
     breakOut: useCallback(() => {
       store.dispatch((s) => withSettled(breakOut(s, random())));

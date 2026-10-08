@@ -175,3 +175,15 @@ First pass at 0.1/s crowding and 0.05/s overdue rest (starting at 15 min) made c
 slower than balanced and the run 143 min. Lowered to 0.04/s and 0.02/s (from 20 min): run lengths
 125.0 / 129.8 / 134.1 min (efficient / balanced / compassionate), compassionate 3.3% over balanced.
 The efficient bot still walks out about 30 times, as before: extended shifts dominate its morale.
+
+## Displaced workers (GAME-29)
+
+The idle pool used to drain morale at up to 1/s for the whole of stage 2 and 3, which held a
+balanced player near 50 morale with shifts off. Any free cure for it is therefore very strong:
+a first version (redeploy into a real job, no drain) made balanced play 99 min and compassionate
+123 min (24% over). Two levers fixed it: odd-job work makes 0.15 food/s and still drains 0.03/s
+each (cap 0.8), and the sim's efficient strategy only releases people once the breakout starts.
+Result: 125.4 / 122.7 / 123.2 min (efficient / balanced / compassionate). Efficient play is no
+longer fastest, because releasing people removes free hires: cruelty does not clearly pay, which
+suits the story. Bots: efficient releases in stage 3 and uses odd jobs before; balanced uses odd
+jobs; compassionate retrains when it has 500 food spare, else odd jobs.
