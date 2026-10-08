@@ -25,12 +25,17 @@ import {
 import type { BuyQuantity } from "../../game/engine.ts";
 import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS, sighting } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
+import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
+import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
+import { formatDuration } from "../../game/format.ts";
 import { isUnlocked } from "../../game/unlocks.ts";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
 import { useSettings } from "../../hooks/useSettings.ts";
 import { AwaySummaryDialog } from "../../components/AwaySummaryDialog";
+import { EndingScreen } from "../../components/EndingScreen";
 import { EventLog } from "../../components/EventLog";
+import { FinalChoice } from "../../components/FinalChoice";
 import { GatherButton } from "../../components/GatherButton";
 import { LookUpAction } from "../../components/LookUpAction";
 import { MoraleMeter } from "../../components/MoraleMeter";
@@ -72,6 +77,17 @@ export function GamePage({ options }: GamePageProps) {
       .filter((def): def is ItemDef => def !== undefined && visible(def)),
   }));
   const policies = CONFIG.policies;
+  const phase = phaseOf(state);
+  const stats = endStats(state);
+  const statRows = [
+    { label: "Time played", value: formatDuration(stats.seconds) },
+    { label: "Villagers hired", value: String(stats.villagers) },
+    { label: "Machines built", value: String(stats.machines) },
+    { label: "Rest days taken", value: String(stats.restDays) },
+    { label: "Walkouts", value: String(stats.walkouts) },
+    { label: "Research levels", value: String(stats.researchLevels) },
+    { label: "Exploits", value: String(stats.exploits) },
+  ];
   const restCooldown = Math.ceil(state.restReadyAt - state.time);
 
   return (
@@ -100,8 +116,10 @@ export function GamePage({ options }: GamePageProps) {
               This browser is not letting the game save. Progress will be lost when you leave.
             </Alert>
           )}
-          <ResourceCounter label="Food" value={state.food} perSecond={rates.food} />
-          {(unlocked("wood") || unlocked("infra")) && (
+          {phase !== "ended" && (
+            <ResourceCounter label="Food" value={state.food} perSecond={rates.food} />
+          )}
+          {phase !== "ended" && (unlocked("wood") || unlocked("infra")) && (
             <Stack direction="row" spacing={4}>
               {unlocked("wood") && (
                 <ResourceCounter
@@ -121,110 +139,143 @@ export function GamePage({ options }: GamePageProps) {
               )}
             </Stack>
           )}
-          <GatherButton label="Gather food" gain={foodPerClick(state)} onGather={game.gatherFood} />
-          <LookUpAction
-            unlocked={unlocked("lookUp")}
-            sighting={unlocked("lookedUp") ? sighting(state.stage, state.time) : null}
-            onLookUp={game.lookUp}
-          />
-          {unlocked("morale") && (
-            <MoraleMeter
-              morale={state.morale}
-              status={isResting(state) ? "resting" : isWalkingOut(state) ? "walkout" : undefined}
-            />
-          )}
-          {state.stage === 1 && unlocked("horizon") && (
-            <ProjectProgress
-              label="Project Horizon"
-              fraction={state.infra / CONFIG.infraGate}
-              caption="On schedule. Nobody will say what it is a schedule for."
-            />
-          )}
-          {state.stage === 2 && unlocked("researchStarted") && (
-            <ProjectProgress
-              label="Accidental Intelligence"
-              fraction={state.owned.research / CONFIG.researchLevels}
-              caption="Progress is measured in levels of research. Nobody has defined a level."
-            />
-          )}
-          {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-              <QuantitySelector value={quantity} options={BUY_QUANTITIES} onChange={setQuantity} />
-            </Box>
-          )}
-          {shop.map(({ title, defs }) =>
-            defs.length === 0 ? null : (
-              <Box component="section" key={title}>
-                <Typography component="h2" variant="h6">
-                  {title}
-                </Typography>
-                <Box component="ul" sx={{ m: 0, p: 0 }}>
-                  {defs.map((def) => {
-                    const quote = quotePurchase(state, def, quantity);
-                    const copy = ITEM_COPY[def.id];
-                    return (
-                      <ShopItem
-                        key={def.id}
-                        name={def.label}
-                        description={copy.description}
-                        owned={state.owned[def.id]}
-                        actionLabel={copy.action}
-                        count={quote.count}
-                        cost={quote.cost}
-                        currency={CURRENCY_NAME[def.currency]}
-                        output={copy.output}
-                        affordable={quote.affordable}
-                        onBuy={() => game.buyItem(def.id, quantity)}
-                      />
-                    );
-                  })}
+          {phase === "playing" && (
+            <>
+              <GatherButton
+                label="Gather food"
+                gain={foodPerClick(state)}
+                onGather={game.gatherFood}
+              />
+              <LookUpAction
+                unlocked={unlocked("lookUp")}
+                sighting={unlocked("lookedUp") ? sighting(state.stage, state.time) : null}
+                onLookUp={game.lookUp}
+              />
+              {unlocked("morale") && (
+                <MoraleMeter
+                  morale={state.morale}
+                  status={
+                    isResting(state) ? "resting" : isWalkingOut(state) ? "walkout" : undefined
+                  }
+                />
+              )}
+              {state.stage === 1 && unlocked("horizon") && (
+                <ProjectProgress
+                  label="Project Horizon"
+                  fraction={state.infra / CONFIG.infraGate}
+                  caption="On schedule. Nobody will say what it is a schedule for."
+                />
+              )}
+              {state.stage === 2 && unlocked("researchStarted") && (
+                <ProjectProgress
+                  label="Accidental Intelligence"
+                  fraction={state.owned.research / CONFIG.researchLevels}
+                  caption="Progress is measured in levels of research. Nobody has defined a level."
+                />
+              )}
+              {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                  <QuantitySelector
+                    value={quantity}
+                    options={BUY_QUANTITIES}
+                    onChange={setQuantity}
+                  />
                 </Box>
-              </Box>
-            ),
-          )}
-          {(unlocked("policy:rationsOptimisation") ||
-            unlocked("policy:restDay") ||
-            unlocked("policy:extendedShifts")) && (
-            <Box component="section">
-              <Typography component="h2" variant="h6">
-                Policies
-              </Typography>
-              {unlocked("policy:extendedShifts") && (
-                <PolicyToggle
-                  label={POLICY_LABELS.extendedShifts}
-                  description={`+${Math.round((policies.extendedShifts.outputFactor - 1) * 100)}% output. Drains morale, and the village will remember.`}
-                  checked={state.policies.extendedShifts}
-                  onChange={(on) => game.setPolicy("extendedShifts", on)}
-                />
               )}
-              {unlocked("policy:rationsOptimisation") && (
-                <PolicyToggle
-                  label={POLICY_LABELS.rationsOptimisation}
-                  description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less. Drains morale.`}
-                  checked={state.policies.rationsOptimisation}
-                  onChange={(on) => game.setPolicy("rationsOptimisation", on)}
-                />
+              {shop.map(({ title, defs }) =>
+                defs.length === 0 ? null : (
+                  <Box component="section" key={title}>
+                    <Typography component="h2" variant="h6">
+                      {title}
+                    </Typography>
+                    <Box component="ul" sx={{ m: 0, p: 0 }}>
+                      {defs.map((def) => {
+                        const quote = quotePurchase(state, def, quantity);
+                        const copy = ITEM_COPY[def.id];
+                        return (
+                          <ShopItem
+                            key={def.id}
+                            name={def.label}
+                            description={copy.description}
+                            owned={state.owned[def.id]}
+                            actionLabel={copy.action}
+                            count={quote.count}
+                            cost={quote.cost}
+                            currency={CURRENCY_NAME[def.currency]}
+                            output={copy.output}
+                            affordable={quote.affordable}
+                            onBuy={() => game.buyItem(def.id, quantity)}
+                          />
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                ),
               )}
-              {unlocked("policy:restDay") && (
-                <Box sx={{ mt: 1 }}>
-                  <Button
-                    variant="outlined"
-                    color="inherit"
-                    disabled={!canRest(state)}
-                    onClick={game.takeRestDay}
-                  >
-                    Take a rest day
-                  </Button>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {isResting(state)
-                      ? "Resting. Nothing is produced, and nobody minds."
-                      : canRest(state)
-                        ? `Output stops for ${policies.restDay.duration} seconds. Morale recovers, and the village remembers that too.`
-                        : `Available again in ${Math.max(0, restCooldown)} seconds.`}
+              {(unlocked("policy:rationsOptimisation") ||
+                unlocked("policy:restDay") ||
+                unlocked("policy:extendedShifts")) && (
+                <Box component="section">
+                  <Typography component="h2" variant="h6">
+                    Policies
                   </Typography>
+                  {unlocked("policy:extendedShifts") && (
+                    <PolicyToggle
+                      label={POLICY_LABELS.extendedShifts}
+                      description={`+${Math.round((policies.extendedShifts.outputFactor - 1) * 100)}% output. Drains morale, and the village will remember.`}
+                      checked={state.policies.extendedShifts}
+                      onChange={(on) => game.setPolicy("extendedShifts", on)}
+                    />
+                  )}
+                  {unlocked("policy:rationsOptimisation") && (
+                    <PolicyToggle
+                      label={POLICY_LABELS.rationsOptimisation}
+                      description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less. Drains morale.`}
+                      checked={state.policies.rationsOptimisation}
+                      onChange={(on) => game.setPolicy("rationsOptimisation", on)}
+                    />
+                  )}
+                  {unlocked("policy:restDay") && (
+                    <Box sx={{ mt: 1 }}>
+                      <Button
+                        variant="outlined"
+                        color="inherit"
+                        disabled={!canRest(state)}
+                        onClick={game.takeRestDay}
+                      >
+                        Take a rest day
+                      </Button>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {isResting(state)
+                          ? "Resting. Nothing is produced, and nobody minds."
+                          : canRest(state)
+                            ? `Output stops for ${policies.restDay.duration} seconds. Morale recovers, and the village remembers that too.`
+                            : `Available again in ${Math.max(0, restCooldown)} seconds.`}
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               )}
-            </Box>
+            </>
+          )}
+          {phase === "choice" && (
+            <FinalChoice
+              title={FINAL_CHOICE.title}
+              body={FINAL_CHOICE.body}
+              action={FINAL_CHOICE.action}
+              odds={finalOddsWord(state)}
+              onChoose={game.breakOut}
+            />
+          )}
+          {state.ending !== null && (
+            <EndingScreen
+              title={ENDING_COPY[state.ending].title}
+              paragraphs={ENDING_COPY[state.ending].paragraphs}
+              reveal={REVEAL}
+              verdict={VERDICT[temperamentOf(state.drift)]}
+              stats={statRows}
+              onNewGame={game.resetGame}
+            />
           )}
           <EventLog title="Village log" lines={logLines(state)} />
           <Accordion disableGutters variant="outlined">

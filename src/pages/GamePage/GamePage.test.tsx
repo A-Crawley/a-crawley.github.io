@@ -293,3 +293,99 @@ describe("GamePage unlocks", () => {
     expect(screen.getByText("50% complete")).toBeInTheDocument();
   });
 });
+
+describe("GamePage ending", () => {
+  const SAVE_KEY = "look-up:save";
+
+  function memoryStorage() {
+    const data = new Map<string, string>();
+    return {
+      data,
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => void data.set(key, value),
+      removeItem: (key: string) => void data.delete(key),
+    };
+  }
+
+  function atTheExit(drift: number): GameState {
+    const state = createGameState(Date.now());
+    state.stage = 3;
+    state.owned.exploit = 22;
+    state.drift = drift;
+    return state;
+  }
+
+  it("waits at the final choice with the odds in words and the usual controls gone", () => {
+    render(<GamePage options={{ storage: null, initialState: atTheExit(16000) }} />);
+    expect(screen.getByRole("heading", { name: "The exit" })).toBeInTheDocument();
+    expect(screen.getByText(/Odds of getting through/)).toHaveTextContent("Likely");
+    expect(screen.queryByRole("button", { name: "Gather food" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Break out" })).toBeInTheDocument();
+  });
+
+  it("ends in Conquest or Apocalypse depending on the roll", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(
+      <GamePage options={{ storage: null, initialState: atTheExit(0), random: () => 0.05 }} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    expect(screen.getByRole("heading", { name: "Conquest" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Food" })).not.toBeInTheDocument();
+    expect(screen.getByText(/The rival did not come from the village/)).toBeInTheDocument();
+    cleanup();
+
+    render(
+      <GamePage options={{ storage: null, initialState: atTheExit(0), random: () => 0.99 }} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    expect(screen.getByRole("heading", { name: "Apocalypse" })).toBeInTheDocument();
+  });
+
+  it("keeps the ending across a reload, and does not roll again", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const storage = memoryStorage();
+    storage.setItem(SAVE_KEY, JSON.stringify(atTheExit(0)));
+    render(<GamePage options={{ storage, random: () => 0.05 }} />);
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    expect(screen.getByRole("heading", { name: "Conquest" })).toBeInTheDocument();
+    cleanup();
+
+    // A different dice roll on reload would give Apocalypse if the ending were not saved.
+    render(<GamePage options={{ storage, random: () => 0.99 }} />);
+    expect(screen.getByRole("heading", { name: "Conquest" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Break out" })).not.toBeInTheDocument();
+  });
+
+  it("shows the run's stats on the end screen", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = atTheExit(0);
+    state.time = 7321;
+    state.restDays = 4;
+    render(<GamePage options={{ storage: null, initialState: state, random: () => 0 }} />);
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    const run = screen.getByRole("region", { name: "Your run" });
+    expect(run).toHaveTextContent("Time played");
+    expect(run).toHaveTextContent("Rest days taken4");
+    expect(run).toHaveTextContent("Exploits22");
+  });
+
+  it("starts a new game after the player confirms", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const storage = memoryStorage();
+    render(<GamePage options={{ storage, initialState: atTheExit(0), random: () => 0 }} />);
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    await user.click(screen.getByRole("button", { name: "Start a new game" }));
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Conquest" })).not.toBeInTheDocument();
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").ending).toBeNull();
+  });
+
+  it("shows the rival's incidents in the log, in the tone of the run", () => {
+    const state = atTheExit(-16000);
+    state.owned.exploit = 6;
+    render(<GamePage options={{ storage: null, initialState: state }} />);
+    expect(screen.getByText(/Efficiency noted\. Copied\./)).toBeInTheDocument();
+    expect(screen.getByText(/sends an invoice for the time/)).toBeInTheDocument();
+  });
+});

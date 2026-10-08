@@ -20,6 +20,9 @@ import { applyUnlocks, isUnlocked, unlock } from "./unlocks.ts";
  * callers can detect a no-op with `===`.
  */
 
+/** The final choice, once every exploit is in place. See `breakOut` in ending.ts. */
+export { breakOut } from "./ending.ts";
+
 /** One click on "Gather food". */
 export function gatherFood(state: GameState): GameState {
   if (isFinished(state)) return state;

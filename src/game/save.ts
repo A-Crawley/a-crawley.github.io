@@ -2,6 +2,8 @@ import { ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { STATE_VERSION } from "./state.ts";
 import type { GameState } from "./state.ts";
+import { endingIsPossible, ENDINGS } from "./ending.ts";
+import type { Ending } from "./ending.ts";
 import { isUnlockId } from "./unlocks.ts";
 import type { UnlockId } from "./unlocks.ts";
 
@@ -22,6 +24,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 1 -> 2: unlocks are saved. An old save starts with none; the game settles the ones the
   // player has already earned (from what they own) as soon as it loads the save.
   1: (save) => ({ ...save, version: 2, unlocked: [] }),
+  // 2 -> 3: the ending is saved. No run in a version 2 save had finished, so it starts empty.
+  2: (save) => ({ ...save, version: 3, ending: null }),
 };
 
 function isRecord(value: unknown): value is RawSave {
@@ -124,6 +128,13 @@ export function validateState(raw: unknown): SaveResult<GameState> {
     unlocked.push(id);
   }
 
+  let ending: Ending | null = null;
+  if (raw.ending !== null) {
+    if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
+    ending = raw.ending as Ending;
+    if (!endingIsPossible({ stage: raw.stage, owned })) return fail("ending");
+  }
+
   return {
     ok: true,
     value: {
@@ -145,6 +156,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       walkouts: raw.walkouts as number,
       restDays: raw.restDays as number,
       unlocked,
+      ending,
     },
   };
 }

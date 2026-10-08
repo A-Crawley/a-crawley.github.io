@@ -99,3 +99,18 @@ The interface is the progression system. `unlocks.ts` holds `UNLOCKS`, a list of
 | `stage2`, `policy:extendedShifts`                   | Stage 2 starts                                                                   |
 | `researchStarted`, `researchHalf`, `researchNearly` | 1, half, all but 2 research levels                                               |
 | `stage3`                                            | Stage 3 starts                                                                   |
+
+## The ending (GAME-19)
+
+`ending.ts` holds the last stretch of the game. `phaseOf(state)` gives one of three phases:
+
+- `playing`: the normal game.
+- `choice`: stage 3 with every exploit bought. `isFinished` is true, so time stops and actions do nothing, and `catchUp` reports no "away" summary. The page shows the final choice instead of the shop.
+- `ended`: `state.ending` is set. The page shows the end screen.
+
+- **The choice:** one button, "Break out". `breakOut(state, roll)` is Conquest when `roll < conquestOdds(drift)`, otherwise Apocalypse. The caller supplies the roll (`useGame` uses `Math.random`, and its `random` option lets tests fix it), so the function stays pure. It does nothing unless the choice is waiting, so the ending cannot be re-rolled. The result is saved at once.
+- **Odds in words:** `oddsWord` maps the odds to Unlikely, Risky, Even, Promising or Likely. Percentages are never shown.
+- **Rival incidents:** events only, no simulated opponent. Four incidents (at 1, 6, 12 and 18 exploits) are unlocks named `rival:<exploits>:<tone>`. The tone (gentle, wary or ruthless, `temperamentOf(drift)`) is fixed when the incident happens and then saved, so a later change of drift cannot rewrite it.
+- **End screen:** the ending, the reveal both endings share, one line on how the run read (the hidden drift put into words), and stats (`endStats`: time played, villagers, machines, rest days, walkouts, research, exploits). "Start a new game" asks first, then calls `resetGame`. The shop and counters are hidden once ended.
+- **Save version 3:** adds `ending` (null, `conquest` or `apocalypse`). The 2 to 3 migration sets null. A save with an ending but an unfinished run is rejected.
+- **Copy:** all ending text lives in `endingCopy.ts`; rival lines are in `unlocks.ts`.

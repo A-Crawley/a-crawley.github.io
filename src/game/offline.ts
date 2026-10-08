@@ -1,5 +1,6 @@
 import type { Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
+import { isFinished } from "./engine.ts";
 import type { GameState } from "./state.ts";
 import { tick } from "./tick.ts";
 
@@ -50,6 +51,8 @@ const POLICY_KEYS: ReadonlyArray<keyof Policies> = ["extendedShifts", "rationsOp
  */
 export function catchUp(state: GameState, now: number): CatchUp {
   const awaySeconds = (now - state.lastTickAt) / 1000;
+  // Once every exploit is in, time has stopped: there is nothing to report on return.
+  if (isFinished(state)) return { state: tick(state, now), away: null };
   if (awaySeconds < AWAY_AFTER_SECONDS) return { state: tick(state, now), away: null };
 
   const countedSeconds = Math.min(awaySeconds, MAX_AWAY_SECONDS);

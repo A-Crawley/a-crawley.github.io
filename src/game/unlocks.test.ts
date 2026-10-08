@@ -265,3 +265,46 @@ describe("through play", () => {
     }
   });
 });
+
+describe("rival incidents", () => {
+  const rival = (state: GameState) => state.unlocked.filter((id) => id.startsWith("rival:"));
+
+  it("stay quiet before stage 3", () => {
+    expect(rival(withUnlocks(stateWith({ exploit: 5 }, 2)))).toEqual([]);
+  });
+
+  it("arrive at fixed exploit counts, once each", () => {
+    const state = stateWith({ exploit: 6 }, 3);
+    applyUnlocks(state);
+    expect(rival(state)).toEqual(["rival:1:wary", "rival:6:wary"]);
+    expect(applyUnlocks(state)).toEqual([]);
+  });
+
+  it("take their tone from the drift when they happen", () => {
+    const kind = stateWith({ exploit: 1 }, 3, CONFIG.driftScale);
+    const cruel = stateWith({ exploit: 1 }, 3, -CONFIG.driftScale);
+    expect(rival(withUnlocks(kind))).toEqual(["rival:1:gentle"]);
+    expect(rival(withUnlocks(cruel))).toEqual(["rival:1:ruthless"]);
+  });
+
+  it("keep the tone they had, even if the drift changes later", () => {
+    const state = stateWith({ exploit: 1 }, 3, CONFIG.driftScale);
+    applyUnlocks(state);
+    state.drift = -CONFIG.driftScale;
+    state.owned.exploit = 6;
+    applyUnlocks(state);
+    expect(rival(state)).toEqual(["rival:1:gentle", "rival:6:ruthless"]);
+  });
+});
+
+function stateWith(
+  owned: Partial<GameState["owned"]>,
+  stage: GameState["stage"],
+  drift = 0,
+): GameState {
+  const state = fresh();
+  state.stage = stage;
+  state.drift = drift;
+  Object.assign(state.owned, owned);
+  return state;
+}
