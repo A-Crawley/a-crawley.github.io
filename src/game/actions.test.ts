@@ -1,10 +1,17 @@
 import { CONFIG } from "./config.ts";
-import { startRestDay } from "./engine.ts";
+import { bedsOf, startRestDay, unemployed } from "./engine.ts";
 import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "./actions.ts";
 import { createGameState } from "./state.ts";
 import { withUnlocks } from "./unlocks.ts";
 
 const fresh = () => createGameState(0);
+
+/** A fresh game whose village already has plenty of people, so jobs are not limited by headcount. */
+function withVillagers(population: number) {
+  const state = createGameState(0);
+  state.population = population;
+  return state;
+}
 
 describe("gatherFood", () => {
   it("adds one click of food and leaves the original alone", () => {
@@ -111,7 +118,7 @@ describe("a finished game", () => {
 
 describe("buyItem with a quantity", () => {
   it("buys exactly ten when ten are affordable", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 1000;
     const next = buyItem(state, "forager", 10);
     expect(next.owned.forager).toBe(10);
@@ -120,13 +127,13 @@ describe("buyItem with a quantity", () => {
   });
 
   it("is all or nothing for a fixed amount", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 100; // enough for several, not ten
     expect(buyItem(state, "forager", 10)).toBe(state);
   });
 
   it("buys as many as it can with max", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 100;
     const next = buyItem(state, "forager", "max");
     expect(next.owned.forager).toBe(6);
@@ -135,13 +142,13 @@ describe("buyItem with a quantity", () => {
   });
 
   it("does nothing with max when nothing is affordable", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 3;
     expect(buyItem(state, "forager", "max")).toBe(state);
   });
 
   it("gives the same result as buying one at a time", () => {
-    const bulk = fresh();
+    const bulk = withVillagers(100);
     bulk.food = 500;
     const single = structuredClone(bulk);
     const bought = buyItem(bulk, "forager", 10);
@@ -152,13 +159,13 @@ describe("buyItem with a quantity", () => {
   });
 
   it("still blocks items that are not available in the current stage", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 1e9;
     expect(buyItem(state, "autoForager", "max")).toBe(state);
   });
 
   it("advances the stage when a bulk purchase reaches the research goal", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.stage = 2;
     state.food = 1e12;
     state.owned.research = CONFIG.researchLevels - 2;
@@ -178,7 +185,7 @@ describe("unlocking while playing", () => {
   });
 
   it("unlocks what a purchase earns, such as morale after the first hire", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 10;
     const next = buyItem(state, "forager");
     expect(next.unlocked).toContain("morale");
@@ -186,7 +193,7 @@ describe("unlocking while playing", () => {
   });
 
   it("keeps an item on offer after the food that revealed it is spent", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.food = 25;
     state.owned.forager = 1;
     let next = withUnlocks(state);
@@ -199,17 +206,70 @@ describe("unlocking while playing", () => {
 
 describe("lookUp", () => {
   it("does nothing while the button is still locked", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     expect(lookUp(state)).toBe(state);
   });
 
   it("records the first look once the button works, and ignores later looks", () => {
-    const state = fresh();
+    const state = withVillagers(100);
     state.owned.forager = 5;
     const ready = withUnlocks(state);
     const looked = lookUp(ready);
     expect(looked.unlocked).toContain("lookedUp");
     expect(ready.unlocked).not.toContain("lookedUp");
     expect(lookUp(looked)).toBe(looked);
+  });
+});
+
+describe("hiring needs a free villager", () => {
+  it("hires only as many as there are people without a job", () => {
+    const state = withVillagers(4);
+    state.food = 1e6;
+    const next = buyItem(state, "forager", "max");
+    expect(next.owned.forager).toBe(4);
+    expect(buyItem(next, "forager")).toBe(next);
+  });
+
+  it("refuses a fixed amount bigger than the free villagers", () => {
+    const state = withVillagers(5);
+    state.food = 1e6;
+    expect(buyItem(state, "forager", 10)).toBe(state);
+  });
+
+  it("does not limit machines, which take over a job", () => {
+    const state = withVillagers(0);
+    state.stage = 2;
+    state.owned.forager = 5;
+    state.food = 1e9;
+    expect(buyItem(state, "autoForager", 10).owned.autoForager).toBe(10);
+  });
+
+  it("frees villagers again when machines take their jobs", () => {
+    const state = withVillagers(10);
+    state.stage = 2;
+    state.owned.forager = 10;
+    state.food = 1e9;
+    expect(unemployed(state)).toBe(0);
+    const next = buyItem(state, "autoForager", 10);
+    expect(unemployed(next)).toBe(10);
+    expect(buyItem(next, "forager", 10).owned.forager).toBe(20);
+  });
+});
+
+describe("housing", () => {
+  it("is bought like anything else and adds beds", () => {
+    const state = withVillagers(10);
+    state.food = 1e6;
+    const next = buyItem(state, "hut");
+    expect(next.owned.hut).toBe(1);
+    expect(bedsOf(next.owned)).toBe(bedsOf(state.owned) + 5);
+  });
+
+  it("needs a village of 25 before houses are offered", () => {
+    const state = withVillagers(10);
+    state.wood = 1e6;
+    expect(buyItem(state, "house")).toBe(state);
+    state.population = 25;
+    expect(buyItem(state, "house").owned.house).toBe(1);
   });
 });

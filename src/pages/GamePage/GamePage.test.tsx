@@ -99,6 +99,7 @@ describe("GamePage shop", () => {
   it("buys ten at once with ×10 and shows the price of ten", async () => {
     const user = setupWith((s) => {
       s.food = 1000;
+      s.population = 100;
       s.unlocked.push("bulkBuying");
     });
     await user.click(screen.getByRole("button", { name: "×10" }));
@@ -113,6 +114,7 @@ describe("GamePage shop", () => {
   it("buys as many as it can with Max", async () => {
     const user = setupWith((s) => {
       s.food = 100;
+      s.population = 100;
       s.unlocked.push("bulkBuying");
     });
     await user.click(screen.getByRole("button", { name: "Max" }));
@@ -433,5 +435,45 @@ describe("GamePage achievements", () => {
     const list = screen.getByRole("list", { name: "Achievements" });
     expect(list).toHaveTextContent("Conquest");
     expect(list).toHaveTextContent("Soft Landing");
+  });
+});
+
+describe("GamePage village", () => {
+  it("says so when a job can't be taken because nobody is free", () => {
+    setupWith((s) => {
+      s.food = 100;
+      s.population = 3;
+      s.owned.forager = 3;
+    });
+    expect(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ })).toBeDisabled();
+    expect(screen.getAllByText(/Nobody is free to take the job/).length).toBeGreaterThan(0);
+  });
+
+  it("shows how many villagers and beds there are once there is a job", () => {
+    setupWith((s) => {
+      s.owned.forager = 2;
+      s.population = 5;
+    });
+    expect(screen.getByText(/5 villagers, 3 without a job\. 10 beds\./)).toBeInTheDocument();
+  });
+
+  it("offers a hut once the village is nearly out of beds, and builds it", async () => {
+    const user = setupWith((s) => {
+      s.population = 10;
+      s.owned.forager = 10;
+      s.food = 500;
+    });
+    expect(screen.getByRole("heading", { name: "Housing" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Build Hut" }));
+    expect(screen.getByRole("heading", { name: /Hut/ })).toHaveTextContent("× 1");
+    expect(screen.getByText(/10 villagers, 0 without a job\. 15 beds\./)).toBeInTheDocument();
+  });
+
+  it("keeps housing out of sight while there is plenty of room", () => {
+    setupWith((s) => {
+      s.owned.forager = 2;
+      s.food = 500;
+    });
+    expect(screen.queryByRole("heading", { name: "Housing" })).not.toBeInTheDocument();
   });
 });

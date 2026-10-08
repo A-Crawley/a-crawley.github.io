@@ -1,4 +1,5 @@
 import { CONFIG, ITEMS } from "./config.ts";
+import { bedsOf } from "./engine.ts";
 import {
   exportSave,
   importSave,
@@ -292,6 +293,57 @@ describe("achievements in a save", () => {
       ["first-hire", "first-hire"],
     ]) {
       expect(validateState({ ...raw(), achievements }).ok).toBe(false);
+    }
+  });
+});
+
+describe("villagers in a save", () => {
+  it("round-trips the population", () => {
+    const state = playedState();
+    state.population = 42;
+    state.arrivalTimer = 2.5;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 4 save with room for everyone it already employs", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 4 };
+    delete old.population;
+    delete old.arrivalTimer;
+    const owned: Record<string, number> = {
+      ...(old.owned as Record<string, number>),
+      forager: 60,
+      woodcutter: 40,
+    };
+    delete owned.hut;
+    delete owned.house;
+    old.owned = owned;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const { value } = result;
+      expect(value.version).toBe(STATE_VERSION);
+      // Everyone with a job is a villager, plus a couple of spare hands.
+      expect(value.population).toBeGreaterThanOrEqual(102);
+      expect(value.owned.hut).toBe(0);
+      expect(bedsOf(value.owned)).toBeGreaterThanOrEqual(value.population);
+    }
+  });
+
+  it("gives a small old save the starting village", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 4 };
+    delete old.population;
+    delete old.arrivalTimer;
+    const owned = { ...(old.owned as Record<string, number>) };
+    delete owned.hut;
+    delete owned.house;
+    old.owned = { ...owned, forager: 0, woodcutter: 0, builder: 0 };
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.population).toBe(3);
+  });
+
+  it("rejects a population that is missing, fractional or negative", () => {
+    for (const population of [undefined, 2.5, -1, "3"]) {
+      expect(validateState({ ...raw(), population }).ok).toBe(false);
     }
   });
 });

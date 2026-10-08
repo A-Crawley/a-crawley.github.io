@@ -98,6 +98,24 @@ describe("full playthrough", () => {
     expect(results.compassionate.restDays).toBeGreaterThan(0);
   });
 
+  // GAME-22 and GAME-23: villagers fill jobs and sleep in beds. The cap should be felt, not stall.
+  it("grows a village of a few hundred, and builds both kinds of housing", () => {
+    for (const result of Object.values(results)) {
+      expect(result.peakPopulation).toBeGreaterThan(100);
+      expect(result.peakPopulation).toBeLessThan(300);
+      expect(result.purchases.some((p) => p.item === "hut")).toBe(true);
+      expect(result.purchases.some((p) => p.item === "house")).toBe(true);
+    }
+  });
+
+  it("keeps time spent waiting for villagers to a few minutes", () => {
+    for (const result of Object.values(results)) {
+      expect(result.waitingForVillagersSeconds).toBeLessThan(10 * 60);
+      expect(result.waitingForBedsSeconds).toBeLessThanOrEqual(result.waitingForVillagersSeconds);
+      expect(result.waitingForBedsSeconds).toBeLessThan(5 * 60);
+    }
+  });
+
   it("is deterministic", () => {
     const again = runSimulation(STRATEGIES[1]);
     expect(again.totalSeconds).toBe(results.balanced.totalSeconds);

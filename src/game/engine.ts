@@ -1,5 +1,5 @@
 import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
-import { CONFIG, ITEMS } from "./config.ts";
+import { CONFIG, ITEMS, VILLAGE } from "./config.ts";
 import type { ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
@@ -26,6 +26,10 @@ export interface SimState {
   walkoutReadyAt: number;
   walkouts: number;
   restDays: number;
+  /** Everyone living in the village: workers, the unemployed and machines' former staff. */
+  population: number;
+  /** Seconds since the last arrival, capped at the arrival interval. */
+  arrivalTimer: number;
 }
 
 export interface Rates {
@@ -43,6 +47,8 @@ const ZERO_COUNTS: Counts = {
   builderDrone: 0,
   research: 0,
   exploit: 0,
+  hut: 0,
+  house: 0,
 };
 
 export function createState(): SimState {
@@ -62,6 +68,8 @@ export function createState(): SimState {
     walkoutReadyAt: 0,
     walkouts: 0,
     restDays: 0,
+    population: VILLAGE.startPopulation,
+    arrivalTimer: 0,
   };
 }
 
@@ -78,6 +86,24 @@ export function idleVillagers(owned: Counts): number {
     Math.min(owned.woodcutter, owned.sawmillBot) +
     Math.min(owned.builder, owned.builderDrone)
   );
+}
+
+/** Jobs the villagers hold, including those a machine has since taken over. */
+export function jobsHeld(owned: Counts): number {
+  return owned.forager + owned.woodcutter + owned.builder;
+}
+
+/** Beds in the village: the starting beds plus everything built. */
+export function bedsOf(owned: Counts): number {
+  let beds: number = VILLAGE.startBeds;
+  for (const def of ITEMS) beds += (def.beds ?? 0) * owned[def.id];
+  return beds;
+}
+
+/** Villagers without a job: free to be hired, and including those a machine replaced. */
+export function unemployed(state: SimState): number {
+  const working = jobsHeld(state.owned) - idleVillagers(state.owned);
+  return Math.max(0, state.population - working);
 }
 
 export function isResting(state: SimState): boolean {
@@ -140,7 +166,19 @@ export function ratesFor(
 }
 
 export function isAvailable(state: SimState, def: ItemDef): boolean {
-  return state.stage >= def.firstStage && state.stage <= def.lastStage;
+  if (state.stage < def.firstStage || state.stage > def.lastStage) return false;
+  // Housing is offered once the village is big enough, and stays offered once built.
+  if (def.fromPopulation !== undefined) {
+    return state.population >= def.fromPopulation || state.owned[def.id] > 0;
+  }
+  return true;
+}
+
+const JOB_IDS: readonly ItemId[] = ["forager", "woodcutter", "builder"];
+
+/** Jobs are filled from the village, so they need an unemployed villager each. */
+export function isJob(id: ItemId): boolean {
+  return JOB_IDS.includes(id);
 }
 
 /** Cost of the next unit of an item, including the rations policy discount on food prices. */
@@ -183,7 +221,9 @@ export function purchaseLimit(state: SimState, def: ItemDef): number {
       : def.id === "exploit"
         ? CONFIG.exploitsGoal
         : null;
-  return goal === null ? Infinity : Math.max(0, goal - state.owned[def.id]);
+  if (goal !== null) return Math.max(0, goal - state.owned[def.id]);
+  // A job needs a villager to do it, so the unemployed are the limit.
+  return isJob(def.id) ? unemployed(state) : Infinity;
 }
 
 /** Total cost of buying `count` more units of an item, using the closed-form sum. */
@@ -280,6 +320,13 @@ export function step(state: SimState, dt = 1, includeClicks = true): void {
     state.walkoutReadyAt = state.time + m.walkoutCooldown;
     state.morale = m.walkoutMoraleAfter;
     state.walkouts += 1;
+  }
+
+  // Villagers arrive to fill free beds, one every few seconds.
+  state.arrivalTimer = Math.min(state.arrivalTimer + dt, VILLAGE.arrivalSeconds);
+  if (state.arrivalTimer >= VILLAGE.arrivalSeconds && state.population < bedsOf(state.owned)) {
+    state.population += 1;
+    state.arrivalTimer = 0;
   }
 
   state.time += dt;

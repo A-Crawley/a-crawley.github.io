@@ -1,7 +1,7 @@
 import { buyItem, gatherFood } from "./actions.ts";
 import { CONFIG } from "./config.ts";
 import { canAfford } from "./engine.ts";
-import { chooseTarget, runSimulation, STRATEGIES } from "./sim/player.ts";
+import { chooseNext, runSimulation, STRATEGIES } from "./sim/player.ts";
 import { createGameState } from "./state.ts";
 import { tick } from "./tick.ts";
 
@@ -23,7 +23,7 @@ describe("first stage timeline", () => {
       state = tick(state, now);
       for (let i = 0; i < CONFIG.clicksPerSecond; i++) state = gatherFood(state);
       for (;;) {
-        const target = chooseTarget(state);
+        const target = chooseNext(state).item;
         if (!target || !canAfford(state, target)) break;
         const next = buyItem(state, target.id);
         if (next === state) break;

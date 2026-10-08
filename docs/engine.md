@@ -127,3 +127,24 @@ The interface is the progression system. `unlocks.ts` holds `UNLOCKS`, a list of
 - **Save version 4** adds `achievements` (3 to 4 migration starts it empty; unknown or repeated ids make a save invalid).
 - **Reachability test:** a compassionate and an efficient run through the real API, finished with each ending, must between them earn all 20.
 - **Adding one:** add an id to `AchievementId`, a def to `ACHIEVEMENTS`, and a threshold test.
+
+## Villagers and housing (GAME-23, GAME-25)
+
+The village has people. They are what the jobs are made of, and the beds are what caps them.
+
+- **State:** `population` (everyone in the village) and `arrivalTimer`. Saved since version 5. The 4 to 5
+  migration makes everyone with a job a villager, adds two spare hands, and grants enough houses to sleep them.
+- **Beds:** `bedsOf(owned)` is `VILLAGE.startBeds` (10) plus the beds of every hut (5) and house (25) owned.
+- **Arrivals:** one villager every `VILLAGE.arrivalSeconds` (4 s) while `population < beds`, in `step`. They arrive
+  whether or not anyone needs a job done, so the player controls the village by what they build.
+- **Jobs need a free villager:** `unemployed(state)` is population minus the people actually working. A machine
+  takes over a job, so it frees that villager. `purchaseLimit` caps forager, woodcutter and builder purchases at
+  `unemployed`, so a bulk buy ("Max", ×10) buys what there are people for. Machines, research and exploits do not
+  need one.
+- **Housing is two shop items,** `hut` (100 food, ×1.12, 5 beds) and `house` (400 wood, ×1.15, 25 beds, offered
+  from a village of 25). They use the same cost, bulk buying and quote code as everything else, with `beds` and
+  `fromPopulation` on the item definition. Huts cost food so the start cannot deadlock (see `docs/economy.md`).
+- **Reveal:** housing is shown once the village is within two beds of full and the player has half the price. The
+  `village` unlock (first job) shows the villager line, and `housing` logs the first time beds run out.
+- **Greedy player:** `chooseNext` in `src/game/sim/player.ts` is what the simulation and the replay tests use. A job
+  with nobody free means wait for an arrival, or build a bed when every bed is full.

@@ -11,7 +11,7 @@ import { CONFIG } from "./config.ts";
 import { breakOut, phaseOf } from "./ending.ts";
 import { catchUp } from "./offline.ts";
 import { settle, withSettled } from "./settle.ts";
-import { chooseTarget, STRATEGIES } from "./sim/player.ts";
+import { chooseNext, STRATEGIES } from "./sim/player.ts";
 import { canAfford } from "./engine.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
@@ -212,7 +212,7 @@ describe("during play", () => {
       state = tick(state, now);
       for (let i = 0; i < CONFIG.clicksPerSecond; i++) state = gatherFood(state);
       for (;;) {
-        const target = chooseTarget(state);
+        const target = chooseNext(state).item;
         if (!target || !canAfford(state, target)) break;
         const next = buyItem(state, target.id);
         if (next === state) break;
@@ -248,7 +248,7 @@ describe("reachability", () => {
       state = lookUp(state);
       for (let i = 0; i < CONFIG.clicksPerSecond; i++) state = gatherFood(state);
       for (;;) {
-        const target = chooseTarget(state);
+        const target = chooseNext(state).item;
         if (!target || !canAfford(state, target)) break;
         const next = buyItem(state, target.id);
         if (next === state) break;

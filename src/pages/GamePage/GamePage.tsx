@@ -15,13 +15,16 @@ import { CONFIG, ITEMS } from "../../game/config.ts";
 import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
   BUY_QUANTITIES,
+  bedsOf,
   canRest,
   foodPerClick,
   isAvailable,
+  isJob,
   isResting,
   isWalkingOut,
   quotePurchase,
   ratesFor,
+  unemployed,
 } from "../../game/engine.ts";
 import type { BuyQuantity } from "../../game/engine.ts";
 import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS, sighting } from "../../game/itemCopy.ts";
@@ -55,6 +58,7 @@ import { ShopItem } from "../../components/ShopItem";
 
 const SECTIONS: ReadonlyArray<{ title: string; ids: readonly ItemId[] }> = [
   { title: "Jobs", ids: ["forager", "woodcutter", "builder"] },
+  { title: "Housing", ids: ["hut", "house"] },
   { title: "Machines", ids: ["autoForager", "sawmillBot", "builderDrone"] },
   { title: "Projects", ids: ["research", "exploit"] },
 ];
@@ -193,6 +197,12 @@ export function GamePage({ options }: GamePageProps) {
                   caption="Progress is measured in levels of research. Nobody has defined a level."
                 />
               )}
+              {unlocked("village") && (
+                <Typography variant="body2" color="text.secondary">
+                  {state.population} villagers, {unemployed(state)} without a job.{" "}
+                  {bedsOf(state.owned)} beds.
+                </Typography>
+              )}
               {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (
                 <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                   <QuantitySelector
@@ -212,6 +222,7 @@ export function GamePage({ options }: GamePageProps) {
                       {defs.map((def) => {
                         const quote = quotePurchase(state, def, quantity);
                         const copy = ITEM_COPY[def.id];
+                        const noOneFree = isJob(def.id) && unemployed(state) === 0;
                         return (
                           <ShopItem
                             key={def.id}
@@ -224,6 +235,11 @@ export function GamePage({ options }: GamePageProps) {
                             currency={CURRENCY_NAME[def.currency]}
                             output={copy.output}
                             affordable={quote.affordable}
+                            blockedReason={
+                              noOneFree
+                                ? "Nobody is free to take the job. More villagers move in when there are beds."
+                                : undefined
+                            }
                             onBuy={() => game.buyItem(def.id, quantity)}
                           />
                         );

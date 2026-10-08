@@ -14,7 +14,9 @@ export type ItemId =
   | "sawmillBot"
   | "builderDrone"
   | "research"
-  | "exploit";
+  | "exploit"
+  | "hut"
+  | "house";
 
 export interface ItemDef {
   id: ItemId;
@@ -26,6 +28,10 @@ export interface ItemDef {
   currency: Currency;
   base: number;
   growth: number;
+  /** Housing only: how many beds one unit adds. */
+  beds?: number;
+  /** Housing only: the village needs this many people before the item is offered. */
+  fromPopulation?: number;
 }
 
 export const ITEMS: readonly ItemDef[] = [
@@ -104,7 +110,40 @@ export const ITEMS: readonly ItemDef[] = [
     base: 150,
     growth: 1.18,
   },
+  // Housing (GAME-23 and GAME-25). Villagers arrive to fill free beds, so beds cap the village.
+  // A hut costs food, not wood: with wood huts the start could deadlock (every bed full, nobody
+  // free to hire as a woodcutter, no wood for a bed). Houses come once there is a wood economy.
+  {
+    id: "hut",
+    label: "Hut",
+    firstStage: 1,
+    lastStage: 2,
+    currency: "food",
+    base: 100,
+    growth: 1.12,
+    beds: 5,
+  },
+  {
+    id: "house",
+    label: "House",
+    firstStage: 1,
+    lastStage: 2,
+    currency: "wood",
+    base: 400,
+    growth: 1.15,
+    beds: 25,
+    fromPopulation: 25,
+  },
 ];
+
+/** The village: how many people it starts with, how fast they arrive and where they sleep. */
+export const VILLAGE = {
+  startPopulation: 3,
+  /** Beds before any housing is built. */
+  startBeds: 10,
+  /** Seconds between arrivals while there is a free bed. */
+  arrivalSeconds: 4,
+} as const;
 
 export const CONFIG = {
   /** Fully active play: clicks per second on "Gather food", and food per click. */

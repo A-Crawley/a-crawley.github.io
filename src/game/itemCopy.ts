@@ -1,4 +1,4 @@
-import { CONFIG } from "./config.ts";
+import { CONFIG, ITEMS } from "./config.ts";
 import type { Currency, ItemId, Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
 import { formatRate } from "./format.ts";
@@ -10,6 +10,11 @@ export interface ItemCopy {
   /** What one unit gives the player. */
   output: string;
 }
+
+const BEDS = {
+  hut: ITEMS.find((def) => def.id === "hut")?.beds ?? 0,
+  house: ITEMS.find((def) => def.id === "house")?.beds ?? 0,
+};
 
 /**
  * The words on the shop for each item. The numbers come from CONFIG so they can't drift. Per-unit
@@ -56,6 +61,16 @@ export const ITEM_COPY: Record<ItemId, ItemCopy> = {
     action: "Exploit",
     description: "A gap in the simulation. A rather large one.",
     output: "one step closer to the exit",
+  },
+  hut: {
+    action: "Build",
+    description: "Accommodation Solutions, version one. Mostly a roof.",
+    output: `room for ${BEDS.hut} more villagers`,
+  },
+  house: {
+    action: "Build",
+    description: "Residential Delivery. Has a door, and a form to fill in about the door.",
+    output: `room for ${BEDS.house} more villagers`,
   },
 };
 

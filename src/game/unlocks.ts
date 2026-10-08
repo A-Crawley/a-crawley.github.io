@@ -1,6 +1,6 @@
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
-import { costOf, isAvailable } from "./engine.ts";
+import { bedsOf, costOf, isAvailable } from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import type { GameState } from "./state.ts";
@@ -27,6 +27,8 @@ export type UnlockId =
   | `item:${ItemId}`
   | "wood"
   | "infra"
+  | "village"
+  | "housing"
   | "morale"
   | "policy:rationsOptimisation"
   | "policy:restDay"
@@ -123,11 +125,18 @@ function totalJobs(state: GameState): number {
   return state.owned.forager + state.owned.woodcutter + state.owned.builder;
 }
 
+/** Beds left before the village is full. Housing is offered when this is nearly nothing. */
+export const HOUSING_REVEAL_FREE_BEDS = 2;
+
 const ITEM_UNLOCKS: readonly UnlockDef[] = ITEMS.map((def) => ({
   id: `item:${def.id}` as const,
   when: (state) =>
     isAvailable(state, def) &&
-    (state.owned[def.id] > 0 || state[def.currency] >= costOf(state, def) * REVEAL_FRACTION),
+    (state.owned[def.id] > 0 ||
+      (state[def.currency] >= costOf(state, def) * REVEAL_FRACTION &&
+        // Beds are only worth offering once the village is nearly full.
+        (def.beds === undefined ||
+          bedsOf(state.owned) - state.population <= HOUSING_REVEAL_FREE_BEDS))),
 }));
 
 /** Every unlock, in the order the player is expected to meet them. */
@@ -140,6 +149,15 @@ export const UNLOCKS: readonly UnlockDef[] = [
   {
     id: "infra",
     when: (s) => s.infra > 0 || s.owned.builder > 0,
+  },
+  {
+    id: "village",
+    when: (s) => totalJobs(s) >= 1,
+  },
+  {
+    id: "housing",
+    when: (s) => s.owned.hut > 0 || s.owned.house > 0 || bedsOf(s.owned) - s.population <= 0,
+    log: "The village has run out of beds. A working group has been formed to look at sleeping.",
   },
   {
     id: "morale",
