@@ -165,13 +165,23 @@ export const CONFIG = {
       moraleDrainPerSecond: 0.3,
       driftPerSecond: -0.5,
     },
-    restDay: { duration: 30, moraleGain: 30, cooldown: 150, drift: 200 },
+    // Rest day: output stops for `duration` seconds. 30 seconds (the first prototype value) made a
+    // fully compassionate run about 30% slower than a balanced one; 8 seconds brings it to within
+    // 2%. Kindness should cost the village a moment, not the player half an hour (GAME-18).
+    restDay: { duration: 8, moraleGain: 30, cooldown: 150, drift: 200 },
   },
 
   /** Raw drift at which the compassion index reaches its extremes (0 or 1). */
   driftScale: 16000,
   /** Chance of the Conquest ending: base + span × compassion index (a mirror rival is gentler when you were). */
   conquestOdds: { base: 0.15, span: 0.7 },
+
+  /**
+   * How fast the village works while the player is away, as a fraction of normal. Away time is
+   * replayed at this rate (so 8 hours away is 2 hours of village time), which stops a long absence
+   * from skipping a game that is meant to take about 2 hours.
+   */
+  offlineRate: 0.25,
 
   /** Stop after this long if the run has not finished. */
   maxSeconds: 4 * 60 * 60,

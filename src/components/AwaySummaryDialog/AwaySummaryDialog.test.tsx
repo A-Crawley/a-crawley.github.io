@@ -8,6 +8,7 @@ const base: AwaySummary = {
   awaySeconds: 2 * 3600 + 14 * 60,
   countedSeconds: 2 * 3600 + 14 * 60,
   capped: false,
+  rate: 0.25,
   gained: { food: 3200, wood: 410, infra: 0 },
   policiesEnded: [],
   stageFrom: 1,
@@ -94,5 +95,15 @@ describe("AwaySummaryDialog", () => {
     expect(screen.getByRole("list", { name: "Gained while away" })).toHaveTextContent(
       "Food+3.20e3",
     );
+  });
+
+  it("says the village worked at reduced speed while nobody was watching", () => {
+    render(<AwaySummaryDialog summary={base} onClose={() => {}} />);
+    expect(screen.getByText(/worked at 25% speed/)).toBeInTheDocument();
+  });
+
+  it("does not mention speed when the village worked at full speed", () => {
+    render(<AwaySummaryDialog summary={{ ...base, rate: 1 }} onClose={() => {}} />);
+    expect(screen.queryByText(/% speed/)).not.toBeInTheDocument();
   });
 });

@@ -57,11 +57,12 @@ touches it through `src/hooks/useGame.ts`.
 
 - **What counts as away:** a gap of 60 seconds or more (`AWAY_AFTER_SECONDS`). A shorter gap is an ordinary `tick`.
 - **Policies switch off when the player leaves.** Extended Shifts and Rations Optimisation are turned off at the start of the gap, so being away never costs morale or moves the hidden drift (and gives no bonus output). Without them, morale can't fall far enough for a walkout, even with every villager laid off.
+- **Credited at 25%** (`CONFIG.offlineRate`, GAME-18): away time is replayed at a quarter speed, so 8 hours away is 2 hours of village time (food, wood, infrastructure and game time alike). The summary carries `rate`, and the dialog mentions it.
 - **Cap: 8 hours** (`MAX_AWAY_SECONDS`). Only the first 8 hours are replayed, with the same step-by-step `tick` as normal play, so stage changes work. Time beyond the cap is dropped: play resumes from now and the lost time does not come back.
 - **One path for every case.** A closed tab, a hidden tab and an old imported save all look the same, a state whose `lastTickAt` is long ago. While the tab is hidden `useGame` does not tick; on return (or on load) the store catches up straight away.
 - **The summary:** `AwaySummary` (time away, time counted, whether capped, food, wood and infrastructure gained, policies that ended, stage before and after) is kept in the store until the player dismisses it (`getAway`, `dismissAway`). Two unseen summaries merge. It is not saved. `AwaySummaryDialog` shows it.
 - **Unlocks during catch-up:** `tick` settles unlocks after every step, so an 8-hour absence unlocks things in the right order and nothing is missed (see Unlocks). GAME-17 should record achievements from the state after `catchUp`, not from events.
-- **Balance note:** 8 hours of output is far more than the whole game's 2 hours of play, so a long absence can fund a lot on return. Flagged for GAME-18; an offline efficiency multiplier is the usual lever.
+- **Balance note:** at full rate, 8 hours of output was far more than the whole game's 2 hours of play. The 25% rate above is the lever GAME-18 used: 8 hours away now equals 2 hours of village time.
 
 ## Number formatting (GAME-8)
 

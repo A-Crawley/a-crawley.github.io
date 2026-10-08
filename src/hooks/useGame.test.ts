@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { CONFIG } from "../game/config.ts";
 import { createGameState } from "../game/state.ts";
 import { CORRUPT_SAVE_KEY, loadGame, SAVE_KEY } from "../game/storage.ts";
 import type { StorageLike } from "../game/storage.ts";
@@ -67,8 +68,9 @@ describe("useGame", () => {
     act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    expect(result.current.state.time).toBeCloseTo(3600, 0);
-    expect(result.current.state.food).toBeGreaterThan(1000);
+    // An hour away is credited at the offline rate: a quarter of an hour of village time.
+    expect(result.current.state.time).toBeCloseTo(3600 * CONFIG.offlineRate, 0);
+    expect(result.current.state.food).toBeGreaterThan(250);
   });
 
   it("toggles a policy", () => {

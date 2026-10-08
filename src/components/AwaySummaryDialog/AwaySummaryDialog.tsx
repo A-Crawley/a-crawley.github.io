@@ -54,6 +54,11 @@ export function AwaySummaryDialog({ summary, onClose }: AwaySummaryDialogProps) 
             Only the first {formatDuration(shown.countedSeconds)} counted.
           </Typography>
         )}
+        {shown.rate < 1 && (
+          <Typography color="text.secondary">
+            With nobody watching, the village worked at {Math.round(shown.rate * 100)}% speed.
+          </Typography>
+        )}
         {gains.length > 0 ? (
           <List dense aria-label="Gained while away" sx={{ my: 1 }}>
             {gains.map(({ key, label }) => (

@@ -180,8 +180,10 @@ describe("GamePage while away", () => {
     expect(dialog).toHaveTextContent("Food+");
     await user.click(screen.getByRole("button", { name: "Back to work" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    // 10 foragers at 0.4/s, doubled by the 10-owned milestone, for 3 hours: 8 × 10,800.
-    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("86.4K");
+    // 10 foragers at 0.4/s, doubled by the 10-owned milestone, for 3 hours at a quarter speed:
+    // 8 × 10,800 × 0.25.
+    expect(dialog).toHaveTextContent("25% speed");
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("21.6K");
   });
 
   it("shows no summary for a game saved a moment ago", () => {
