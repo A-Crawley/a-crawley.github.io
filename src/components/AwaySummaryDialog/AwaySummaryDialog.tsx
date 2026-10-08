@@ -74,6 +74,13 @@ export function AwaySummaryDialog({ summary, onClose }: AwaySummaryDialogProps) 
             The village produced nothing, which is also a result.
           </Typography>
         )}
+        {shown.storageFull.length > 0 && (
+          <Typography color="text.secondary" sx={{ mb: 1 }}>
+            The {shown.storageFull.join(" and ")} store
+            {shown.storageFull.length === 1 ? " was" : "s were"} full, so the village stopped
+            gathering. More storage means more to come back to.
+          </Typography>
+        )}
         {shown.policiesEnded.length > 0 && (
           <Typography color="text.secondary" sx={{ mb: 1 }}>
             {shown.policiesEnded.map((key) => POLICY_LABELS[key]).join(" and ")}{" "}

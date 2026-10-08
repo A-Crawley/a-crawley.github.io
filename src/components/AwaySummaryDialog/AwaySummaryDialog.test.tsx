@@ -11,6 +11,7 @@ const base: AwaySummary = {
   rate: 0.25,
   gained: { food: 3200, wood: 410, infra: 0 },
   policiesEnded: [],
+  storageFull: [],
   achievementsEarned: [],
   stageFrom: 1,
   stageTo: 1,
@@ -123,5 +124,15 @@ describe("AwaySummaryDialog", () => {
   it("does not mention achievements when none were earned", () => {
     render(<AwaySummaryDialog summary={base} onClose={() => {}} />);
     expect(screen.queryByText(/Achievements earned/)).not.toBeInTheDocument();
+  });
+
+  it("says when a store was full on return", () => {
+    render(<AwaySummaryDialog summary={{ ...base, storageFull: ["food"] }} onClose={() => {}} />);
+    expect(screen.getByRole("dialog")).toHaveTextContent("The food store was full");
+  });
+
+  it("says nothing about stores when there was room", () => {
+    render(<AwaySummaryDialog summary={base} onClose={() => {}} />);
+    expect(screen.getByRole("dialog")).not.toHaveTextContent("store");
   });
 });

@@ -16,6 +16,7 @@ import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
   BUY_QUANTITIES,
   bedsOf,
+  capOf,
   canRest,
   foodPerClick,
   isAvailable,
@@ -62,6 +63,7 @@ import { VillagePanel } from "../../components/VillagePanel";
 const SECTIONS: ReadonlyArray<{ title: string; ids: readonly ItemId[] }> = [
   { title: "Jobs", ids: ["forager", "woodcutter", "builder"] },
   { title: "Housing", ids: ["hut", "house"] },
+  { title: "Storage", ids: ["granary", "woodshed"] },
   { title: "Machines", ids: ["autoForager", "sawmillBot", "builderDrone"] },
   { title: "Projects", ids: ["research", "exploit"] },
 ];
@@ -149,6 +151,7 @@ export function GamePage({ options }: GamePageProps) {
               value={state.food}
               perSecond={rates.food}
               upkeep={upkeepPerSecond(state)}
+              capacity={unlocked("storage") ? capOf(state, "food") : undefined}
             />
           )}
           {phase !== "ended" && (unlocked("wood") || unlocked("infra")) && (
@@ -158,6 +161,7 @@ export function GamePage({ options }: GamePageProps) {
                   label="Wood"
                   value={state.wood}
                   perSecond={rates.wood}
+                  capacity={unlocked("storage") ? capOf(state, "wood") : undefined}
                   size="small"
                 />
               )}

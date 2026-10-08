@@ -8,6 +8,8 @@ export interface ResourceCounterProps {
   perSecond?: number;
   /** Eaten each second, if anything is. The counter then shows what is left after it. */
   upkeep?: number;
+  /** Most the village can hold. Leave out for a stock with no ceiling. */
+  capacity?: number;
   /** "large" for the main resource, "small" for the others. */
   size?: "large" | "small";
 }
@@ -18,6 +20,7 @@ export function ResourceCounter({
   value,
   perSecond,
   upkeep = 0,
+  capacity,
   size = "large",
 }: ResourceCounterProps) {
   const format = useNumberFormat();
@@ -36,6 +39,13 @@ export function ResourceCounter({
       >
         {format.amount(value)}
       </Typography>
+      {capacity !== undefined && (
+        <Typography variant="body2" color="text.secondary">
+          {value >= capacity
+            ? `Store full (${format.amount(capacity)}): anything more is lost`
+            : `Store holds up to ${format.amount(capacity)}`}
+        </Typography>
+      )}
       {perSecond !== undefined && (
         <Typography variant="body1" color="text.secondary">
           {rateText(perSecond, upkeep, format.rate)}

@@ -2,7 +2,7 @@ import type { AchievementId } from "./achievements.ts";
 import { CONFIG } from "./config.ts";
 import type { Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
-import { isFinished } from "./engine.ts";
+import { isFinished, isFull } from "./engine.ts";
 import type { GameState } from "./state.ts";
 import { tick } from "./tick.ts";
 
@@ -28,6 +28,8 @@ export interface AwaySummary {
   policiesEnded: Array<keyof Policies>;
   /** Achievements earned while away, in the order they were awarded. */
   achievementsEarned: AchievementId[];
+  /** Stocks that were full when the player came back, so the village stopped gathering them. */
+  storageFull: Array<"food" | "wood">;
   stageFrom: Stage;
   stageTo: Stage;
 }
@@ -90,6 +92,7 @@ export function catchUp(state: GameState, now: number): CatchUp {
       },
       policiesEnded,
       achievementsEarned: returned.achievements.filter((id) => !state.achievements.includes(id)),
+      storageFull: (["food", "wood"] as const).filter((c) => isFull(returned, c)),
       stageFrom: state.stage,
       stageTo: returned.stage,
     },
@@ -110,6 +113,7 @@ export function mergeAway(earlier: AwaySummary, later: AwaySummary): AwaySummary
     },
     policiesEnded: [...new Set([...earlier.policiesEnded, ...later.policiesEnded])],
     achievementsEarned: [...new Set([...earlier.achievementsEarned, ...later.achievementsEarned])],
+    storageFull: later.storageFull,
     stageFrom: earlier.stageFrom,
     stageTo: later.stageTo,
   };

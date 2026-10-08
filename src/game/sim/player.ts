@@ -273,7 +273,9 @@ export function runSimulation(strategy: Strategy): RunResult {
     stages,
     purchases,
     firstPurchase,
-    neverBought: ITEMS.filter((def) => !bought.has(def.id)).map((def) => def.id),
+    neverBought: ITEMS.filter((def) => def.stores === undefined && !bought.has(def.id)).map(
+      (def) => def.id,
+    ),
     walkouts: state.walkouts,
     restDays: state.restDays,
     drift: state.drift,

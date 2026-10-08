@@ -54,4 +54,16 @@ describe("ResourceCounter", () => {
     render(<ResourceCounter label="Food" value={5} perSecond={2} upkeep={2} />);
     expect(screen.getByText("Holding steady: villagers eat 2.0")).toBeInTheDocument();
   });
+
+  it("shows how much the store holds, and says when it is full", () => {
+    const { rerender } = render(<ResourceCounter label="Food" value={40} capacity={300} />);
+    expect(screen.getByText("Store holds up to 300")).toBeInTheDocument();
+    rerender(<ResourceCounter label="Food" value={300} capacity={300} />);
+    expect(screen.getByText("Store full (300): anything more is lost")).toBeInTheDocument();
+  });
+
+  it("shows no store line when there is no ceiling", () => {
+    render(<ResourceCounter label="Food" value={40} />);
+    expect(screen.queryByText(/Store/)).not.toBeInTheDocument();
+  });
 });

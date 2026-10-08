@@ -36,6 +36,12 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   4: migratePopulation,
   // 5 -> 6: hunger is tracked. A save starts fed.
   5: (save) => ({ ...save, version: 6, shortfallSeconds: 0 }),
+  // 6 -> 7: storage can be built. Nothing is owned yet; the ceiling is applied on the next step.
+  6: (save) => ({
+    ...save,
+    version: 7,
+    owned: { ...(isRecord(save.owned) ? save.owned : {}), granary: 0, woodshed: 0 },
+  }),
 };
 
 function migratePopulation(save: RawSave): RawSave {

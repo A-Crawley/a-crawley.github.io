@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.ts";
-import { bedsOf, startRestDay, unemployed } from "./engine.ts";
+import { bedsOf, capOf, startRestDay, unemployed } from "./engine.ts";
 import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "./actions.ts";
 import { createGameState } from "./state.ts";
 import { withUnlocks } from "./unlocks.ts";
@@ -271,5 +271,22 @@ describe("housing", () => {
     expect(buyItem(state, "house")).toBe(state);
     state.population = 25;
     expect(buyItem(state, "house").owned.house).toBe(1);
+  });
+});
+
+describe("storage and clicking", () => {
+  it("loses a click that does not fit in a full store", () => {
+    const state = fresh();
+    state.food = capOf(state, "food");
+    expect(gatherFood(state).food).toBe(capOf(state, "food"));
+  });
+
+  it("buys storage with wood", () => {
+    const state = fresh();
+    state.stage = 1;
+    state.wood = 100;
+    const next = buyItem(state, "granary");
+    expect(next.owned.granary).toBe(1);
+    expect(next.wood).toBeLessThan(100);
   });
 });
