@@ -41,8 +41,18 @@ touches it through `src/hooks/useGame.ts`.
 - **Blocked storage:** every read and write is wrapped. The game still runs and `loadStatus` reports `"unavailable"`.
 - **Loading is offline progress:** loading or importing a save and then ticking replays the time since `lastTickAt`. GAME-13 decides the cap and how policies behave while away.
 
+## Bulk buying (GAME-12)
+
+`buyItem(state, id, quantity)` takes `1`, `10`, `100` or `"max"` (`BuyQuantity`, default 1).
+
+- A fixed amount is all or nothing: if the player can't pay for every unit, nothing is bought and the same state object comes back.
+- `"max"` buys as many as affordable, and does nothing if that is zero.
+- Prices use the closed-form sums in `economy.ts` (`bulkCost`, `maxAffordable`), with the Rations Optimisation discount applied to food prices. `bulkCostOf`, `maxAffordableOf` and `quotePurchase` in `engine.ts` expose them to the UI; `quotePurchase` says how many units, what they cost and whether the purchase can go ahead.
+- Research and exploits stop at their stage goals (`purchaseLimit`), so a bulk buy can't overshoot a stage.
+- Tests check bulk results against buying one unit at a time, and `timeline.test.ts` replays the prototype's greedy player through `tick`, `gatherFood` and `buyItem`: stage 1 ends at the same time as in the prototype.
+
 ## For later tickets
 
 - **Offline progress (GAME-13):** a long `tick` already replays the gap in full. Open decisions: a cap, and
   whether policies such as Extended Shifts keep draining morale while the player is away.
-- **Bulk buying (GAME-12):** `buyItem` buys one unit. The closed-form helpers in `economy.ts` are ready for it.
+- **Bulk buying (GAME-12, done in the engine):** see below.

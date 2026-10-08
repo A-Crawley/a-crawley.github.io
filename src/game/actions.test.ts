@@ -107,3 +107,62 @@ describe("a finished game", () => {
     expect(takeRestDay(state)).toBe(state);
   });
 });
+
+describe("buyItem with a quantity", () => {
+  it("buys exactly ten when ten are affordable", () => {
+    const state = fresh();
+    state.food = 1000;
+    const next = buyItem(state, "forager", 10);
+    expect(next.owned.forager).toBe(10);
+    expect(next.food).toBeLessThan(1000 - 10 * 10);
+    expect(state.owned.forager).toBe(0);
+  });
+
+  it("is all or nothing for a fixed amount", () => {
+    const state = fresh();
+    state.food = 100; // enough for several, not ten
+    expect(buyItem(state, "forager", 10)).toBe(state);
+  });
+
+  it("buys as many as it can with max", () => {
+    const state = fresh();
+    state.food = 100;
+    const next = buyItem(state, "forager", "max");
+    expect(next.owned.forager).toBe(6);
+    expect(next.food).toBeGreaterThanOrEqual(0);
+    expect(next.food).toBeLessThan(state.food);
+  });
+
+  it("does nothing with max when nothing is affordable", () => {
+    const state = fresh();
+    state.food = 3;
+    expect(buyItem(state, "forager", "max")).toBe(state);
+  });
+
+  it("gives the same result as buying one at a time", () => {
+    const bulk = fresh();
+    bulk.food = 500;
+    const single = structuredClone(bulk);
+    const bought = buyItem(bulk, "forager", 10);
+    let stepwise = single;
+    for (let i = 0; i < 10; i++) stepwise = buyItem(stepwise, "forager");
+    expect(bought.owned.forager).toBe(stepwise.owned.forager);
+    expect(bought.food).toBeCloseTo(stepwise.food, 6);
+  });
+
+  it("still blocks items that are not available in the current stage", () => {
+    const state = fresh();
+    state.food = 1e9;
+    expect(buyItem(state, "autoForager", "max")).toBe(state);
+  });
+
+  it("advances the stage when a bulk purchase reaches the research goal", () => {
+    const state = fresh();
+    state.stage = 2;
+    state.food = 1e12;
+    state.owned.research = CONFIG.researchLevels - 2;
+    const next = buyItem(state, "research", "max");
+    expect(next.owned.research).toBe(CONFIG.researchLevels);
+    expect(next.stage).toBe(3);
+  });
+});
