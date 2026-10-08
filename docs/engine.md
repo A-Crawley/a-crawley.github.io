@@ -115,3 +115,15 @@ The interface is the progression system. `unlocks.ts` holds `UNLOCKS`, a list of
 - **End screen:** the ending, the reveal both endings share, one line on how the run read (the hidden drift put into words), and stats (`endStats`: time played, villagers, machines, rest days, walkouts, research, exploits). "Start a new game" asks first, then calls `resetGame`. The shop and counters are hidden once ended.
 - **Save version 3:** adds `ending` (null, `conquest` or `apocalypse`). The 2 to 3 migration sets null. A save with an ending but an unfinished run is rejected.
 - **Copy:** all ending text lives in `endingCopy.ts`; rival lines are in `unlocks.ts`.
+
+## Achievements (GAME-17)
+
+`achievements.ts` holds `ACHIEVEMENTS`: 20 achievements, each with a title, a hint (shown while locked), a dry line (shown once earned) and a condition on the saved state. They work like unlocks: conditions on state, never events, saved in `state.achievements` (in the order awarded) and never taken back.
+
+- **Where they are awarded:** `settle(state)` in `settle.ts` runs unlocks first and then achievements (some depend on an unlock, such as Look Up). It runs after every tick step and every action, after `breakOut`, and when the store starts or replaces its state, so an old or imported save is awarded what it already earned. `withSettled` is the copying version.
+- **Offline:** because `tick` settles every step, a long gap awards in the right order. `AwaySummary.achievementsEarned` lists what the gap earned, and the "welcome back" dialog names them. They are not shown again as toasts.
+- **No production bonus:** achievements are a record, not a power-up. The balance pass assumed none, and a bonus would have meant re-tuning it.
+- **UI:** an "Achievements (n/20)" panel on the game page (earned ones by name and line, locked ones as a hint under "Locked"), and a brief toast when one is earned during play (`useNewAchievements`: nothing is announced for what was earned before the page loaded or while the away dialog is open).
+- **Save version 4** adds `achievements` (3 to 4 migration starts it empty; unknown or repeated ids make a save invalid).
+- **Reachability test:** a compassionate and an efficient run through the real API, finished with each ending, must between them earn all 20.
+- **Adding one:** add an id to `AchievementId`, a def to `ACHIEVEMENTS`, and a threshold test.

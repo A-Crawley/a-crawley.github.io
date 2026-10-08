@@ -391,3 +391,47 @@ describe("GamePage ending", () => {
     expect(screen.getByText(/sends an invoice for the time/)).toBeInTheDocument();
   });
 });
+
+describe("GamePage achievements", () => {
+  it("lists them in a panel with a count, earned ones by name and locked ones as hints", async () => {
+    const user = setupWith((s) => {
+      s.owned.forager = 5;
+    });
+    const summary = screen.getByRole("button", { name: /Achievements \(2\/20\)/ });
+    await user.click(summary);
+    const list = screen.getByRole("list", { name: "Achievements" });
+    expect(list).toHaveTextContent("Headcount");
+    expect(list).toHaveTextContent("A Team");
+    expect(list).toHaveTextContent("Have 10 foragers.");
+    expect(list).not.toHaveTextContent("Synergy");
+  });
+
+  it("does not announce achievements already earned when the page opens", () => {
+    setupWith((s) => {
+      s.owned.forager = 5;
+    });
+    expect(screen.queryByText(/^Achievement: /)).not.toBeInTheDocument();
+  });
+
+  it("announces an achievement earned while playing", async () => {
+    const user = setupWith((s) => {
+      s.food = 10;
+    });
+    await user.click(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ }));
+    expect(await screen.findByText("Achievement: Headcount")).toBeInTheDocument();
+  });
+
+  it("awards the ending achievements at the final choice", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = createGameState(Date.now());
+    state.stage = 3;
+    state.owned.exploit = 22;
+    state.drift = 16000;
+    render(<GamePage options={{ storage: null, initialState: state, random: () => 0 }} />);
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    await user.click(screen.getByRole("button", { name: /Achievements \(/ }));
+    const list = screen.getByRole("list", { name: "Achievements" });
+    expect(list).toHaveTextContent("Conquest");
+    expect(list).toHaveTextContent("Soft Landing");
+  });
+});

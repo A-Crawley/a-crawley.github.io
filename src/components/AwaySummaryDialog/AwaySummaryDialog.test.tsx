@@ -11,6 +11,7 @@ const base: AwaySummary = {
   rate: 0.25,
   gained: { food: 3200, wood: 410, infra: 0 },
   policiesEnded: [],
+  achievementsEarned: [],
   stageFrom: 1,
   stageTo: 1,
 };
@@ -105,5 +106,22 @@ describe("AwaySummaryDialog", () => {
   it("does not mention speed when the village worked at full speed", () => {
     render(<AwaySummaryDialog summary={{ ...base, rate: 1 }} onClose={() => {}} />);
     expect(screen.queryByText(/% speed/)).not.toBeInTheDocument();
+  });
+
+  it("lists achievements earned while away, by title", () => {
+    render(
+      <AwaySummaryDialog
+        summary={{ ...base, achievementsEarned: ["first-hire", "stage-two"] }}
+        onClose={() => {}}
+      />,
+    );
+    expect(
+      screen.getByText(/Achievements earned while you were gone: Headcount, Restructure\./),
+    ).toBeInTheDocument();
+  });
+
+  it("does not mention achievements when none were earned", () => {
+    render(<AwaySummaryDialog summary={base} onClose={() => {}} />);
+    expect(screen.queryByText(/Achievements earned/)).not.toBeInTheDocument();
   });
 });

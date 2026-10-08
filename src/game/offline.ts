@@ -1,3 +1,4 @@
+import type { AchievementId } from "./achievements.ts";
 import { CONFIG } from "./config.ts";
 import type { Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
@@ -25,6 +26,8 @@ export interface AwaySummary {
   gained: { food: number; wood: number; infra: number };
   /** Policies that were on when the player left and were switched off. */
   policiesEnded: Array<keyof Policies>;
+  /** Achievements earned while away, in the order they were awarded. */
+  achievementsEarned: AchievementId[];
   stageFrom: Stage;
   stageTo: Stage;
 }
@@ -84,6 +87,7 @@ export function catchUp(state: GameState, now: number): CatchUp {
         infra: Math.max(0, returned.infra - state.infra),
       },
       policiesEnded,
+      achievementsEarned: returned.achievements.filter((id) => !state.achievements.includes(id)),
       stageFrom: state.stage,
       stageTo: returned.stage,
     },
@@ -103,6 +107,7 @@ export function mergeAway(earlier: AwaySummary, later: AwaySummary): AwaySummary
       infra: earlier.gained.infra + later.gained.infra,
     },
     policiesEnded: [...new Set([...earlier.policiesEnded, ...later.policiesEnded])],
+    achievementsEarned: [...new Set([...earlier.achievementsEarned, ...later.achievementsEarned])],
     stageFrom: earlier.stageFrom,
     stageTo: later.stageTo,
   };

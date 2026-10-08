@@ -16,6 +16,25 @@ function setup() {
   };
 }
 
+describe("createGameStore achievements", () => {
+  it("awards what a loaded save has already earned", () => {
+    const initialState = createGameState(1_000_000);
+    initialState.owned.forager = 10;
+    const store = createGameStore({ now: () => 1_000_000, initialState });
+    expect(store.getState().achievements).toEqual(
+      expect.arrayContaining(["first-hire", "five-foragers", "ten-foragers"]),
+    );
+  });
+
+  it("awards them for a replacement state, such as an imported save", () => {
+    const store = createGameStore({ now: () => 1_000_000 });
+    const imported = createGameState(1_000_000);
+    imported.restDays = 3;
+    store.replace(imported);
+    expect(store.getState().achievements).toContain("first-rest");
+  });
+});
+
 describe("createGameStore unlocks", () => {
   it("settles the unlocks a loaded save has earned before anything is shown", () => {
     const initialState = createGameState(1_000_000);

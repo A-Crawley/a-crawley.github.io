@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { formatDuration } from "../../game/format.ts";
 import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
+import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { POLICY_LABELS } from "../../game/itemCopy.ts";
 import type { AwaySummary } from "../../game/offline.ts";
 
@@ -78,6 +79,15 @@ export function AwaySummaryDialog({ summary, onClose }: AwaySummaryDialogProps) 
             {shown.policiesEnded.map((key) => POLICY_LABELS[key]).join(" and ")}{" "}
             {shown.policiesEnded.length === 1 ? "ended" : "both ended"} when you left. Nobody was
             there to enforce it.
+          </Typography>
+        )}
+        {shown.achievementsEarned.length > 0 && (
+          <Typography color="text.secondary" sx={{ mb: 1 }}>
+            Achievements earned while you were gone:{" "}
+            {shown.achievementsEarned
+              .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.title ?? id)
+              .join(", ")}
+            .
           </Typography>
         )}
         {stageChanged && (

@@ -1,6 +1,6 @@
 import { advanceStage, isFinished, step } from "./engine.ts";
 import type { GameState } from "./state.ts";
-import { applyUnlocks } from "./unlocks.ts";
+import { settle } from "./settle.ts";
 
 /** Longest single step. Morale, rest days and walkouts are not linear, so long gaps are replayed in steps. */
 export const MAX_STEP_SECONDS = 1;
@@ -28,9 +28,9 @@ export function tick(state: GameState, now: number): GameState {
     const dt = Math.min(MAX_STEP_SECONDS, remaining);
     step(next, dt, false);
     advanceStage(next);
-    applyUnlocks(next);
+    settle(next);
     remaining -= dt;
   }
-  applyUnlocks(next);
+  settle(next);
   return next;
 }

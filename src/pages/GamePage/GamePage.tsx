@@ -25,13 +25,17 @@ import {
 import type { BuyQuantity } from "../../game/engine.ts";
 import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS, sighting } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
+import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatDuration } from "../../game/format.ts";
 import { isUnlocked } from "../../game/unlocks.ts";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
+import { useNewAchievements } from "../../hooks/useNewAchievements.ts";
 import { useSettings } from "../../hooks/useSettings.ts";
+import { AchievementList } from "../../components/AchievementList";
+import { AchievementToast } from "../../components/AchievementToast";
 import { AwaySummaryDialog } from "../../components/AwaySummaryDialog";
 import { EndingScreen } from "../../components/EndingScreen";
 import { EventLog } from "../../components/EventLog";
@@ -77,6 +81,15 @@ export function GamePage({ options }: GamePageProps) {
       .filter((def): def is ItemDef => def !== undefined && visible(def)),
   }));
   const policies = CONFIG.policies;
+  const news = useNewAchievements(state.achievements, game.away !== null);
+  const toastTitle = ACHIEVEMENTS.find((a) => a.id === news.current)?.title ?? null;
+  const achievementItems = ACHIEVEMENTS.map((a) => ({
+    id: a.id,
+    title: a.title,
+    hint: a.hint,
+    flavour: a.flavour,
+    earned: state.achievements.includes(a.id),
+  }));
   const phase = phaseOf(state);
   const stats = endStats(state);
   const statRows = [
@@ -104,6 +117,7 @@ export function GamePage({ options }: GamePageProps) {
           </Link>
         </Box>
         <AwaySummaryDialog summary={game.away} onClose={game.dismissAway} />
+        <AchievementToast title={toastTitle} onClose={news.dismiss} />
         <Stack spacing={3}>
           {game.loadStatus === "corrupt" && (
             <Alert severity="warning">
@@ -278,6 +292,14 @@ export function GamePage({ options }: GamePageProps) {
             />
           )}
           <EventLog title="Village log" lines={logLines(state)} />
+          <Accordion disableGutters variant="outlined">
+            <AccordionSummary>
+              Achievements ({state.achievements.length}/{ACHIEVEMENTS.length})
+            </AccordionSummary>
+            <AccordionDetails>
+              <AchievementList items={achievementItems} />
+            </AccordionDetails>
+          </Accordion>
           <Accordion disableGutters variant="outlined">
             <AccordionSummary>Settings</AccordionSummary>
             <AccordionDetails>
