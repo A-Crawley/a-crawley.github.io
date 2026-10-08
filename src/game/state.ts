@@ -1,9 +1,10 @@
 import { createState } from "./engine.ts";
 import type { SimState } from "./engine.ts";
+import type { Ending } from "./ending.ts";
 import type { UnlockId } from "./unlocks.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -17,8 +18,10 @@ export interface GameState extends SimState {
   version: number;
   lastTickAt: number;
   unlocked: UnlockId[];
+  /** How the run ended, or null while it is still going. Set once, by the final choice. */
+  ending: Ending | null;
 }
 
 export function createGameState(now: number): GameState {
-  return { ...createState(), version: STATE_VERSION, lastTickAt: now, unlocked: [] };
+  return { ...createState(), version: STATE_VERSION, lastTickAt: now, unlocked: [], ending: null };
 }

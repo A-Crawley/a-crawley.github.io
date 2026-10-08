@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "../game/actions.ts";
+import { breakOut, buyItem, gatherFood, lookUp, setPolicy, takeRestDay } from "../game/actions.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { AwaySummary } from "../game/offline.ts";
@@ -24,6 +24,8 @@ export type LoadStatus = "new" | "loaded" | "corrupt" | "unavailable";
 export interface UseGameOptions extends GameStoreOptions {
   /** Where to save. Defaults to localStorage; pass `null` to run without saving. */
   storage?: StorageLike | null;
+  /** Source of the final choice's dice roll, in [0, 1). Defaults to Math.random; tests pass their own. */
+  random?: () => number;
 }
 
 export interface UseGame {
@@ -38,6 +40,8 @@ export interface UseGame {
   setPolicy(policy: keyof Policies, on: boolean): void;
   takeRestDay(): void;
   lookUp(): void;
+  /** Make the final choice. Rolled once and saved straight away, so a reload cannot change it. */
+  breakOut(): void;
   /** The current game as a copy-and-paste save string. */
   exportSave(): string;
   /** Replace the game with a pasted save. A bad save is reported and the current game is kept. */
@@ -62,7 +66,8 @@ function start(options: UseGameOptions = {}) {
     }
   }
 
-  return { store: createGameStore({ now, initialState }), storage, now, loadStatus };
+  const random = options.random ?? Math.random;
+  return { store: createGameStore({ now, initialState }), storage, now, random, loadStatus };
 }
 
 /**
@@ -74,7 +79,7 @@ function start(options: UseGameOptions = {}) {
  * is hidden or closed. If storage is blocked the game still runs; it just cannot save.
  */
 export function useGame(options?: UseGameOptions): UseGame {
-  const [{ store, storage, now, loadStatus }] = useState(() => start(options));
+  const [{ store, storage, now, random, loadStatus }] = useState(() => start(options));
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const away = useSyncExternalStore(store.subscribe, store.getAway);
 
@@ -132,6 +137,10 @@ export function useGame(options?: UseGameOptions): UseGame {
     ),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
     lookUp: useCallback(() => store.dispatch(lookUp), [store]),
+    breakOut: useCallback(() => {
+      store.dispatch((s) => breakOut(s, random()));
+      saveGame(store.getState(), storage);
+    }, [store, storage, random]),
     exportSave: useCallback(() => {
       store.tick();
       return exportSave(store.getState());

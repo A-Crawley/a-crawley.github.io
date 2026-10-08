@@ -180,3 +180,14 @@ describe("mergeAway", () => {
     expect(merged.capped).toBe(false);
   });
 });
+
+describe("catchUp: waiting at the final choice", () => {
+  it("reports no time away, because time has stopped", () => {
+    const state = village();
+    state.stage = 3;
+    state.owned.exploit = CONFIG.exploitsGoal;
+    const result = catchUp(state, at(3 * 60 * 60));
+    expect(result.away).toBeNull();
+    expect(result.state.food).toBe(state.food);
+  });
+});

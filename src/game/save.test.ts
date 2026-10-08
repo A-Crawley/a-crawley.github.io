@@ -1,4 +1,4 @@
-import { ITEMS } from "./config.ts";
+import { CONFIG, ITEMS } from "./config.ts";
 import {
   exportSave,
   importSave,
@@ -224,6 +224,43 @@ describe("unlocks in a save", () => {
     for (const unlocked of [undefined, "lookUp", 3, ["nonsense"], ["lookUp", "lookUp"], [1]]) {
       const save = { ...raw(), unlocked };
       expect(validateState(save).ok).toBe(false);
+    }
+  });
+});
+
+describe("the ending in a save", () => {
+  function finishedState(): GameState {
+    const state = playedState();
+    state.stage = 3;
+    state.owned.exploit = CONFIG.exploitsGoal;
+    return state;
+  }
+
+  it("round-trips each ending", () => {
+    for (const ending of ["conquest", "apocalypse"] as const) {
+      const state = finishedState();
+      state.ending = ending;
+      expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+    }
+  });
+
+  it("upgrades a version 2 save by starting with no ending", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 2 };
+    delete old.ending;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.version).toBe(STATE_VERSION);
+      expect(result.value.ending).toBeNull();
+    }
+  });
+
+  it("rejects an ending that is missing, unknown, or from a run that has not finished", () => {
+    const early = { ...raw(), ending: "conquest" };
+    expect(validateState(early).ok).toBe(false);
+    const finishedSave = JSON.parse(serializeState(finishedState())) as Record<string, unknown>;
+    for (const ending of [undefined, "victory", 1]) {
+      expect(validateState({ ...finishedSave, ending }).ok).toBe(false);
     }
   });
 });
