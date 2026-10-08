@@ -17,6 +17,15 @@ export const visuallyHidden = {
 /** Smallest height, in px, of anything the player taps. */
 export const TOUCH_TARGET = 44;
 
+/** Width, in px, from which the game becomes a two-column page (tablet). */
+export const TABLET_MIN = 600;
+
+/** Width, in px, from which the game becomes a three-column dashboard (desktop). */
+export const DESKTOP_MIN = 1024;
+
+/** Digits all the same width, so counters do not jitter as they change. */
+export const tabularNumbers = { fontVariantNumeric: "tabular-nums" } as const;
+
 /**
  * Theme for the game. A dusk-lit village: deep blue-green ground, warm lamplight for the things the
  * player can act on, and a cold pale blue reserved for the one thing that is not what it seems.
@@ -30,10 +39,13 @@ export const gameTheme = createTheme({
     text: { primary: "#eef0e6", secondary: "#aab8b0" },
     divider: "#35504b",
   },
-  shape: { borderRadius: 6 },
+  shape: { borderRadius: 8 },
   typography: {
     fontFamily: '"Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif',
     button: { textTransform: "none", fontWeight: 600 },
+    // Secondary text stays readable on a phone: 15 px, with room between the lines.
+    body2: { fontSize: "0.9375rem", lineHeight: 1.5 },
+    caption: { fontSize: "0.8125rem", lineHeight: 1.4 },
   },
   components: {
     // Every control is at least 44 px tall, the size a thumb can hit reliably.

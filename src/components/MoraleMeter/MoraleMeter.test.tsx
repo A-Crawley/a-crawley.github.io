@@ -57,3 +57,30 @@ describe("MoraleMeter", () => {
     expect(screen.queryByText(/Falling|Rising/)).not.toBeInTheDocument();
   });
 });
+
+describe("MoraleMeter compact", () => {
+  it("is one row: a labelled bar and a word for it", () => {
+    render(<MoraleMeter morale={72} compact reasons={[{ label: "Crowded", lifting: false }]} />);
+    expect(screen.getByRole("progressbar", { name: "Morale" })).toHaveAttribute(
+      "aria-valuenow",
+      "72",
+    );
+    expect(screen.getByText("Holding up")).toBeInTheDocument();
+    expect(screen.queryByText(/Falling/)).not.toBeInTheDocument();
+  });
+
+  it("still says when there is a rest day or a walkout", () => {
+    render(<MoraleMeter morale={50} compact status="walkout" />);
+    expect(screen.getByText(/Walkout/)).toBeInTheDocument();
+  });
+
+  it("can sit beside the full meter without clashing", () => {
+    render(
+      <>
+        <MoraleMeter morale={50} compact />
+        <MoraleMeter morale={50} />
+      </>,
+    );
+    expect(screen.getAllByRole("progressbar", { name: "Morale" })).toHaveLength(2);
+  });
+});

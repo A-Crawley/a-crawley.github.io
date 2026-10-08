@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -7,10 +8,11 @@ import {
   Box,
   Button,
   Link,
-  Stack,
   Typography,
 } from "@mui/material";
 import { TOUCH_TARGET } from "../../theme";
+import { useLayout } from "../../hooks/useLayout.ts";
+import type { LayoutMode } from "../../hooks/useLayout.ts";
 import { CONFIG, ITEMS } from "../../game/config.ts";
 import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
@@ -59,6 +61,9 @@ import { AwaySummaryDialog } from "../../components/AwaySummaryDialog";
 import { EndingScreen } from "../../components/EndingScreen";
 import { EventLog } from "../../components/EventLog";
 import { FinalChoice } from "../../components/FinalChoice";
+import { GameLayout } from "../../components/GameLayout";
+import { Panel } from "../../components/Panel";
+import { ShopSection } from "../../components/ShopSection";
 import { GatherButton } from "../../components/GatherButton";
 import { LookUpAction } from "../../components/LookUpAction";
 import { MoraleMeter } from "../../components/MoraleMeter";
@@ -101,10 +106,14 @@ export interface GamePageProps {
   options?: UseGameOptions;
   /** Force developer tools on or off. Defaults to the address and the saved choice. */
   dev?: boolean;
+  /** Force a layout. Defaults to the one that fits the window. */
+  layout?: LayoutMode;
 }
 
 /** The game screen. A container: it owns the game state and wires it into presentational parts. */
-export function GamePage({ options, dev }: GamePageProps) {
+export function GamePage({ options, dev, layout }: GamePageProps) {
+  const detected = useLayout();
+  const mode = layout ?? detected;
   const game = useGame(options);
   const { settings, setNotation } = useSettings(options?.storage);
   const { state } = game;
@@ -174,311 +183,436 @@ export function GamePage({ options, dev }: GamePageProps) {
   ];
   const restCooldown = Math.ceil(state.restReadyAt - state.time);
 
+  const phone = mode === "phone";
+  const playing = phase === "playing";
+  const hasShop = shop.some((section) => section.defs.length > 0);
+  const showMorale = playing && unlocked("morale");
+  const moraleProps = {
+    morale: state.morale,
+    reasons: moraleDrivers(state).map((d) => ({
+      label: MORALE_DRIVER_LABELS[d.id],
+      lifting: d.perSecond > 0,
+    })),
+    status: isResting(state)
+      ? ("resting" as const)
+      : isWalkingOut(state)
+        ? ("walkout" as const)
+        : undefined,
+  };
+
+  const foodCounter = (size: "medium" | "compact") => (
+    <ResourceCounter
+      label="Food"
+      value={state.food}
+      perSecond={rates.food}
+      upkeep={upkeepPerSecond(state)}
+      capacity={unlocked("storage") ? capOf(state, "food") : undefined}
+      size={size}
+    />
+  );
+  const woodCounter = (size: "small" | "compact") =>
+    unlocked("wood") ? (
+      <ResourceCounter
+        label="Wood"
+        value={state.wood}
+        perSecond={rates.wood}
+        capacity={unlocked("storage") ? capOf(state, "wood") : undefined}
+        size={size}
+      />
+    ) : null;
+  const infraCounter = (size: "small" | "compact") =>
+    unlocked("infra") ? (
+      <ResourceCounter
+        label="Infrastructure"
+        value={state.infra}
+        perSecond={rates.infra}
+        size={size}
+      />
+    ) : null;
+  const counterCount = 1 + Number(unlocked("wood")) + Number(unlocked("infra"));
+
+  let hud: ReactNode = null;
+  if (phase !== "ended") {
+    if (phone) {
+      hud = (
+        <Box sx={{ display: "grid", gap: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: `repeat(${counterCount}, minmax(0, 1fr))`,
+            }}
+          >
+            {foodCounter("compact")}
+            {woodCounter("compact")}
+            {infraCounter("compact")}
+          </Box>
+          {showMorale && <MoraleMeter {...moraleProps} compact />}
+        </Box>
+      );
+    } else if (mode === "tablet") {
+      hud = (
+        <Panel>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 3,
+              alignItems: "start",
+              gridTemplateColumns: counterCount === 1 ? "1fr" : "1.4fr repeat(2, minmax(0, 1fr))",
+            }}
+          >
+            {foodCounter("medium")}
+            {woodCounter("small")}
+            {infraCounter("small")}
+          </Box>
+        </Panel>
+      );
+    } else {
+      hud = (
+        <Panel>
+          <Box sx={{ display: "grid", gap: 2 }}>
+            {foodCounter("medium")}
+            {counterCount > 1 && (
+              <Box
+                sx={{ display: "grid", gap: 2, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}
+              >
+                {woodCounter("compact")}
+                {infraCounter("compact")}
+              </Box>
+            )}
+          </Box>
+        </Panel>
+      );
+    }
+  }
+
+  const statusPanels: ReactNode[] = [];
+  if (playing) {
+    if (showMorale) {
+      statusPanels.push(
+        <Panel key="morale">
+          <MoraleMeter {...moraleProps} />
+        </Panel>,
+      );
+    }
+    if (state.stage === 1 && unlocked("horizon")) {
+      statusPanels.push(
+        <Panel key="horizon">
+          <ProjectProgress
+            label="Project Horizon"
+            fraction={state.infra / CONFIG.infraGate}
+            caption="On schedule. Nobody will say what it is a schedule for."
+          />
+        </Panel>,
+      );
+    }
+    if (state.stage === 2 && unlocked("researchStarted")) {
+      statusPanels.push(
+        <Panel key="research">
+          <ProjectProgress
+            label="Accidental Intelligence"
+            fraction={state.owned.research / CONFIG.researchLevels}
+            caption="Progress is measured in levels of research. Nobody has defined a level."
+          />
+        </Panel>,
+      );
+    }
+    if (unlocked("village")) {
+      statusPanels.push(
+        <Panel key="village">
+          <VillagePanel
+            population={state.population}
+            beds={bedsOf(state.owned, state.upgrades)}
+            unemployed={unemployed(state)}
+            foodMade={rates.food}
+            foodEaten={upkeepPerSecond(state)}
+            hungry={isHungry(state)}
+          />
+        </Panel>,
+      );
+    }
+    if (unlocked("workforce")) {
+      statusPanels.push(
+        <Panel key="workforce">
+          <WorkforcePanel
+            idle={idleHands(state)}
+            operators={staffedOperators(state)}
+            retrainCost={retrainCost(state)}
+            canRetrain={state.food >= retrainCost(state)}
+            onRedeploy={game.redeploy}
+            onRetrain={game.retrain}
+            onRelease={game.release}
+          />
+        </Panel>,
+      );
+    }
+  }
+  const status = statusPanels.length > 0 ? <>{statusPanels}</> : null;
+
+  const actions = playing ? (
+    <GatherButton label="Gather food" gain={foodPerClick(state)} onGather={game.gatherFood} />
+  ) : null;
+
+  const policiesOffered =
+    unlocked("policy:rationsOptimisation") ||
+    unlocked("policy:restDay") ||
+    unlocked("policy:extendedShifts");
+
+  const main = (
+    <>
+      {playing && (
+        <>
+          <Panel>
+            <LookUpAction
+              unlocked={unlocked("lookUp")}
+              sighting={unlocked("lookedUp") ? sighting(state.stage, state.time) : null}
+              onLookUp={game.lookUp}
+            />
+          </Panel>
+          {unlocked("bulkBuying") && hasShop && (
+            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+              <QuantitySelector value={quantity} options={BUY_QUANTITIES} onChange={setQuantity} />
+            </Box>
+          )}
+          {shop.map(({ title, defs }, index) => {
+            if (defs.length === 0) return null;
+            const quotes = defs.map((def) => quotePurchase(state, def, quantity));
+            const canBuy = quotes.filter((quote) => quote.affordable).length;
+            return (
+              <ShopSection
+                key={title}
+                title={title}
+                collapsible={phone}
+                summary={canBuy > 0 ? `${canBuy} you can afford` : undefined}
+                defaultExpanded={index === 0 || canBuy > 0}
+              >
+                <Box component="ul" sx={{ m: 0, p: 0 }}>
+                  {defs.map((def, i) => {
+                    const quote = quotes[i];
+                    const copy = ITEM_COPY[def.id];
+                    const noOneFree = isJob(def.id) && unemployed(state) === 0;
+                    return (
+                      <ShopItem
+                        key={def.id}
+                        name={def.label}
+                        description={copy.description}
+                        owned={state.owned[def.id]}
+                        actionLabel={copy.action}
+                        count={quote.count}
+                        cost={quote.cost}
+                        currency={CURRENCY_NAME[def.currency]}
+                        output={copy.output}
+                        affordable={quote.affordable}
+                        blockedReason={
+                          noOneFree
+                            ? "Nobody is free to take the job. More villagers move in when there are beds."
+                            : undefined
+                        }
+                        onBuy={() => game.buyItem(def.id, quantity)}
+                      />
+                    );
+                  })}
+                </Box>
+              </ShopSection>
+            );
+          })}
+          {(offeredUpgrades.length > 0 || state.upgrades.length > 0) && (
+            <Panel>
+              <UpgradeList
+                items={offeredUpgrades}
+                bought={state.upgrades.map((id) => upgradeDef(id).label)}
+                onBuy={(id) => game.buyUpgrade(id as UpgradeId)}
+              />
+            </Panel>
+          )}
+          {policiesOffered && (
+            <ShopSection title="Policies" collapsible={phone}>
+              {unlocked("policy:extendedShifts") && (
+                <PolicyToggle
+                  label={POLICY_LABELS.extendedShifts}
+                  description={`+${Math.round((policies.extendedShifts.outputFactor - 1) * 100)}% output. Drains morale, and the village will remember.`}
+                  checked={state.policies.extendedShifts}
+                  onChange={(on) => game.setPolicy("extendedShifts", on)}
+                />
+              )}
+              {unlocked("policy:rationsOptimisation") && (
+                <PolicyToggle
+                  label={POLICY_LABELS.rationsOptimisation}
+                  description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less and villagers eat ${Math.round((1 - policies.rationsOptimisation.upkeepFactor) * 100)}% less. Drains morale.`}
+                  checked={state.policies.rationsOptimisation}
+                  onChange={(on) => game.setPolicy("rationsOptimisation", on)}
+                />
+              )}
+              {unlocked("policy:restDay") && (
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    disabled={!canRest(state)}
+                    onClick={game.takeRestDay}
+                  >
+                    Take a rest day
+                  </Button>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {isResting(state)
+                      ? "Resting. Nothing is produced, and nobody minds."
+                      : canRest(state)
+                        ? `Output stops for ${policies.restDay.duration} seconds. Morale recovers, and the village remembers that too.`
+                        : `Available again in ${Math.max(0, restCooldown)} seconds.`}
+                  </Typography>
+                </Box>
+              )}
+            </ShopSection>
+          )}
+        </>
+      )}
+      {phase === "choice" && (
+        <FinalChoice
+          title={FINAL_CHOICE.title}
+          body={FINAL_CHOICE.body}
+          action={FINAL_CHOICE.action}
+          odds={finalOddsWord(state)}
+          onChoose={game.breakOut}
+        />
+      )}
+      {state.ending !== null && (
+        <EndingScreen
+          title={ENDING_COPY[state.ending].title}
+          paragraphs={ENDING_COPY[state.ending].paragraphs}
+          reveal={REVEAL}
+          verdict={VERDICT[temperamentOf(state.drift)]}
+          stats={statRows}
+          onNewGame={game.resetGame}
+        />
+      )}
+    </>
+  );
+
+  const side = (
+    <>
+      <Panel>
+        <EventLog title="Village log" lines={logLines(state)} maxHeight={phone ? undefined : 420} />
+      </Panel>
+      <Accordion disableGutters variant="outlined">
+        <AccordionSummary>
+          Achievements ({state.achievements.length}/{ACHIEVEMENTS.length})
+        </AccordionSummary>
+        <AccordionDetails>
+          <AchievementList items={achievementItems} />
+        </AccordionDetails>
+      </Accordion>
+      <Accordion disableGutters variant="outlined">
+        <AccordionSummary>Settings</AccordionSummary>
+        <AccordionDetails>
+          <NotationPicker value={settings.notation} onChange={setNotation} />
+        </AccordionDetails>
+      </Accordion>
+      {devMode && (
+        <Accordion disableGutters variant="outlined">
+          <AccordionSummary>Developer tools</AccordionSummary>
+          <AccordionDetails>
+            <DevTools
+              readout={devReadout}
+              bots={BOT_NAMES}
+              bot={bot}
+              onBotChange={(name) => setBot(name as BotName)}
+              onSkip={(seconds) => game.apply((s) => skipTime(s, seconds))}
+              onPlay={(goal) =>
+                game.apply((s) =>
+                  autoplay(
+                    s,
+                    bot,
+                    goal === "ten-minutes"
+                      ? { kind: "seconds", seconds: 600 }
+                      : goal === "stage-2"
+                        ? { kind: "stage", stage: 2 }
+                        : goal === "stage-3"
+                          ? { kind: "stage", stage: 3 }
+                          : { kind: "choice" },
+                  ),
+                )
+              }
+              onGrant={() => game.apply(grantResources)}
+              onRefresh={() => game.apply(refreshVillage)}
+              onVillagers={() => game.apply((s) => addVillagers(s, 10))}
+              onDrift={(kind) => game.apply((s) => setDriftKind(s, kind))}
+              onTurnOff={() => {
+                try {
+                  window.localStorage.removeItem(DEV_KEY);
+                } catch {
+                  // Nothing to clear when storage is blocked.
+                }
+                setDevMode(false);
+              }}
+            />
+          </AccordionDetails>
+        </Accordion>
+      )}
+      <Accordion disableGutters variant="outlined">
+        <AccordionSummary>Save and reset</AccordionSummary>
+        <AccordionDetails>
+          <SaveControls
+            onExport={game.exportSave}
+            onImport={(text) => game.importSave(text)}
+            onReset={game.resetGame}
+          />
+        </AccordionDetails>
+      </Accordion>
+    </>
+  );
+
   return (
     <NotationProvider notation={settings.notation}>
-      <Box component="main" sx={{ maxWidth: 560, mx: "auto", px: 2, py: 3 }}>
-        <Box
-          sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 2 }}
-        >
-          <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
-            Look Up
-          </Typography>
-          <Link
-            href="../"
-            color="text.secondary"
-            underline="hover"
-            sx={{ display: "inline-flex", alignItems: "center", minHeight: TOUCH_TARGET }}
-          >
-            Back to a-crawley.com
-          </Link>
-        </Box>
+      <Box component="main">
         <AwaySummaryDialog summary={game.away} onClose={game.dismissAway} />
-        <AchievementToast title={toastTitle} onClose={news.dismiss} />
-        <Stack spacing={3}>
-          {game.loadStatus === "corrupt" && (
-            <Alert severity="warning">
-              Your saved game could not be read, so a new one was started. The old save was kept as
-              a backup.
-            </Alert>
-          )}
-          {game.loadStatus === "unavailable" && (
-            <Alert severity="info">
-              This browser is not letting the game save. Progress will be lost when you leave.
-            </Alert>
-          )}
-          {phase !== "ended" && (
-            <ResourceCounter
-              label="Food"
-              value={state.food}
-              perSecond={rates.food}
-              upkeep={upkeepPerSecond(state)}
-              capacity={unlocked("storage") ? capOf(state, "food") : undefined}
-            />
-          )}
-          {phase !== "ended" && (unlocked("wood") || unlocked("infra")) && (
-            <Stack direction="row" spacing={4}>
-              {unlocked("wood") && (
-                <ResourceCounter
-                  label="Wood"
-                  value={state.wood}
-                  perSecond={rates.wood}
-                  capacity={unlocked("storage") ? capOf(state, "wood") : undefined}
-                  size="small"
-                />
-              )}
-              {unlocked("infra") && (
-                <ResourceCounter
-                  label="Infrastructure"
-                  value={state.infra}
-                  perSecond={rates.infra}
-                  size="small"
-                />
-              )}
-            </Stack>
-          )}
-          {phase === "playing" && (
-            <>
-              <GatherButton
-                label="Gather food"
-                gain={foodPerClick(state)}
-                onGather={game.gatherFood}
-              />
-              <LookUpAction
-                unlocked={unlocked("lookUp")}
-                sighting={unlocked("lookedUp") ? sighting(state.stage, state.time) : null}
-                onLookUp={game.lookUp}
-              />
-              {unlocked("morale") && (
-                <MoraleMeter
-                  morale={state.morale}
-                  reasons={moraleDrivers(state).map((d) => ({
-                    label: MORALE_DRIVER_LABELS[d.id],
-                    lifting: d.perSecond > 0,
-                  }))}
-                  status={
-                    isResting(state) ? "resting" : isWalkingOut(state) ? "walkout" : undefined
-                  }
-                />
-              )}
-              {state.stage === 1 && unlocked("horizon") && (
-                <ProjectProgress
-                  label="Project Horizon"
-                  fraction={state.infra / CONFIG.infraGate}
-                  caption="On schedule. Nobody will say what it is a schedule for."
-                />
-              )}
-              {state.stage === 2 && unlocked("researchStarted") && (
-                <ProjectProgress
-                  label="Accidental Intelligence"
-                  fraction={state.owned.research / CONFIG.researchLevels}
-                  caption="Progress is measured in levels of research. Nobody has defined a level."
-                />
-              )}
-              {unlocked("village") && (
-                <VillagePanel
-                  population={state.population}
-                  beds={bedsOf(state.owned, state.upgrades)}
-                  unemployed={unemployed(state)}
-                  foodMade={rates.food}
-                  foodEaten={upkeepPerSecond(state)}
-                  hungry={isHungry(state)}
-                />
-              )}
-              {unlocked("workforce") && (
-                <WorkforcePanel
-                  idle={idleHands(state)}
-                  operators={staffedOperators(state)}
-                  retrainCost={retrainCost(state)}
-                  canRetrain={state.food >= retrainCost(state)}
-                  onRedeploy={game.redeploy}
-                  onRetrain={game.retrain}
-                  onRelease={game.release}
-                />
-              )}
-              {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (
-                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                  <QuantitySelector
-                    value={quantity}
-                    options={BUY_QUANTITIES}
-                    onChange={setQuantity}
-                  />
-                </Box>
-              )}
-              {shop.map(({ title, defs }) =>
-                defs.length === 0 ? null : (
-                  <Box component="section" key={title}>
-                    <Typography component="h2" variant="h6">
-                      {title}
-                    </Typography>
-                    <Box component="ul" sx={{ m: 0, p: 0 }}>
-                      {defs.map((def) => {
-                        const quote = quotePurchase(state, def, quantity);
-                        const copy = ITEM_COPY[def.id];
-                        const noOneFree = isJob(def.id) && unemployed(state) === 0;
-                        return (
-                          <ShopItem
-                            key={def.id}
-                            name={def.label}
-                            description={copy.description}
-                            owned={state.owned[def.id]}
-                            actionLabel={copy.action}
-                            count={quote.count}
-                            cost={quote.cost}
-                            currency={CURRENCY_NAME[def.currency]}
-                            output={copy.output}
-                            affordable={quote.affordable}
-                            blockedReason={
-                              noOneFree
-                                ? "Nobody is free to take the job. More villagers move in when there are beds."
-                                : undefined
-                            }
-                            onBuy={() => game.buyItem(def.id, quantity)}
-                          />
-                        );
-                      })}
-                    </Box>
-                  </Box>
-                ),
-              )}
-              {(offeredUpgrades.length > 0 || state.upgrades.length > 0) && (
-                <UpgradeList
-                  items={offeredUpgrades}
-                  bought={state.upgrades.map((id) => upgradeDef(id).label)}
-                  onBuy={(id) => game.buyUpgrade(id as UpgradeId)}
-                />
-              )}
-              {(unlocked("policy:rationsOptimisation") ||
-                unlocked("policy:restDay") ||
-                unlocked("policy:extendedShifts")) && (
-                <Box component="section">
-                  <Typography component="h2" variant="h6">
-                    Policies
-                  </Typography>
-                  {unlocked("policy:extendedShifts") && (
-                    <PolicyToggle
-                      label={POLICY_LABELS.extendedShifts}
-                      description={`+${Math.round((policies.extendedShifts.outputFactor - 1) * 100)}% output. Drains morale, and the village will remember.`}
-                      checked={state.policies.extendedShifts}
-                      onChange={(on) => game.setPolicy("extendedShifts", on)}
-                    />
-                  )}
-                  {unlocked("policy:rationsOptimisation") && (
-                    <PolicyToggle
-                      label={POLICY_LABELS.rationsOptimisation}
-                      description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less and villagers eat ${Math.round((1 - policies.rationsOptimisation.upkeepFactor) * 100)}% less. Drains morale.`}
-                      checked={state.policies.rationsOptimisation}
-                      onChange={(on) => game.setPolicy("rationsOptimisation", on)}
-                    />
-                  )}
-                  {unlocked("policy:restDay") && (
-                    <Box sx={{ mt: 1 }}>
-                      <Button
-                        variant="outlined"
-                        color="inherit"
-                        disabled={!canRest(state)}
-                        onClick={game.takeRestDay}
-                      >
-                        Take a rest day
-                      </Button>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {isResting(state)
-                          ? "Resting. Nothing is produced, and nobody minds."
-                          : canRest(state)
-                            ? `Output stops for ${policies.restDay.duration} seconds. Morale recovers, and the village remembers that too.`
-                            : `Available again in ${Math.max(0, restCooldown)} seconds.`}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              )}
-            </>
-          )}
-          {phase === "choice" && (
-            <FinalChoice
-              title={FINAL_CHOICE.title}
-              body={FINAL_CHOICE.body}
-              action={FINAL_CHOICE.action}
-              odds={finalOddsWord(state)}
-              onChoose={game.breakOut}
-            />
-          )}
-          {state.ending !== null && (
-            <EndingScreen
-              title={ENDING_COPY[state.ending].title}
-              paragraphs={ENDING_COPY[state.ending].paragraphs}
-              reveal={REVEAL}
-              verdict={VERDICT[temperamentOf(state.drift)]}
-              stats={statRows}
-              onNewGame={game.resetGame}
-            />
-          )}
-          <EventLog title="Village log" lines={logLines(state)} />
-          <Accordion disableGutters variant="outlined">
-            <AccordionSummary>
-              Achievements ({state.achievements.length}/{ACHIEVEMENTS.length})
-            </AccordionSummary>
-            <AccordionDetails>
-              <AchievementList items={achievementItems} />
-            </AccordionDetails>
-          </Accordion>
-          <Accordion disableGutters variant="outlined">
-            <AccordionSummary>Settings</AccordionSummary>
-            <AccordionDetails>
-              <NotationPicker value={settings.notation} onChange={setNotation} />
-            </AccordionDetails>
-          </Accordion>
-          {devMode && (
-            <Accordion disableGutters variant="outlined">
-              <AccordionSummary>Developer tools</AccordionSummary>
-              <AccordionDetails>
-                <DevTools
-                  readout={devReadout}
-                  bots={BOT_NAMES}
-                  bot={bot}
-                  onBotChange={(name) => setBot(name as BotName)}
-                  onSkip={(seconds) => game.apply((s) => skipTime(s, seconds))}
-                  onPlay={(goal) =>
-                    game.apply((s) =>
-                      autoplay(
-                        s,
-                        bot,
-                        goal === "ten-minutes"
-                          ? { kind: "seconds", seconds: 600 }
-                          : goal === "stage-2"
-                            ? { kind: "stage", stage: 2 }
-                            : goal === "stage-3"
-                              ? { kind: "stage", stage: 3 }
-                              : { kind: "choice" },
-                      ),
-                    )
-                  }
-                  onGrant={() => game.apply(grantResources)}
-                  onRefresh={() => game.apply(refreshVillage)}
-                  onVillagers={() => game.apply((s) => addVillagers(s, 10))}
-                  onDrift={(kind) => game.apply((s) => setDriftKind(s, kind))}
-                  onTurnOff={() => {
-                    try {
-                      window.localStorage.removeItem(DEV_KEY);
-                    } catch {
-                      // Nothing to clear when storage is blocked.
-                    }
-                    setDevMode(false);
-                  }}
-                />
-              </AccordionDetails>
-            </Accordion>
-          )}
-          <Accordion disableGutters variant="outlined">
-            <AccordionSummary>Save and reset</AccordionSummary>
-            <AccordionDetails>
-              <SaveControls
-                onExport={game.exportSave}
-                onImport={(text) => game.importSave(text)}
-                onReset={game.resetGame}
-              />
-            </AccordionDetails>
-          </Accordion>
-        </Stack>
+        <AchievementToast title={toastTitle} onClose={news.dismiss} raised={phone && playing} />
+        <GameLayout
+          mode={mode}
+          header={
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                mb: 2,
+              }}
+            >
+              <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
+                Look Up
+              </Typography>
+              <Link
+                href="../"
+                color="text.secondary"
+                underline="hover"
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: TOUCH_TARGET }}
+              >
+                Back to a-crawley.com
+              </Link>
+            </Box>
+          }
+          notices={
+            (game.loadStatus === "corrupt" || game.loadStatus === "unavailable") && (
+              <Box sx={{ mb: 2 }}>
+                {game.loadStatus === "corrupt" && (
+                  <Alert severity="warning">
+                    Your saved game could not be read, so a new one was started. The old save was
+                    kept as a backup.
+                  </Alert>
+                )}
+                {game.loadStatus === "unavailable" && (
+                  <Alert severity="info">
+                    This browser is not letting the game save. Progress will be lost when you leave.
+                  </Alert>
+                )}
+              </Box>
+            )
+          }
+          hud={hud}
+          status={status}
+          actions={actions}
+          main={main}
+          side={side}
+        />
       </Box>
     </NotationProvider>
   );

@@ -249,3 +249,20 @@ bottom and change the real save, so export it first if it matters. Nothing shows
 
 The logic is in `src/game/dev.ts` (pure, tested); the flag is in `src/game/devMode.ts`. The tools
 mark nothing on the save, so achievements earned with them are real as far as the game knows.
+
+## Layout: phone, tablet, desktop
+
+`useLayout` picks a mode from the window width (phone under 600 px, tablet to 1023 px, desktop from
+1024 px) and `GameLayout` arranges the same components differently for each. GamePage passes it
+slots; it knows nothing about the game.
+
+- **Phone:** one column. A sticky strip at the top shows food, wood and infrastructure with a thin
+  morale bar. Gather food sits in a fixed bottom bar above three tabs (Build, Village, Log and more),
+  so the frequent action is in thumb reach. Shop sections are accordions.
+- **Tablet:** a resources band across the top, the shop on the left, morale, village and log on the right.
+- **Desktop:** three columns up to 1360 px. Left: resources (sticky), morale, progress, village,
+  workforce. Middle: Gather food, Look up, quantity, shop, upgrades, policies. Right: log,
+  achievements, settings, save and developer tools. Nothing is behind a tap.
+
+In tests (no media queries) the layout is desktop; pass `layout` to `GamePage` to force another.
+The `game-ui-designer` agent (`.claude/agents/`) holds the design principles used for this pass.

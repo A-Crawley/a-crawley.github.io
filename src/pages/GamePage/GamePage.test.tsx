@@ -636,3 +636,52 @@ describe("GamePage developer tools", () => {
     expect(screen.getByLabelText("Game readout")).toHaveTextContent("Stage2");
   }, 60_000);
 });
+
+describe("GamePage layouts", () => {
+  function setupLayout(layout: "phone" | "tablet" | "desktop") {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null }} layout={layout} />);
+    return user;
+  }
+
+  it("lays out as a dashboard on a desktop: no tabs, everything in reach", () => {
+    setupLayout("desktop");
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
+    expect(screen.getByRole("log", { name: "Village log" })).toBeVisible();
+  });
+
+  it("shows the same parts on a tablet without tabs", () => {
+    setupLayout("tablet");
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByRole("log", { name: "Village log" })).toBeVisible();
+  });
+
+  it("folds a phone into tabs, with Gather food always to hand", async () => {
+    const user = setupLayout("phone");
+    expect(screen.getByRole("tab", { name: "Build" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
+    // The log lives on another tab, so it is out of sight until asked for.
+    expect(screen.getByRole("log", { name: "Village log", hidden: true })).not.toBeVisible();
+    await user.click(screen.getByRole("tab", { name: "Log and more" }));
+    expect(screen.getByRole("log", { name: "Village log" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
+  });
+
+  it("keeps the shop sections on a phone behind headings that open", async () => {
+    const user = setupLayout("phone");
+    for (let i = 0; i < 10; i++)
+      await user.click(screen.getByRole("button", { name: "Gather food" }));
+    const jobs = screen.getByRole("button", { name: /^Jobs/ });
+    expect(jobs).toHaveTextContent("1 you can afford");
+    expect(jobs).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ })).toBeEnabled();
+  });
+
+  it("keeps resources in the strip above the tabs on a phone", async () => {
+    const user = setupLayout("phone");
+    await user.click(screen.getByRole("button", { name: "Gather food" }));
+    await user.click(screen.getByRole("tab", { name: "Log and more" }));
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("1");
+  });
+});

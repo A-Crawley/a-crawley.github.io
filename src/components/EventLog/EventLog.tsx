@@ -9,10 +9,12 @@ export interface EventLogProps {
   title: string;
   /** Oldest first. The log shows the newest at the top. */
   lines: readonly EventLogLine[];
+  /** Tallest the list may grow, in px, before it scrolls inside its own box. Leave out for no limit. */
+  maxHeight?: number;
 }
 
 /** The village log. A polite live region, so new lines are announced without interrupting. */
-export function EventLog({ title, lines }: EventLogProps) {
+export function EventLog({ title, lines, maxHeight }: EventLogProps) {
   const newestFirst = [...lines].reverse();
   return (
     <Box component="section">
@@ -24,7 +26,12 @@ export function EventLog({ title, lines }: EventLogProps) {
         aria-labelledby="event-log-title"
         aria-live="polite"
         aria-relevant="additions"
-        sx={{ mt: 1 }}
+        // A box that scrolls must be reachable by keyboard.
+        tabIndex={maxHeight === undefined ? undefined : 0}
+        sx={{
+          mt: 1,
+          ...(maxHeight !== undefined && { maxHeight, overflowY: "auto", pr: 1 }),
+        }}
       >
         <Box component="ul" sx={{ m: 0, p: 0 }}>
           {newestFirst.map((line, index) => (
