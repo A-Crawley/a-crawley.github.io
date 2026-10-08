@@ -1,15 +1,20 @@
+import { catchUp, mergeAway } from "./offline.ts";
+import type { AwaySummary } from "./offline.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
-import { tick } from "./tick.ts";
 
 export type GameAction = (state: GameState) => GameState;
 
 /** A tiny external store for the game state, with no React in it. */
 export interface GameStore {
   getState(): GameState;
+  /** What happened while the player was away, until they dismiss it. */
+  getAway(): AwaySummary | null;
+  /** The player has seen the summary. */
+  dismissAway(): void;
   /** Returns an unsubscribe function. Listeners run after every state change. */
   subscribe(listener: () => void): () => void;
-  /** Advance the game to the current time. */
+  /** Advance the game to the current time. A long gap counts as being away (see `catchUp`). */
   tick(): void;
   /** Catch up to the current time, then apply a player action. */
   dispatch(action: GameAction): void;
@@ -26,16 +31,34 @@ export interface GameStoreOptions {
 export function createGameStore(options: GameStoreOptions = {}): GameStore {
   const now = options.now ?? Date.now;
   let state = options.initialState ?? createGameState(now());
+  let away: AwaySummary | null = null;
   const listeners = new Set<() => void>();
+
+  function notify(): void {
+    listeners.forEach((listener) => listener());
+  }
 
   function setState(next: GameState): void {
     if (next === state) return;
     state = next;
-    listeners.forEach((listener) => listener());
+    notify();
+  }
+
+  /** Bring the state up to now, recording a summary if the player was away. */
+  function advance(): GameState {
+    const result = catchUp(state, now());
+    if (result.away) away = away ? mergeAway(away, result.away) : result.away;
+    return result.state;
   }
 
   return {
     getState: () => state,
+    getAway: () => away,
+    dismissAway() {
+      if (away === null) return;
+      away = null;
+      notify();
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => {
@@ -43,13 +66,14 @@ export function createGameStore(options: GameStoreOptions = {}): GameStore {
       };
     },
     tick() {
-      setState(tick(state, now()));
+      setState(advance());
     },
     dispatch(action) {
       // Bring the state up to date first, so the action happens at the moment the player did it.
-      setState(action(tick(state, now())));
+      setState(action(advance()));
     },
     replace(next) {
+      away = null;
       setState(next);
     },
   };

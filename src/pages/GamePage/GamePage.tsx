@@ -24,11 +24,12 @@ import {
   ratesFor,
 } from "../../game/engine.ts";
 import type { BuyQuantity } from "../../game/engine.ts";
-import { CURRENCY_NAME, ITEM_COPY } from "../../game/itemCopy.ts";
+import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
 import { useLatchedSet } from "../../hooks/useLatchedSet.ts";
+import { AwaySummaryDialog } from "../../components/AwaySummaryDialog";
 import { EventLog } from "../../components/EventLog";
 import { GatherButton } from "../../components/GatherButton";
 import { LockedAction } from "../../components/LockedAction";
@@ -97,6 +98,7 @@ export function GamePage({ options }: GamePageProps) {
           Back to a-crawley.com
         </Link>
       </Box>
+      <AwaySummaryDialog summary={game.away} onClose={game.dismissAway} />
       <Stack spacing={3}>
         {game.loadStatus === "corrupt" && (
           <Alert severity="warning">
@@ -179,13 +181,13 @@ export function GamePage({ options }: GamePageProps) {
               Policies
             </Typography>
             <PolicyToggle
-              label="Extended Shifts"
+              label={POLICY_LABELS.extendedShifts}
               description={`+${Math.round((policies.extendedShifts.outputFactor - 1) * 100)}% output. Drains morale, and the village will remember.`}
               checked={state.policies.extendedShifts}
               onChange={(on) => game.setPolicy("extendedShifts", on)}
             />
             <PolicyToggle
-              label="Rations Optimisation"
+              label={POLICY_LABELS.rationsOptimisation}
               description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less. Drains morale.`}
               checked={state.policies.rationsOptimisation}
               onChange={(on) => game.setPolicy("rationsOptimisation", on)}

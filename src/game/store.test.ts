@@ -64,3 +64,62 @@ describe("createGameStore", () => {
     expect(store.getState()).toBe(store.getState());
   });
 });
+
+describe("createGameStore: being away", () => {
+  it("has no summary for a short gap", () => {
+    const { store, advance } = setup();
+    advance(30);
+    store.tick();
+    expect(store.getAway()).toBeNull();
+  });
+
+  it("records a summary after a long gap, and tells subscribers", () => {
+    const { store, advance } = setup();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    advance(2 * 3600);
+    store.tick();
+    const away = store.getAway();
+    expect(away?.awaySeconds).toBe(2 * 3600);
+    expect(away?.gained.food).toBeCloseTo(5 * 0.4 * 2 * 3600, 3);
+    expect(listener).toHaveBeenCalled();
+  });
+
+  it("catches up as away before applying an action", () => {
+    const { store, advance } = setup();
+    advance(3600);
+    store.dispatch(gatherFood);
+    expect(store.getAway()).not.toBeNull();
+    expect(store.getState().food).toBeCloseTo(5 * 0.4 * 3600 + 1, 3);
+  });
+
+  it("clears the summary when it is dismissed", () => {
+    const { store, advance } = setup();
+    advance(3600);
+    store.tick();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.dismissAway();
+    expect(store.getAway()).toBeNull();
+    expect(listener).toHaveBeenCalledTimes(1);
+    store.dismissAway(); // nothing to dismiss: no extra notification
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("combines two summaries the player has not seen yet", () => {
+    const { store, advance } = setup();
+    advance(3600);
+    store.tick();
+    advance(3600);
+    store.tick();
+    expect(store.getAway()?.awaySeconds).toBe(7200);
+  });
+
+  it("forgets the summary when the game is replaced", () => {
+    const { store, advance } = setup();
+    advance(3600);
+    store.tick();
+    store.replace(createGameState(5));
+    expect(store.getAway()).toBeNull();
+  });
+});

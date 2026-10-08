@@ -29,3 +29,22 @@ export function formatRate(perSecond: number): string {
   if (perSecond < 100) return perSecond.toFixed(1);
   return formatAmount(perSecond);
 }
+
+function plural(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
+/** A length of time in plain words: "less than a minute", "45 minutes", "2 hours 14 minutes". */
+export function formatDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 60) return "less than a minute";
+  const totalMinutes = Math.floor(seconds / 60);
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(plural(days, "day"));
+  if (hours > 0) parts.push(plural(hours, "hour"));
+  // Minutes only matter for short gaps; "3 days 4 hours 12 minutes" is more than anyone wants.
+  if (minutes > 0 && days === 0) parts.push(plural(minutes, "minute"));
+  return parts.join(" ");
+}

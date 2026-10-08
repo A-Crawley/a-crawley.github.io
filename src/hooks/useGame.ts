@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { buyItem, gatherFood, setPolicy, takeRestDay } from "../game/actions.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
+import type { AwaySummary } from "../game/offline.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
 import { createGameState } from "../game/state.ts";
@@ -28,6 +29,9 @@ export interface UseGameOptions extends GameStoreOptions {
 export interface UseGame {
   state: GameState;
   loadStatus: LoadStatus;
+  /** What happened while the player was away, until they dismiss it. */
+  away: AwaySummary | null;
+  dismissAway(): void;
   gatherFood(): void;
   /** Buy 1, 10 or 100 units, or as many as can be afforded. Fixed amounts are all or nothing. */
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
@@ -61,9 +65,9 @@ function start(options: UseGameOptions = {}) {
 }
 
 /**
- * Runs the game and subscribes the component to it. The state refreshes a few times a second, and
- * immediately when a hidden tab becomes visible again, because browsers throttle timers in the
- * background. Catching up uses elapsed real time, so nothing is lost.
+ * Runs the game and subscribes the component to it. The state refreshes a few times a second while
+ * the tab is visible. While it is hidden the game pauses, and on return the whole gap is caught up
+ * from the clock (see `catchUp`): a hidden tab, a closed tab and an old save all look the same.
  *
  * The game loads from storage when it starts, saves every 30 seconds, and saves again when the tab
  * is hidden or closed. If storage is blocked the game still runs; it just cannot save.
@@ -71,19 +75,34 @@ function start(options: UseGameOptions = {}) {
 export function useGame(options?: UseGameOptions): UseGame {
   const [{ store, storage, now, loadStatus }] = useState(() => start(options));
   const state = useSyncExternalStore(store.subscribe, store.getState);
+  const away = useSyncExternalStore(store.subscribe, store.getAway);
 
   useEffect(() => {
+    const isHidden = () => document.visibilityState === "hidden";
+    // While hidden, time is not advanced: the gap is replayed as "away" when the player returns,
+    // the same as for a closed tab. Saving while hidden keeps the moment they left.
     const save = () => {
-      store.tick();
+      if (!isHidden()) store.tick();
       saveGame(store.getState(), storage);
     };
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") store.tick();
-      else save();
+      if (isHidden()) {
+        store.tick(); // credit the time up to the moment they left
+        saveGame(store.getState(), storage);
+      } else {
+        store.tick();
+      }
+    };
+    const onTimer = () => {
+      if (!isHidden()) store.tick();
     };
 
-    const tickInterval = setInterval(store.tick, TICK_INTERVAL_MS);
-    const saveInterval = setInterval(save, AUTOSAVE_INTERVAL_MS);
+    // A saved game may be hours old: catch up straight away rather than on the first timer tick.
+    store.tick();
+    const tickInterval = setInterval(onTimer, TICK_INTERVAL_MS);
+    const saveInterval = setInterval(() => {
+      if (!isHidden()) save();
+    }, AUTOSAVE_INTERVAL_MS);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("pagehide", save);
     window.addEventListener("beforeunload", save);
@@ -99,6 +118,8 @@ export function useGame(options?: UseGameOptions): UseGame {
   return {
     state,
     loadStatus,
+    away,
+    dismissAway: store.dismissAway,
     gatherFood: useCallback(() => store.dispatch(gatherFood), [store]),
     buyItem: useCallback(
       (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),
