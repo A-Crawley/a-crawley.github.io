@@ -67,3 +67,30 @@ describe("ResourceCounter", () => {
     expect(screen.queryByText(/Store/)).not.toBeInTheDocument();
   });
 });
+
+describe("ResourceCounter sizes", () => {
+  it("has a medium size that shows everything the large one does", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={1.2} capacity={100} size="medium" />);
+    expect(screen.getByText("+1.2 per second")).toBeInTheDocument();
+    expect(screen.getByText("Store holds up to 100")).toBeInTheDocument();
+  });
+
+  it("has a compact size with a short rate, keeping the full words for screen readers", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={1.2} size="compact" />);
+    expect(screen.getByText("+1.2/s")).toBeInTheDocument();
+    expect(screen.getByText("+1.2 per second")).toBeInTheDocument();
+  });
+
+  it("shows a falling stock in the compact size with a minus sign", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={1} upkeep={3} size="compact" />);
+    expect(screen.getByText("\u22122.0/s")).toBeInTheDocument();
+  });
+
+  it("says in words when a compact store is full", () => {
+    render(
+      <ResourceCounter label="Wood" value={300} perSecond={2} capacity={300} size="compact" />,
+    );
+    expect(screen.getByText("Store full")).toBeInTheDocument();
+    expect(screen.getByText(/anything more is lost/)).toBeInTheDocument();
+  });
+});

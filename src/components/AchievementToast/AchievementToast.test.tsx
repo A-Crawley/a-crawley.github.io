@@ -38,3 +38,10 @@ describe("AchievementToast", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+describe("AchievementToast raised", () => {
+  it("still shows the achievement when lifted above a bottom bar", () => {
+    render(<AchievementToast title="Headcount" onClose={() => {}} raised />);
+    expect(screen.getByText("Achievement: Headcount")).toBeInTheDocument();
+  });
+});

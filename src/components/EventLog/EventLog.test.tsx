@@ -31,3 +31,17 @@ describe("EventLog", () => {
     expect(within(screen.getByRole("log")).getByRole("list")).toBeInTheDocument();
   });
 });
+
+describe("EventLog height limit", () => {
+  it("scrolls inside its own box, which the keyboard can reach", () => {
+    render(<EventLog title="Village log" lines={[{ id: "a", text: "One." }]} maxHeight={200} />);
+    const log = screen.getByRole("log", { name: "Village log" });
+    expect(log).toHaveAttribute("tabindex", "0");
+    expect(log).toHaveStyle({ maxHeight: "200px", overflowY: "auto" });
+  });
+
+  it("is not a tab stop when it does not scroll", () => {
+    render(<EventLog title="Village log" lines={[{ id: "a", text: "One." }]} />);
+    expect(screen.getByRole("log")).not.toHaveAttribute("tabindex");
+  });
+});

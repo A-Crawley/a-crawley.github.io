@@ -40,7 +40,13 @@ export function GatherButton({ label, gain, onGather }: GatherButtonProps) {
         size="large"
         fullWidth
         onClick={handleClick}
-        sx={{ py: 2.5, fontSize: "1.4rem" }}
+        sx={{
+          py: 2.5,
+          fontSize: "1.4rem",
+          transition: "transform 80ms",
+          "&:active": { transform: "scale(0.98)" },
+          "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+        }}
       >
         {label}
       </Button>
