@@ -1,5 +1,6 @@
 import { CONFIG } from "./config.ts";
 import type { Currency, ItemId } from "./config.ts";
+import type { Policies } from "./engine.ts";
 import { formatRate } from "./format.ts";
 
 export interface ItemCopy {
@@ -58,4 +59,9 @@ export const CURRENCY_NAME: Record<Currency, string> = {
   food: "food",
   wood: "wood",
   infra: "infrastructure",
+};
+
+export const POLICY_LABELS: Record<keyof Policies, string> = {
+  extendedShifts: "Extended Shifts",
+  rationsOptimisation: "Rations Optimisation",
 };

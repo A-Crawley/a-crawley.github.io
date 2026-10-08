@@ -39,7 +39,7 @@ touches it through `src/hooks/useGame.ts`.
 - **Validation:** a save must have exactly the right fields and ranges (known stage, non-negative counts, morale 0 to 100, every item present). Unknown fields are dropped. Anything else is rejected with a plain-words reason, and the current game is not touched.
 - **Corrupt saves:** a stored save that cannot be read is copied to `look-up:save-corrupt` before the game starts fresh, so an autosave cannot destroy it.
 - **Blocked storage:** every read and write is wrapped. The game still runs and `loadStatus` reports `"unavailable"`.
-- **Loading is offline progress:** loading or importing a save and then ticking replays the time since `lastTickAt`. GAME-13 decides the cap and how policies behave while away.
+- **Loading is offline progress:** loading or importing a save and then ticking replays the time since `lastTickAt`, as described under Offline progress below.
 
 ## Bulk buying (GAME-12)
 
@@ -51,8 +51,14 @@ touches it through `src/hooks/useGame.ts`.
 - Research and exploits stop at their stage goals (`purchaseLimit`), so a bulk buy can't overshoot a stage.
 - Tests check bulk results against buying one unit at a time, and `timeline.test.ts` replays the prototype's greedy player through `tick`, `gatherFood` and `buyItem`: stage 1 ends at the same time as in the prototype.
 
-## For later tickets
+## Offline progress (GAME-13)
 
-- **Offline progress (GAME-13):** a long `tick` already replays the gap in full. Open decisions: a cap, and
-  whether policies such as Extended Shifts keep draining morale while the player is away.
-- **Bulk buying (GAME-12, done in the engine):** see below.
+`catchUp(state, now)` in `offline.ts` brings the game up to date and is what the store calls instead of a bare `tick`.
+
+- **What counts as away:** a gap of 60 seconds or more (`AWAY_AFTER_SECONDS`). A shorter gap is an ordinary `tick`.
+- **Policies switch off when the player leaves.** Extended Shifts and Rations Optimisation are turned off at the start of the gap, so being away never costs morale or moves the hidden drift (and gives no bonus output). Without them, morale can't fall far enough for a walkout, even with every villager laid off.
+- **Cap: 8 hours** (`MAX_AWAY_SECONDS`). Only the first 8 hours are replayed, with the same step-by-step `tick` as normal play, so stage changes work. Time beyond the cap is dropped: play resumes from now and the lost time does not come back.
+- **One path for every case.** A closed tab, a hidden tab and an old imported save all look the same, a state whose `lastTickAt` is long ago. While the tab is hidden `useGame` does not tick; on return (or on load) the store catches up straight away.
+- **The summary:** `AwaySummary` (time away, time counted, whether capped, food, wood and infrastructure gained, policies that ended, stage before and after) is kept in the store until the player dismisses it (`getAway`, `dismissAway`). Two unseen summaries merge. It is not saved. `AwaySummaryDialog` shows it.
+- **Achievements and unlocks** during catch-up: there are none yet. What the shop reveals is derived from state, so it just appears. GAME-17 should record achievements from the state after `catchUp`, not from events.
+- **Balance note:** 8 hours of output is far more than the whole game's 2 hours of play, so a long absence can fund a lot on return. Flagged for GAME-18; an offline efficiency multiplier is the usual lever.

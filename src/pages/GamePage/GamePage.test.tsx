@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
 import { createGameState } from "../../game/state.ts";
@@ -157,5 +157,28 @@ describe("GamePage shop", () => {
     expect(screen.getByRole("heading", { name: "Machines" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Build Automated forager/ })).toBeEnabled();
     expect(screen.getByRole("button", { name: /Fund Research/ })).toBeEnabled();
+  });
+});
+
+describe("GamePage while away", () => {
+  it("shows a summary for a game last played hours ago, and closes it", async () => {
+    const user = setupWith((s) => {
+      s.owned.forager = 10;
+      s.lastTickAt = Date.now() - 3 * 3600 * 1000;
+    });
+    const dialog = await screen.findByRole("dialog", { name: "Welcome back" });
+    expect(dialog).toHaveTextContent("You were away for 3 hours.");
+    expect(dialog).toHaveTextContent("Food+");
+    await user.click(screen.getByRole("button", { name: "Back to work" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    // 10 foragers at 0.4/s, doubled by the 10-owned milestone, for 3 hours: 8 × 10,800.
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("86.4K");
+  });
+
+  it("shows no summary for a game saved a moment ago", () => {
+    setupWith((s) => {
+      s.lastTickAt = Date.now() - 5000;
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

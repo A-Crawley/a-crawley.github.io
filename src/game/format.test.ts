@@ -1,4 +1,4 @@
-import { formatAmount, formatRate } from "./format.ts";
+import { formatAmount, formatDuration, formatRate } from "./format.ts";
 
 describe("formatAmount", () => {
   it("shows whole numbers below 1,000, rounded down", () => {
@@ -50,5 +50,24 @@ describe("formatRate", () => {
   it("treats junk as zero", () => {
     expect(formatRate(-1)).toBe("0");
     expect(formatRate(Number.NaN)).toBe("0");
+  });
+});
+
+describe("formatDuration", () => {
+  it("says less than a minute for short or odd values", () => {
+    expect(formatDuration(0)).toBe("less than a minute");
+    expect(formatDuration(59)).toBe("less than a minute");
+    expect(formatDuration(Number.NaN)).toBe("less than a minute");
+    expect(formatDuration(-10)).toBe("less than a minute");
+  });
+
+  it("uses minutes, hours and days with correct plurals", () => {
+    expect(formatDuration(60)).toBe("1 minute");
+    expect(formatDuration(45 * 60)).toBe("45 minutes");
+    expect(formatDuration(3600)).toBe("1 hour");
+    expect(formatDuration(2 * 3600 + 14 * 60)).toBe("2 hours 14 minutes");
+    expect(formatDuration(8 * 3600)).toBe("8 hours");
+    expect(formatDuration(24 * 3600)).toBe("1 day");
+    expect(formatDuration(3 * 24 * 3600 + 4 * 3600 + 12 * 60)).toBe("3 days 4 hours");
   });
 });

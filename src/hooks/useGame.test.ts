@@ -274,3 +274,97 @@ describe("useGame export, import and reset", () => {
     });
   });
 });
+
+function setHidden(hidden: boolean) {
+  if (hidden) {
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+  } else {
+    Reflect.deleteProperty(document, "visibilityState");
+  }
+  document.dispatchEvent(new Event("visibilitychange"));
+}
+
+const HOUR = 60 * 60 * 1000;
+
+describe("useGame while away", () => {
+  afterEach(() => {
+    Reflect.deleteProperty(document, "visibilityState");
+  });
+
+  it("has no summary on a normal start", () => {
+    const { result } = renderHook(() => useGame({ storage: memoryStorage() }));
+    expect(result.current.away).toBeNull();
+  });
+
+  it("shows a summary straight away when an old save is loaded", () => {
+    const storage = memoryStorage();
+    const first = renderHook(() => useGame({ storage }));
+    clickTimes(first.result, 10);
+    act(() => first.result.current.buyItem("forager"));
+    act(() => {
+      vi.advanceTimersByTime(AUTOSAVE_INTERVAL_MS);
+    });
+    first.unmount();
+
+    vi.setSystemTime(new Date(Date.now() + 3 * HOUR));
+    const second = renderHook(() => useGame({ storage }));
+    expect(second.result.current.away?.awaySeconds).toBeGreaterThan(3 * 3600 - 40);
+    expect(second.result.current.away?.gained.food).toBeGreaterThan(1000);
+  });
+
+  it("pauses while the tab is hidden and shows a summary when it returns", () => {
+    const { result } = renderHook(() => useGame({ storage: memoryStorage() }));
+    clickTimes(result, 10);
+    act(() => result.current.buyItem("forager"));
+    act(() => result.current.setPolicy("extendedShifts", true));
+
+    act(() => setHidden(true));
+    const hiddenAt = result.current.state.time;
+    // Timers keep firing in a hidden tab (slowly), but the game does not advance.
+    act(() => {
+      vi.advanceTimersByTime(TICK_INTERVAL_MS * 20);
+    });
+    expect(result.current.state.time).toBe(hiddenAt);
+
+    vi.setSystemTime(new Date(Date.now() + 2 * HOUR));
+    act(() => setHidden(false));
+    expect(result.current.away?.awaySeconds).toBeGreaterThan(2 * 3600 - 10);
+    expect(result.current.away?.policiesEnded).toEqual(["extendedShifts"]);
+    expect(result.current.state.policies.extendedShifts).toBe(false);
+  });
+
+  it("keeps the moment the player left when the page closes while hidden", () => {
+    const storage = memoryStorage();
+    const { result } = renderHook(() => useGame({ storage }));
+    clickTimes(result, 3);
+    act(() => setHidden(true));
+    const leftAt = loadGame(storage);
+    vi.setSystemTime(new Date(Date.now() + HOUR));
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+    const after = loadGame(storage);
+    expect(leftAt.status).toBe("loaded");
+    expect(after.status === "loaded" && after.state.lastTickAt).toBe(
+      leftAt.status === "loaded" && leftAt.state.lastTickAt,
+    );
+  });
+
+  it("does not count a quick tab switch as being away", () => {
+    const { result } = renderHook(() => useGame({ storage: memoryStorage() }));
+    act(() => setHidden(true));
+    vi.setSystemTime(new Date(Date.now() + 20_000));
+    act(() => setHidden(false));
+    expect(result.current.away).toBeNull();
+  });
+
+  it("clears the summary when dismissed", () => {
+    const { result } = renderHook(() => useGame({ storage: memoryStorage() }));
+    act(() => setHidden(true));
+    vi.setSystemTime(new Date(Date.now() + HOUR));
+    act(() => setHidden(false));
+    expect(result.current.away).not.toBeNull();
+    act(() => result.current.dismissAway());
+    expect(result.current.away).toBeNull();
+  });
+});
