@@ -16,6 +16,11 @@ const BEDS = {
   house: ITEMS.find((def) => def.id === "house")?.beds ?? 0,
 };
 
+const CAPACITY = {
+  granary: ITEMS.find((def) => def.id === "granary")?.stores?.amount ?? 0,
+  woodshed: ITEMS.find((def) => def.id === "woodshed")?.stores?.amount ?? 0,
+};
+
 /**
  * The words on the shop for each item. The numbers come from CONFIG so they can't drift. Per-unit
  * outputs are all under 100 a second, which every notation writes the same way, so they don't
@@ -71,6 +76,16 @@ export const ITEM_COPY: Record<ItemId, ItemCopy> = {
     action: "Build",
     description: "Residential Delivery. Has a door, and a form to fill in about the door.",
     output: `room for ${BEDS.house} more villagers`,
+  },
+  granary: {
+    action: "Build",
+    description: "Somewhere to put the food that would otherwise go to waste. Has an audit trail.",
+    output: `room for ${CAPACITY.granary} more food`,
+  },
+  woodshed: {
+    action: "Build",
+    description: "A shed, for wood. The wood had been keeping its own records.",
+    output: `room for ${CAPACITY.woodshed} more wood`,
   },
 };
 

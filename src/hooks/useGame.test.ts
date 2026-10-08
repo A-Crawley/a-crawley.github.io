@@ -23,6 +23,8 @@ function steadyVillage() {
   const state = createGameState(Date.now());
   state.owned.forager = 10;
   state.population = 10;
+  // Room to keep everything the village makes while away.
+  state.owned.granary = 100;
   return state;
 }
 

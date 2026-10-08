@@ -3,6 +3,7 @@ import {
   advanceStage,
   buyMany,
   canRest,
+  clampStocks,
   foodPerClick,
   isAvailable,
   isFinished,
@@ -29,6 +30,7 @@ export function gatherFood(state: GameState): GameState {
   if (isFinished(state)) return state;
   const next = structuredClone(state);
   next.food += foodPerClick(next);
+  clampStocks(next);
   settle(next);
   return next;
 }

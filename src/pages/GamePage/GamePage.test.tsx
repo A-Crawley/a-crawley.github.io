@@ -184,6 +184,7 @@ describe("GamePage while away", () => {
     const user = setupWith((s) => {
       s.owned.forager = 10;
       s.population = 10;
+      s.owned.granary = 100;
       s.lastTickAt = Date.now() - 3 * 3600 * 1000;
     });
     const dialog = await screen.findByRole("dialog", { name: "Welcome back" });
@@ -499,5 +500,35 @@ describe("GamePage village", () => {
     });
     expect(screen.getByRole("region", { name: "Village" })).toHaveTextContent("Hungry");
     expect(screen.getByText(/eating faster than it is fed/)).toBeInTheDocument();
+  });
+});
+
+describe("GamePage storage", () => {
+  it("offers a granary when food is piling up, and shows the ceiling on the counter", async () => {
+    const user = setupWith((s) => {
+      s.owned.forager = 1;
+      s.food = 250;
+      s.wood = 100;
+    });
+    expect(screen.getByRole("heading", { name: "Storage" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("Store holds up to 300");
+    await user.click(screen.getByRole("button", { name: /Build Granary/ }));
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("up to 800");
+  });
+
+  it("says so when the store is full", () => {
+    setupWith((s) => {
+      s.owned.forager = 1;
+      s.food = 300;
+    });
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("Store full (300)");
+  });
+
+  it("shows no storage until it matters", () => {
+    setupWith((s) => {
+      s.food = 20;
+    });
+    expect(screen.queryByRole("heading", { name: "Storage" })).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Food" })).not.toHaveTextContent("Store");
   });
 });

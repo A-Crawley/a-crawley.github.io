@@ -16,7 +16,9 @@ export type ItemId =
   | "research"
   | "exploit"
   | "hut"
-  | "house";
+  | "house"
+  | "granary"
+  | "woodshed";
 
 export interface ItemDef {
   id: ItemId;
@@ -32,6 +34,8 @@ export interface ItemDef {
   beds?: number;
   /** Housing only: the village needs this many people before the item is offered. */
   fromPopulation?: number;
+  /** Storage only: which stock it holds more of, and how much more each unit holds. */
+  stores?: { currency: "food" | "wood"; amount: number };
 }
 
 export const ITEMS: readonly ItemDef[] = [
@@ -134,7 +138,39 @@ export const ITEMS: readonly ItemDef[] = [
     beds: 25,
     fromPopulation: 25,
   },
+  // Storage (GAME-27). Stocks have a ceiling; anything past it is lost, so the player is pushed to
+  // spend rather than hoard. Both cost wood, and neither makes anything.
+  {
+    id: "granary",
+    label: "Granary",
+    firstStage: 1,
+    lastStage: 3,
+    currency: "wood",
+    base: 60,
+    growth: 1.3,
+    stores: { currency: "food", amount: 500 },
+  },
+  {
+    id: "woodshed",
+    label: "Woodshed",
+    firstStage: 1,
+    lastStage: 3,
+    currency: "wood",
+    base: 50,
+    growth: 1.3,
+    stores: { currency: "wood", amount: 300 },
+  },
 ];
+
+/**
+ * How much of each stock the village can hold before anything is built. A stock can also never
+ * sit below `priceCover` times the dearest thing it can buy right now, so the next purchase is
+ * always possible and storage is about saving for bigger buys, not about getting stuck.
+ */
+export const STORAGE = {
+  base: { food: 300, wood: 200 },
+  priceCover: 1.5,
+} as const;
 
 /** The village: how many people it starts with, how fast they arrive and where they sleep. */
 export const VILLAGE = {

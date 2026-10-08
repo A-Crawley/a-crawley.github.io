@@ -1,6 +1,6 @@
 import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
-import { CONFIG, ITEMS, VILLAGE } from "./config.ts";
-import type { ItemDef, ItemId, Stage } from "./config.ts";
+import { CONFIG, ITEMS, STORAGE, VILLAGE } from "./config.ts";
+import type { Currency, ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
 
@@ -51,6 +51,8 @@ const ZERO_COUNTS: Counts = {
   exploit: 0,
   hut: 0,
   house: 0,
+  granary: 0,
+  woodshed: 0,
 };
 
 export function createState(): SimState {
@@ -209,6 +211,41 @@ export function isJob(id: ItemId): boolean {
   return JOB_IDS.includes(id);
 }
 
+/**
+ * The most food or wood the village can hold. Infrastructure has no ceiling. See STORAGE for why
+ * the ceiling never drops below what the dearest available purchase costs.
+ */
+export function capOf(state: SimState, currency: Currency): number {
+  if (currency === "infra") return Infinity;
+  let built: number = STORAGE.base[currency];
+  let dearest = 0;
+  for (const def of ITEMS) {
+    if (def.stores?.currency === currency) built += def.stores.amount * state.owned[def.id];
+    if (def.currency === currency && isAvailable(state, def)) {
+      dearest = Math.max(dearest, costOf(state, def));
+    }
+  }
+  return Math.max(built, dearest * STORAGE.priceCover);
+}
+
+/** Whether a stock is sitting at its ceiling, so what arrives next is lost. */
+export function isFull(state: SimState, currency: Currency): boolean {
+  return currency !== "infra" && state[currency] >= capOf(state, currency);
+}
+
+/** Throw away whatever does not fit. Returns true when something was thrown away. */
+export function clampStocks(state: SimState): boolean {
+  let lost = false;
+  for (const currency of ["food", "wood"] as const) {
+    const cap = capOf(state, currency);
+    if (state[currency] > cap) {
+      state[currency] = cap;
+      lost = true;
+    }
+  }
+  return lost;
+}
+
 /** Cost of the next unit of an item, including the rations policy discount on food prices. */
 export function costOf(state: SimState, def: ItemDef): number {
   let cost = unitCost(def.base, def.growth, state.owned[def.id]);
@@ -351,6 +388,8 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
   state.food += (rates.food - upkeepPerSecond(state)) * dt;
   state.wood += rates.wood * dt;
   state.infra += rates.infra * dt;
+
+  clampStocks(state);
 
   // Food never goes below nothing. Running out for long enough costs morale, then villagers.
   const { hunger: h } = VILLAGE;

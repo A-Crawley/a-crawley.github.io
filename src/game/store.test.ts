@@ -11,6 +11,7 @@ function setup() {
   const initialState = createGameState(time);
   initialState.owned.forager = 5;
   initialState.population = 10;
+  initialState.owned.granary = 100;
   const store = createGameStore({ now: () => time, initialState });
   return {
     store,

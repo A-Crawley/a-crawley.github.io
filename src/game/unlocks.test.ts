@@ -338,3 +338,25 @@ describe("housing reveal", () => {
     expect(withUnlocks(state).unlocked).toContain("village");
   });
 });
+
+describe("storage reveal", () => {
+  it("is offered once the stock is well on its way to the ceiling", () => {
+    const state = fresh();
+    state.wood = 200;
+    state.food = 100;
+    expect(withUnlocks(state).unlocked).not.toContain("item:granary");
+    state.food = 200;
+    const next = withUnlocks(state);
+    expect(next.unlocked).toContain("item:granary");
+    expect(next.unlocked).toContain("storage");
+    expect(logLines(next).some((line) => /more than it can keep/.test(line.text))).toBe(true);
+  });
+
+  it("only offers the shed for the stock that is filling up", () => {
+    const state = fresh();
+    state.wood = 150;
+    const next = withUnlocks(state);
+    expect(next.unlocked).toContain("item:woodshed");
+    expect(next.unlocked).not.toContain("item:granary");
+  });
+});

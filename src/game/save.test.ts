@@ -369,3 +369,17 @@ describe("hunger in a save", () => {
     }
   });
 });
+
+describe("storage in a save", () => {
+  it("upgrades a version 6 save with no storage built", () => {
+    const old = { ...raw(), version: 6 } as Record<string, unknown>;
+    const owned = { ...(old.owned as Record<string, number>) };
+    delete owned.granary;
+    delete owned.woodshed;
+    old.owned = owned;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.owned.granary).toBe(0);
+    expect(result.ok && result.value.owned.woodshed).toBe(0);
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+  });
+});

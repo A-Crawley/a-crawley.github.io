@@ -164,3 +164,21 @@ The village has people. They are what the jobs are made of, and the beds are wha
 - **Display:** the Food counter shows what is left after the villagers eat (`netFoodRate`), and the log warns at
   the three stages of hunger. The `VillagePanel` (revealed by the `village` unlock) shows population against beds,
   who is free to hire, and whether the village is fed, in words.
+
+## Storage (GAME-27)
+
+Food and wood have a ceiling; infrastructure has none. `capOf(state, currency)` is the larger of
+two numbers: `STORAGE.base` plus everything built (granary +500 food, woodshed +300 wood), and
+`STORAGE.priceCover` (1.5) times the dearest thing currently on sale in that currency. The second
+number is the safeguard: the next purchase, including the research and exploit climb, is always
+possible, so storage can never make the game unfinishable. It also means a ×10 or ×100 purchase of
+something dear needs storage first, which is the point of building it.
+
+`step` and `gatherFood` call `clampStocks`; anything over the ceiling is lost. Offline progress runs
+through `step`, so it respects the ceiling too, and `AwaySummary.storageFull` lists the stocks that
+were full on return so the dialog can say why the haul was smaller than the rate suggests.
+
+Storage is revealed (`item:granary`, `item:woodshed`, and the `storage` unlock that shows the
+ceiling on the counters) once the matching stock reaches 60% of its ceiling. The greedy sim player
+never builds it (it makes nothing, so the payback rule skips it) and `neverBought` ignores storage.
+Save version 7 adds the two counts.

@@ -1,4 +1,4 @@
-import { CONFIG, ITEMS, VILLAGE } from "./config.ts";
+import { CONFIG, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import type { ItemDef } from "./config.ts";
 import {
   advanceStage,
@@ -8,6 +8,8 @@ import {
   buyMany,
   canAfford,
   canRest,
+  capOf,
+  clampStocks,
   compassionIndex,
   conquestOdds,
   costOf,
@@ -15,6 +17,7 @@ import {
   idleVillagers,
   isAvailable,
   isFinished,
+  isFull,
   isHungry,
   isResting,
   itemDef,
@@ -547,5 +550,61 @@ describe("food upkeep", () => {
     expect(state.morale).toBeGreaterThan(90);
     expect(state.shortfallSeconds).toBe(0);
     expect(state.food).toBe(0);
+  });
+});
+
+describe("storage", () => {
+  it("starts with the base ceiling for food and wood, and none for infrastructure", () => {
+    const state = createState();
+    expect(capOf(state, "food")).toBe(STORAGE.base.food);
+    expect(capOf(state, "wood")).toBe(STORAGE.base.wood);
+    expect(capOf(state, "infra")).toBe(Infinity);
+  });
+
+  it("raises only its own stock, by the same amount for each unit", () => {
+    const state = createState();
+    const granary = itemDef("granary");
+    const woodshed = itemDef("woodshed");
+    state.owned.granary = 2;
+    expect(capOf(state, "food")).toBe(STORAGE.base.food + 2 * (granary.stores?.amount ?? 0));
+    expect(capOf(state, "wood")).toBe(STORAGE.base.wood);
+    state.owned.woodshed = 1;
+    expect(capOf(state, "wood")).toBe(STORAGE.base.wood + (woodshed.stores?.amount ?? 0));
+  });
+
+  it("never sits below what the dearest available purchase costs, so saving up stays possible", () => {
+    const state = createState();
+    state.stage = 2;
+    state.owned.research = 20;
+    const price = costOf(state, itemDef("research"));
+    expect(price).toBeGreaterThan(STORAGE.base.food);
+    expect(capOf(state, "food")).toBeGreaterThanOrEqual(price);
+  });
+
+  it("throws away what does not fit when time passes", () => {
+    const state = createState();
+    state.owned.forager = 10;
+    state.population = 10;
+    state.food = STORAGE.base.food - 1;
+    step(state, 100);
+    expect(state.food).toBe(STORAGE.base.food);
+    expect(isFull(state, "food")).toBe(true);
+  });
+
+  it("keeps more once a granary is built", () => {
+    const state = createState();
+    state.owned.forager = 10;
+    state.population = 10;
+    state.owned.granary = 1;
+    state.food = STORAGE.base.food;
+    step(state, 10);
+    expect(state.food).toBeGreaterThan(STORAGE.base.food);
+  });
+
+  it("leaves a stock under the ceiling alone", () => {
+    const state = createState();
+    state.food = 50;
+    expect(clampStocks(state)).toBe(false);
+    expect(state.food).toBe(50);
   });
 });

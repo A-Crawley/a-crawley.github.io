@@ -159,3 +159,12 @@ happens: the stock just sits at nothing.
 
 - Morale effects of crowding and idleness (GAME-28) are not modelled.
 - Storage caps (GAME-27) are not modelled and may bind earlier than housing.
+
+## Storage (GAME-27)
+
+Ceiling: 300 food and 200 wood to start, floored at 1.5× the dearest current price. A granary
+(60 wood ×1.3) adds 500 food, a woodshed (50 wood ×1.3) adds 300 wood. The greedy sim player never
+builds storage and still loses a little to the ceiling: runs went from 124.5 / 127.9 / 132.1 min
+(efficient / balanced / compassionate) to 126.7 / 131.6 / 136.0, compassionate 3.3% over balanced
+(guard is 5%). A real player who builds storage will land at or under the old numbers. Offline,
+a long absence now fills the store and stops: the stores are what you come back to.

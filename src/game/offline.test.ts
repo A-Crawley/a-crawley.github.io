@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.ts";
-import { ratesFor, upkeepPerSecond } from "./engine.ts";
+import { capOf, ratesFor, upkeepPerSecond } from "./engine.ts";
 import { AWAY_AFTER_SECONDS, catchUp, MAX_AWAY_SECONDS, mergeAway } from "./offline.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
@@ -16,6 +16,9 @@ function village(): GameState {
   state.owned.builder = 2;
   // A full village, so nobody arrives and the upkeep stays the same while time passes.
   state.population = 10;
+  // Room for everything made while away; storage has its own tests.
+  state.owned.granary = 200;
+  state.owned.woodshed = 200;
   return state;
 }
 
@@ -246,5 +249,21 @@ describe("catchUp: hunger while away", () => {
   it("does cost them while the player is there to see it", () => {
     const played = tick(starving(), at(100));
     expect(played.population).toBeLessThan(10);
+  });
+});
+
+describe("catchUp: storage while away", () => {
+  it("stops gathering at the ceiling and says which store was full", () => {
+    const state = village();
+    state.owned.granary = 0;
+    state.owned.woodshed = 0;
+    const { state: after, away } = catchUp(state, at(8 * 3600));
+    expect(after.food).toBe(capOf(after, "food"));
+    expect(away?.storageFull).toContain("food");
+  });
+
+  it("reports nothing when the stores had room", () => {
+    const { away } = catchUp(village(), at(3600));
+    expect(away?.storageFull).toEqual([]);
   });
 });
