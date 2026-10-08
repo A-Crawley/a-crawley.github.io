@@ -5,6 +5,10 @@ export interface ShopItemProps {
   name: string;
   description: string;
   owned: number;
+  /** The verb on the button, e.g. "Hire" or "Build". */
+  actionLabel: string;
+  /** Units one press buys. Shown on the button when more than one. */
+  count?: number;
   cost: number;
   /** What the cost is paid in, e.g. "food". */
   currency: string;
@@ -19,6 +23,8 @@ export function ShopItem({
   name,
   description,
   owned,
+  actionLabel,
+  count = 1,
   cost,
   currency,
   output,
@@ -42,7 +48,7 @@ export function ShopItem({
       <Box sx={{ minWidth: 0 }}>
         <Typography component="h3" sx={{ fontWeight: 700 }}>
           {name}{" "}
-          <Typography component="span" color="text.secondary">
+          <Typography component="span" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
             × {owned}
           </Typography>
         </Typography>
@@ -58,10 +64,18 @@ export function ShopItem({
         color={affordable ? "primary" : "inherit"}
         disabled={!affordable}
         onClick={onBuy}
-        aria-label={`Hire ${name}`}
-        sx={{ flexShrink: 0, minWidth: 96, flexDirection: "column", lineHeight: 1.2 }}
+        aria-label={`${actionLabel} ${count > 1 ? `${count} × ` : ""}${name}`}
+        sx={{
+          flexShrink: 0,
+          minWidth: 96,
+          flexDirection: "column",
+          lineHeight: 1.2,
+          // Keep the price readable when the button is unavailable.
+          "&.Mui-disabled": { color: "text.secondary", backgroundColor: "rgba(255,255,255,0.06)" },
+        }}
       >
-        Hire
+        {actionLabel}
+        {count > 1 ? ` ×${count}` : ""}
         <Typography component="span" variant="caption">
           {formatAmount(cost)} {currency}
         </Typography>

@@ -8,7 +8,7 @@ describe("ResourceCounter", () => {
   });
 
   it("shows the rate when there is one", () => {
-    render(<ResourceCounter label="Food" value={5} perSecond={1.25} />);
+    render(<ResourceCounter label="Food" value={5} perSecond={1.2} />);
     expect(screen.getByText("+1.2 per second")).toBeInTheDocument();
   });
 
@@ -20,5 +20,11 @@ describe("ResourceCounter", () => {
   it("hides the rate line when no rate is given", () => {
     render(<ResourceCounter label="Food" value={5} />);
     expect(screen.queryByText(/per second/)).not.toBeInTheDocument();
+  });
+
+  it("works in its small size too", () => {
+    render(<ResourceCounter label="Wood" value={42} perSecond={0.5} size="small" />);
+    expect(screen.getByRole("region", { name: "Wood" })).toHaveTextContent("42");
+    expect(screen.getByText("+0.5 per second")).toBeInTheDocument();
   });
 });

@@ -19,9 +19,13 @@ export function formatAmount(value: number): string {
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}${SUFFIXES[tier]}`;
 }
 
-/** A per-second rate, with one decimal below 100 so small rates stay visible. */
+/**
+ * A per-second rate, rounded to nearest: two decimals below 1 (0.03, 0.25) so slow producers don't
+ * show as 0, one decimal below 100, then compact.
+ */
 export function formatRate(perSecond: number): string {
   if (!Number.isFinite(perSecond) || perSecond <= 0) return "0";
-  if (perSecond < 100) return (Math.floor(perSecond * 10) / 10).toFixed(1);
+  if (perSecond < 1) return String(Number(perSecond.toFixed(2)));
+  if (perSecond < 100) return perSecond.toFixed(1);
   return formatAmount(perSecond);
 }

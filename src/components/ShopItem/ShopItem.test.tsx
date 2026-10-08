@@ -7,6 +7,7 @@ const base: ShopItemProps = {
   name: "Food Acquisition Associate",
   description: "Walks to where the food is.",
   owned: 3,
+  actionLabel: "Hire",
   cost: 12,
   currency: "food",
   output: "0.4 food per second",
@@ -54,5 +55,27 @@ describe("ShopItem", () => {
     // MUI sets pointer-events: none on disabled buttons; skip that check to prove the click is inert.
     await userEvent.setup({ pointerEventsCheck: 0 }).click(button);
     expect(onBuy).not.toHaveBeenCalled();
+  });
+});
+
+describe("ShopItem with a bigger purchase", () => {
+  it("names the amount on the button and in its accessible name", () => {
+    render(
+      <ul>
+        <ShopItem {...base} count={10} cost={210} />
+      </ul>,
+    );
+    const button = screen.getByRole("button", { name: "Hire 10 × Food Acquisition Associate" });
+    expect(button).toHaveTextContent("Hire ×10");
+    expect(button).toHaveTextContent("210 food");
+  });
+
+  it("uses the verb it is given", () => {
+    render(
+      <ul>
+        <ShopItem {...base} actionLabel="Build" name="Sawmill bot" />
+      </ul>,
+    );
+    expect(screen.getByRole("button", { name: "Build Sawmill bot" })).toBeInTheDocument();
   });
 });
