@@ -79,6 +79,21 @@ export function logLines(state: GameState): LogLine[] {
     "hungry-leaving",
     "People are leaving. Leadership calls it a flexible workforce.",
   );
+  add(
+    state.redeployed > 0,
+    "redeployed",
+    "Someone was moved to another job without being asked. The paperwork calls it a lateral opportunity.",
+  );
+  add(
+    state.operators > 0,
+    "retrained",
+    "A villager has been retrained to supervise a machine. The machine did not ask for one.",
+  );
+  add(
+    state.released > 0,
+    "released",
+    "Some villagers have been released. The note says this was difficult, and thanks them for their flexibility.",
+  );
   // Reveal lines come last, in the order the player met them.
   for (const id of state.unlocked) {
     const log = UNLOCKS.find((unlock) => unlock.id === id)?.log;

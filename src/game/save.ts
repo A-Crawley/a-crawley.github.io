@@ -42,6 +42,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     version: 7,
     owned: { ...(isRecord(save.owned) ? save.owned : {}), granary: 0, woodshed: 0 },
   }),
+  // 7 -> 8: displaced workers can be retrained, redeployed or released. Nobody has been yet.
+  7: (save) => ({ ...save, version: 8, operators: 0, redeployed: 0, released: 0 }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -112,6 +114,9 @@ const NON_NEGATIVE_FIELDS = [
   "lastTickAt",
   "arrivalTimer",
   "shortfallSeconds",
+  "operators",
+  "redeployed",
+  "released",
 ] as const;
 
 const POLICY_FIELDS = ["extendedShifts", "rationsOptimisation"] as const;
@@ -205,6 +210,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       population: raw.population,
       arrivalTimer: raw.arrivalTimer as number,
       shortfallSeconds: raw.shortfallSeconds as number,
+      operators: raw.operators as number,
+      redeployed: raw.redeployed as number,
+      released: raw.released as number,
       unlocked,
       ending,
       achievements,

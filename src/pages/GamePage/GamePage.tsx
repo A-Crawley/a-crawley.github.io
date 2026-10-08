@@ -11,11 +11,13 @@ import {
   Typography,
 } from "@mui/material";
 import { TOUCH_TARGET } from "../../theme";
-import { CONFIG, ITEMS } from "../../game/config.ts";
+import { CONFIG, DISPLACED, ITEMS } from "../../game/config.ts";
 import type { ItemDef, ItemId } from "../../game/config.ts";
 import {
   BUY_QUANTITIES,
   bedsOf,
+  idleHands,
+  staffedOperators,
   capOf,
   canRest,
   foodPerClick,
@@ -66,6 +68,7 @@ import { ResourceCounter } from "../../components/ResourceCounter";
 import { SaveControls } from "../../components/SaveControls";
 import { ShopItem } from "../../components/ShopItem";
 import { VillagePanel } from "../../components/VillagePanel";
+import { WorkforcePanel } from "../../components/WorkforcePanel";
 
 const SECTIONS: ReadonlyArray<{ title: string; ids: readonly ItemId[] }> = [
   { title: "Jobs", ids: ["forager", "woodcutter", "builder"] },
@@ -228,6 +231,17 @@ export function GamePage({ options }: GamePageProps) {
                   foodMade={rates.food}
                   foodEaten={upkeepPerSecond(state)}
                   hungry={isHungry(state)}
+                />
+              )}
+              {unlocked("workforce") && (
+                <WorkforcePanel
+                  idle={idleHands(state)}
+                  operators={staffedOperators(state)}
+                  retrainCost={DISPLACED.retrainFood}
+                  canRetrain={state.food >= DISPLACED.retrainFood}
+                  onRedeploy={game.redeploy}
+                  onRetrain={game.retrain}
+                  onRelease={game.release}
                 />
               )}
               {unlocked("bulkBuying") && shop.some((section) => section.defs.length > 0) && (

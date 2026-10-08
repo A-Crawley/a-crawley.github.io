@@ -543,3 +543,47 @@ describe("GamePage morale reasons", () => {
     expect(screen.getByRole("region", { name: "Morale" })).toHaveTextContent("Falling: Crowded");
   });
 });
+
+describe("GamePage workforce", () => {
+  function setupIdle() {
+    return setupWith((s) => {
+      s.stage = 2;
+      s.owned.forager = 10;
+      s.owned.autoForager = 4;
+      s.owned.hut = 1;
+      s.population = 10;
+      s.food = 600;
+    });
+  }
+
+  it("offers redeploy, retrain and release once machines have taken jobs", () => {
+    setupIdle();
+    expect(screen.getByRole("region", { name: "Workforce transition" })).toHaveTextContent(
+      "4 villagers are between opportunities",
+    );
+  });
+
+  it("releasing someone removes them from the village and the idle count", async () => {
+    const user = setupIdle();
+    await user.click(screen.getByRole("button", { name: "Release" }));
+    expect(screen.getByRole("region", { name: "Workforce transition" })).toHaveTextContent(
+      "3 villagers are between opportunities",
+    );
+    expect(screen.getByText(/Some villagers have been released/)).toBeInTheDocument();
+  });
+
+  it("retraining spends food and counts an operator", async () => {
+    const user = setupIdle();
+    await user.click(screen.getByRole("button", { name: /Retrain as operator/ }));
+    expect(screen.getByRole("region", { name: "Workforce transition" })).toHaveTextContent(
+      "1 now run machines",
+    );
+  });
+
+  it("shows nothing in stage 1", () => {
+    setupWith((s) => {
+      s.owned.forager = 3;
+    });
+    expect(screen.queryByRole("region", { name: "Workforce transition" })).not.toBeInTheDocument();
+  });
+});

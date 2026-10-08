@@ -1,3 +1,4 @@
+import { DISPLACED } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import {
   advanceStage,
@@ -5,10 +6,14 @@ import {
   canRest,
   clampStocks,
   foodPerClick,
+  idleHands,
   isAvailable,
   isFinished,
   itemDef,
   quotePurchase,
+  redeployOne,
+  releaseOne,
+  retrainOne,
   startRestDay,
 } from "./engine.ts";
 import type { BuyQuantity, Policies } from "./engine.ts";
@@ -75,4 +80,33 @@ export function takeRestDay(state: GameState): GameState {
 export function lookUp(state: GameState): GameState {
   if (!isUnlocked(state, "lookUp")) return state;
   return withSettled(unlock(state, "lookedUp"));
+}
+
+/** Whether the village can pay to retrain someone, and has someone to retrain. */
+export function canRetrain(state: GameState): boolean {
+  return !isFinished(state) && idleHands(state) > 0 && state.food >= DISPLACED.retrainFood;
+}
+
+/** Run one of the workforce changes on a copy of the state. Returns the same state if it can't happen. */
+function workforce(state: GameState, change: (copy: GameState) => boolean): GameState {
+  if (isFinished(state)) return state;
+  const next = structuredClone(state);
+  if (!change(next)) return state;
+  settle(next);
+  return next;
+}
+
+/** Give an idle villager odd jobs, at no cost. Nudges the village towards compassion. */
+export function redeploy(state: GameState): GameState {
+  return workforce(state, redeployOne);
+}
+
+/** Pay to turn an idle villager into a machine operator, which raises what machines make. */
+export function retrain(state: GameState): GameState {
+  return workforce(state, retrainOne);
+}
+
+/** Let an idle villager go. They stop eating, morale takes a hit, and the drift moves towards efficiency. */
+export function release(state: GameState): GameState {
+  return workforce(state, releaseOne);
 }

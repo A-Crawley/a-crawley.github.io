@@ -383,3 +383,25 @@ describe("storage in a save", () => {
     expect(result.ok && result.value.version).toBe(STATE_VERSION);
   });
 });
+
+describe("displaced workers in a save", () => {
+  it("upgrades a version 7 save with nobody retrained, redeployed or released", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 7 };
+    delete old.operators;
+    delete old.redeployed;
+    delete old.released;
+    const result = parseSave(JSON.stringify(old));
+    expect(
+      result.ok && [result.value.operators, result.value.redeployed, result.value.released],
+    ).toEqual([0, 0, 0]);
+  });
+
+  it("round-trips the counts and rejects a negative one", () => {
+    const state = playedState();
+    state.operators = 3;
+    state.redeployed = 5;
+    state.released = 2;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+    expect(validateState({ ...raw(), operators: -1 }).ok).toBe(false);
+  });
+});

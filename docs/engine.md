@@ -193,3 +193,21 @@ grace period, idle villagers (stage 2+), crowding (every bed taken, 0.04/s) and 
 free beds (0.05/s). Lifts only shrink the gap to 100, so a happy village changes nothing visible.
 Crowding and overdue rest are not counted while the player is away (`strain = false`). None of
 these touch drift: that stays with the policies and rest days.
+
+## Displaced workers (GAME-29)
+
+A machine displaces the villager in the matching job (`idleVillagers`). They still eat and sleep.
+`idleHands(state)` is the part of that pool with nothing to do yet: not an operator, not on odd
+jobs, not let go. The Workforce transition panel (revealed by the `workforce` unlock) offers:
+
+- **Redeploy to odd jobs**: free. Each makes `DISPLACED.oddJobFood` (0.15/s, flat) and drains morale
+  a little (0.03/s each, capped at 0.8/s). Drift +15.
+- **Retrain as operator**: 250 food. Operators remove that villager from the morale drain, and
+  machines make up to +25% more once every machine has one (scaled by coverage). Drift +40.
+- **Release**: free. Population −1 (so upkeep drops), morale −8 once, drift −120.
+
+Redeploying does not hire into a real job: a free real hire was worth about 30 minutes of stage 2
+(see docs/economy.md). Nobody new moves in while `idleHands > 0`, so a release is not undone by an
+arrival. The pure changes live in the engine (`redeployOne`, `retrainOne`, `releaseOne`); the
+actions wrap them. Save version 8 adds `operators`, `redeployed` and `released`. Away time
+changes none of this.
