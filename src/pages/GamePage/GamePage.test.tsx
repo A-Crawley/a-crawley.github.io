@@ -606,3 +606,33 @@ describe("GamePage upgrades", () => {
     expect(screen.queryByRole("heading", { name: "Upgrades" })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage developer tools", () => {
+  function setupDev(dev: boolean) {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = createGameState(Date.now());
+    state.owned.forager = 3;
+    state.population = 10;
+    render(<GamePage dev={dev} options={{ storage: null, initialState: state }} />);
+    return user;
+  }
+
+  it("is not there for an ordinary player", () => {
+    setupDev(false);
+    expect(screen.queryByText("Developer tools")).not.toBeInTheDocument();
+  });
+
+  it("skips an hour of play in one press", async () => {
+    const user = setupDev(true);
+    await user.click(screen.getByText("Developer tools"));
+    await user.click(screen.getByRole("button", { name: "Skip 1 hour" }));
+    expect(screen.getByLabelText("Game readout")).toHaveTextContent(/Game time1 h/);
+  });
+
+  it("lets a bot play to the start of stage 2", async () => {
+    const user = setupDev(true);
+    await user.click(screen.getByText("Developer tools"));
+    await user.click(screen.getByRole("button", { name: "Play To stage 2" }));
+    expect(screen.getByLabelText("Game readout")).toHaveTextContent("Stage2");
+  }, 60_000);
+});

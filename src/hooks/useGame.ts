@@ -69,6 +69,8 @@ export interface UseGame {
   importSave(text: string): SaveResult<GameState>;
   /** Delete the saved game and start again. The caller is responsible for asking first. */
   resetGame(): void;
+  /** Apply any change to the state, for the developer tools. */
+  apply(change: (state: GameState) => GameState): void;
 }
 
 function start(options: UseGameOptions = {}) {
@@ -157,6 +159,10 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store],
     ),
     buyUpgrade: useCallback((id: UpgradeId) => store.dispatch((s) => buyUpgrade(s, id)), [store]),
+    apply: useCallback(
+      (change: (state: GameState) => GameState) => store.dispatch(change),
+      [store],
+    ),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
     redeploy: useCallback(() => store.dispatch(redeploy), [store]),
     retrain: useCallback(() => store.dispatch(retrain), [store]),
