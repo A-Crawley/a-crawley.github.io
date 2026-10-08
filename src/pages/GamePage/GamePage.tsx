@@ -25,6 +25,7 @@ import {
   quotePurchase,
   ratesFor,
   unemployed,
+  upkeepPerSecond,
 } from "../../game/engine.ts";
 import type { BuyQuantity } from "../../game/engine.ts";
 import { CURRENCY_NAME, ITEM_COPY, POLICY_LABELS, sighting } from "../../game/itemCopy.ts";
@@ -141,7 +142,12 @@ export function GamePage({ options }: GamePageProps) {
             </Alert>
           )}
           {phase !== "ended" && (
-            <ResourceCounter label="Food" value={state.food} perSecond={rates.food} />
+            <ResourceCounter
+              label="Food"
+              value={state.food}
+              perSecond={rates.food}
+              upkeep={upkeepPerSecond(state)}
+            />
           )}
           {phase !== "ended" && (unlocked("wood") || unlocked("infra")) && (
             <Stack direction="row" spacing={4}>
@@ -266,7 +272,7 @@ export function GamePage({ options }: GamePageProps) {
                   {unlocked("policy:rationsOptimisation") && (
                     <PolicyToggle
                       label={POLICY_LABELS.rationsOptimisation}
-                      description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less. Drains morale.`}
+                      description={`Food purchases cost ${Math.round((1 - policies.rationsOptimisation.foodCostFactor) * 100)}% less and villagers eat ${Math.round((1 - policies.rationsOptimisation.upkeepFactor) * 100)}% less. Drains morale.`}
                       checked={state.policies.rationsOptimisation}
                       onChange={(on) => game.setPolicy("rationsOptimisation", on)}
                     />

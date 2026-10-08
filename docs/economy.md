@@ -131,8 +131,31 @@ so bulk buying still works and the player decides the size of the village by bui
 peak population of 185 to 195, 4 to 6 minutes of waiting for villagers and 1 to 3 minutes of waiting with every bed
 full. Upkeep will add to these; the prototype put it at about 6 to 8 minutes.
 
+### Food upkeep landed (GAME-24)
+
+Villagers eat 0.1 food a second each, working or not, from the first hire. Rations Optimisation now also cuts
+upkeep by 30%. A shortfall of 20 seconds costs morale, 60 seconds starts costing villagers (someone without a
+job first, then from the biggest job), one more every 10 seconds. While the player is away none of that
+happens: the stock just sits at nothing.
+
+| Strategy      | Total | Stages (min)       | Walkouts | Peak population |
+| ------------- | ----- | ------------------ | -------- | --------------- |
+| Efficient     | 124.5 | 65.5 / 39.2 / 19.8 | 30       | 195             |
+| Balanced      | 127.9 | 62.1 / 48.0 / 17.8 | 0        | 185             |
+| Compassionate | 132.1 | 76.0 / 48.6 / 7.5  | 0        | 185             |
+
+- **0.1, not the prototype's 0.15.** At 0.15 compassionate play finished 5.1% slower than balanced, outside the
+  5% guard. At 0.1 it is 3.3%. A forager (0.4 before milestones) now feeds four villagers.
+- **Stage 2 is about 4 minutes longer** (48 against 45) because research is paid in food, which the villagers now
+  also eat. Stage 1 is 2 minutes longer.
+- **The longest quiet stretch is now the research middle** (researchHalf to researchNearly, 31 minutes by the
+  bot). The unlock gap guard moved from 30 to 35 minutes. GAME-30 (upgrades) and GAME-31 (events) should fill it.
+- **The first forager roughly feeds three villagers** and no more (0.4 against 0.3). Arrivals stop while the
+  village is hungry, so the village grows as fast as it is fed rather than starving itself in the first minute.
+- **A passive player does not collapse the game.** With no jobs there is no upkeep at all, and a village that
+  has lost every job to a famine has none either, so the villagers who are left simply recover.
+
 ### Open for the later tickets
 
-- Population loss when starving (GAME-24) is not modelled: no run goes hungry, so it never triggers.
 - Morale effects of crowding and idleness (GAME-28) are not modelled.
 - Storage caps (GAME-27) are not modelled and may bind earlier than housing.

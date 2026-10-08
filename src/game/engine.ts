@@ -30,6 +30,8 @@ export interface SimState {
   population: number;
   /** Seconds since the last arrival, capped at the arrival interval. */
   arrivalTimer: number;
+  /** Consecutive seconds the village has gone without enough food. Zero when it is fed. */
+  shortfallSeconds: number;
 }
 
 export interface Rates {
@@ -70,6 +72,7 @@ export function createState(): SimState {
     restDays: 0,
     population: VILLAGE.startPopulation,
     arrivalTimer: 0,
+    shortfallSeconds: 0,
   };
 }
 
@@ -105,6 +108,31 @@ export function unemployed(state: SimState): number {
   const working = jobsHeld(state.owned) - idleVillagers(state.owned);
   return Math.max(0, state.population - working);
 }
+
+/**
+ * Food the village eats each second. Nobody eats until the first job is held: before that the
+ * village is just the player clicking, and an opening that starves is not an opening.
+ */
+export function upkeepPerSecond(state: SimState): number {
+  if (jobsHeld(state.owned) === 0) return 0;
+  const policy = state.policies.rationsOptimisation
+    ? CONFIG.policies.rationsOptimisation.upkeepFactor
+    : 1;
+  return state.population * VILLAGE.upkeepPerVillager * policy;
+}
+
+/** How the village is fed: food coming in minus food eaten, per second (clicks excluded). */
+export function netFoodRate(state: SimState, includeClicks = false): number {
+  return ratesFor(state, state.owned, includeClicks).food - upkeepPerSecond(state);
+}
+
+/** Whether the village has gone hungry long enough to notice. */
+export function isHungry(state: SimState): boolean {
+  return state.shortfallSeconds >= HUNGRY_NOTICE_SECONDS;
+}
+
+/** A shortfall shorter than this is a blip, not worth a warning. */
+export const HUNGRY_NOTICE_SECONDS = 5;
 
 export function isResting(state: SimState): boolean {
   return state.time < state.restUntil;
@@ -288,12 +316,50 @@ export function foodPerClick(state: SimState): number {
   return CONFIG.clickValue * globalMultiplier(state);
 }
 
-/** Advance by `dt` seconds. Pass `includeClicks = false` when clicks are real actions. */
-export function step(state: SimState, dt = 1, includeClicks = true): void {
+const WORKER_PAIRS: ReadonlyArray<readonly [ItemId, ItemId]> = [
+  ["forager", "autoForager"],
+  ["woodcutter", "sawmillBot"],
+  ["builder", "builderDrone"],
+];
+
+/** A villager leaves: someone without a job first, otherwise from the job with the most workers. */
+function loseVillager(state: SimState): void {
+  if (state.population <= 0) return;
+  if (unemployed(state) === 0) {
+    let best: ItemId | null = null;
+    let bestWorking = 0;
+    for (const [job, machine] of WORKER_PAIRS) {
+      const working = state.owned[job] - state.owned[machine];
+      if (working > bestWorking) {
+        best = job;
+        bestWorking = working;
+      }
+    }
+    if (best === null) return;
+    state.owned[best] -= 1;
+  }
+  state.population -= 1;
+}
+
+/**
+ * Advance by `dt` seconds. Pass `includeClicks = false` when clicks are real actions. Pass
+ * `hunger = false` to let a shortfall pass without morale or villagers paying for it (used while
+ * the player is away, so being gone never costs the village).
+ */
+export function step(state: SimState, dt = 1, includeClicks = true, hunger = true): void {
   const rates = ratesFor(state, state.owned, includeClicks);
-  state.food += rates.food * dt;
+  state.food += (rates.food - upkeepPerSecond(state)) * dt;
   state.wood += rates.wood * dt;
   state.infra += rates.infra * dt;
+
+  // Food never goes below nothing. Running out for long enough costs morale, then villagers.
+  const { hunger: h } = VILLAGE;
+  if (state.food < 0) {
+    state.food = 0;
+    state.shortfallSeconds = hunger ? state.shortfallSeconds + dt : 0;
+  } else {
+    state.shortfallSeconds = 0;
+  }
 
   const { morale: m, policies: p } = CONFIG;
   let drain = 0;
@@ -305,6 +371,7 @@ export function step(state: SimState, dt = 1, includeClicks = true): void {
     drain += p.rationsOptimisation.moraleDrainPerSecond;
     state.drift += p.rationsOptimisation.driftPerSecond * dt;
   }
+  if (state.shortfallSeconds > h.graceSeconds) drain += h.moraleDrainPerSecond;
   if (state.stage >= 2) {
     drain += Math.min(
       m.unemployedDrainPerSecond * idleVillagers(state.owned),
@@ -322,9 +389,19 @@ export function step(state: SimState, dt = 1, includeClicks = true): void {
     state.walkouts += 1;
   }
 
+  if (state.shortfallSeconds >= h.starveAfterSeconds) {
+    loseVillager(state);
+    state.shortfallSeconds -= h.leaveSeconds;
+  }
+
   // Villagers arrive to fill free beds, one every few seconds.
   state.arrivalTimer = Math.min(state.arrivalTimer + dt, VILLAGE.arrivalSeconds);
-  if (state.arrivalTimer >= VILLAGE.arrivalSeconds && state.population < bedsOf(state.owned)) {
+  const fed = state.shortfallSeconds < HUNGRY_NOTICE_SECONDS;
+  if (
+    fed &&
+    state.arrivalTimer >= VILLAGE.arrivalSeconds &&
+    state.population < bedsOf(state.owned)
+  ) {
     state.population += 1;
     state.arrivalTimer = 0;
   }

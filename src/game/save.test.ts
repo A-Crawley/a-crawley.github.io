@@ -347,3 +347,25 @@ describe("villagers in a save", () => {
     }
   });
 });
+
+describe("hunger in a save", () => {
+  it("round-trips how long the village has been hungry", () => {
+    const state = playedState();
+    state.shortfallSeconds = 17;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 5 save as fed", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 5 };
+    delete old.shortfallSeconds;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.shortfallSeconds).toBe(0);
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+  });
+
+  it("rejects a hunger count that is missing or negative", () => {
+    for (const shortfallSeconds of [undefined, -1, "5"]) {
+      expect(validateState({ ...raw(), shortfallSeconds }).ok).toBe(false);
+    }
+  });
+});

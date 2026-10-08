@@ -1,4 +1,5 @@
-import { itemDef } from "./engine.ts";
+import { VILLAGE } from "./config.ts";
+import { isHungry, itemDef } from "./engine.ts";
 import type { GameState } from "./state.ts";
 import { UNLOCKS } from "./unlocks.ts";
 
@@ -61,6 +62,22 @@ export function logLines(state: GameState): LogLine[] {
     owned.builder >= 1,
     "builder-hired",
     `${BUILDER_TITLE} hired. Nobody can say what is being built, only that it is on schedule.`,
+  );
+  // Hunger shows while it lasts. The warning comes well before anyone is lost.
+  add(
+    isHungry(state),
+    "hungry",
+    "The village is eating faster than it is fed. Leadership has asked everyone to be less hungry.",
+  );
+  add(
+    state.shortfallSeconds > VILLAGE.hunger.graceSeconds,
+    "hungry-morale",
+    "Morale is falling with the food. A survey is planned, once there is energy to fill it in.",
+  );
+  add(
+    state.shortfallSeconds >= VILLAGE.hunger.starveAfterSeconds - VILLAGE.hunger.leaveSeconds,
+    "hungry-leaving",
+    "People are leaving. Leadership calls it a flexible workforce.",
   );
   // Reveal lines come last, in the order the player met them.
   for (const id of state.unlocked) {

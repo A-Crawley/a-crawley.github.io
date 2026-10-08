@@ -16,9 +16,10 @@ export const MAX_TICK_SECONDS = 7 * 24 * 60 * 60;
  * gives the same result as the same time arriving in many small ticks (exactly, when ticks land on
  * whole seconds; within a fraction of a percent otherwise).
  *
- * The input is not changed. If the clock went backwards, no time passes.
+ * The input is not changed. If the clock went backwards, no time passes. With `hunger: false`
+ * a shortfall of food costs nothing (see `step`); away time uses this.
  */
-export function tick(state: GameState, now: number): GameState {
+export function tick(state: GameState, now: number, options: { hunger?: boolean } = {}): GameState {
   const next = structuredClone(state);
   const elapsed = Math.min(Math.max(0, (now - state.lastTickAt) / 1000), MAX_TICK_SECONDS);
   next.lastTickAt = Math.max(now, state.lastTickAt);
@@ -26,7 +27,7 @@ export function tick(state: GameState, now: number): GameState {
   let remaining = elapsed;
   while (remaining > 0 && !isFinished(next)) {
     const dt = Math.min(MAX_STEP_SECONDS, remaining);
-    step(next, dt, false);
+    step(next, dt, false, options.hunger ?? true);
     advanceStage(next);
     settle(next);
     remaining -= dt;

@@ -179,6 +179,8 @@ export interface RunResult {
   conquestOdds: number;
   endMorale: number;
   peakPopulation: number;
+  /** The longest the village went without enough food, in seconds. */
+  longestShortfallSeconds: number;
   /** Seconds the player could pay for a hire but had nobody free to do the job. */
   waitingForVillagersSeconds: number;
   /** Seconds of that wait with every bed full, so only housing could help. */
@@ -196,12 +198,14 @@ export function runSimulation(strategy: Strategy): RunResult {
   let waitingForVillagersSeconds = 0;
   let waitingForBedsSeconds = 0;
   let peakPopulation = state.population;
+  let longestShortfallSeconds = 0;
 
   while (!isFinished(state) && state.time < CONFIG.maxSeconds) {
     strategy.decide(state);
     step(state);
 
     peakPopulation = Math.max(peakPopulation, state.population);
+    longestShortfallSeconds = Math.max(longestShortfallSeconds, state.shortfallSeconds);
 
     // Buy as much as the greedy player can afford this second.
     let counted = false;
@@ -277,6 +281,7 @@ export function runSimulation(strategy: Strategy): RunResult {
     conquestOdds: conquestOdds(state.drift),
     endMorale: state.morale,
     peakPopulation,
+    longestShortfallSeconds,
     waitingForVillagersSeconds,
     waitingForBedsSeconds,
   };

@@ -148,3 +148,18 @@ The village has people. They are what the jobs are made of, and the beds are wha
   `village` unlock (first job) shows the villager line, and `housing` logs the first time beds run out.
 - **Greedy player:** `chooseNext` in `src/game/sim/player.ts` is what the simulation and the replay tests use. A job
   with nobody free means wait for an arrival, or build a bed when every bed is full.
+
+## Food upkeep (GAME-24)
+
+- **Upkeep:** `upkeepPerSecond(state)` is `population × VILLAGE.upkeepPerVillager` (0.1), times 0.7 under Rations
+  Optimisation. It is zero until someone holds a job. `step` takes it out of the food gained each step.
+- **Hunger:** food never goes below nothing. Each step that would have taken it below nothing adds to
+  `shortfallSeconds` (saved since version 6); a step that does not resets it. `isHungry` is five seconds or more.
+  - After `VILLAGE.hunger.graceSeconds` (20) the shortfall drains morale.
+  - After `starveAfterSeconds` (60) a villager leaves, then another every `leaveSeconds` (10). Someone without a
+    job goes first; otherwise one leaves the job with the most workers, never one a machine has replaced.
+  - Arrivals pause while the village is hungry.
+- **Away:** `catchUp` calls `tick` with `{ hunger: false }`, so a shortfall costs no morale and no villagers. The
+  stock stays at nothing.
+- **Display:** the Food counter shows what is left after the villagers eat (`netFoodRate`), and the log warns at
+  the three stages of hunger.
