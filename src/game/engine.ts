@@ -378,6 +378,53 @@ function loseVillager(state: SimState): void {
   state.population -= 1;
 }
 
+export type MoraleDriverId =
+  "extendedShifts" | "rations" | "hungry" | "idle" | "crowded" | "restless" | "fed" | "room";
+
+/** One thing moving morale right now. Positive `perSecond` lifts it, negative drains it. */
+export interface MoraleDriver {
+  id: MoraleDriverId;
+  perSecond: number;
+}
+
+/**
+ * Everything pushing morale up or down at this moment, strongest first. The step and the meter's
+ * "why" line both read this, so what the player is told is what the engine does. `strain = false`
+ * is the player being away: nobody is crowded or overdue a rest day when nobody is watching.
+ */
+export function moraleDrivers(state: SimState, strain = true): MoraleDriver[] {
+  const { morale: m, policies: p } = CONFIG;
+  const d = m.drivers;
+  const drivers: MoraleDriver[] = [];
+  const add = (id: MoraleDriverId, perSecond: number) => {
+    if (perSecond !== 0) drivers.push({ id, perSecond });
+  };
+  if (state.policies.extendedShifts) add("extendedShifts", -p.extendedShifts.moraleDrainPerSecond);
+  if (state.policies.rationsOptimisation)
+    add("rations", -p.rationsOptimisation.moraleDrainPerSecond);
+  if (state.shortfallSeconds > VILLAGE.hunger.graceSeconds) {
+    add("hungry", -VILLAGE.hunger.moraleDrainPerSecond);
+  }
+  if (state.stage >= 2) {
+    add(
+      "idle",
+      -Math.min(m.unemployedDrainPerSecond * idleVillagers(state.owned), m.unemployedDrainCap),
+    );
+  }
+  const freeBeds = bedsOf(state.owned) - state.population;
+  if (strain && jobsHeld(state.owned) > 0) {
+    if (freeBeds <= 0) add("crowded", -d.crowdedDrain);
+    const lastRest = state.restDays > 0 ? state.restReadyAt - p.restDay.cooldown : 0;
+    if (state.time - lastRest > d.restlessAfterSeconds) add("restless", -d.restlessDrain);
+  }
+  if (jobsHeld(state.owned) > 0 && state.shortfallSeconds === 0) {
+    const gaining = netFoodRate(state) > 0;
+    if (gaining && state.food >= upkeepPerSecond(state) * d.fedCoverSeconds) add("fed", d.fedLift);
+    if (freeBeds >= d.roomBeds) add("room", d.roomLift);
+  }
+  return drivers.sort((a, b) => Math.abs(b.perSecond) - Math.abs(a.perSecond));
+}
+
 /**
  * Advance by `dt` seconds. Pass `includeClicks = false` when clicks are real actions. Pass
  * `hunger = false` to let a shortfall pass without morale or villagers paying for it (used while
@@ -402,21 +449,9 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
 
   const { morale: m, policies: p } = CONFIG;
   let drain = 0;
-  if (state.policies.extendedShifts) {
-    drain += p.extendedShifts.moraleDrainPerSecond;
-    state.drift += p.extendedShifts.driftPerSecond * dt;
-  }
-  if (state.policies.rationsOptimisation) {
-    drain += p.rationsOptimisation.moraleDrainPerSecond;
-    state.drift += p.rationsOptimisation.driftPerSecond * dt;
-  }
-  if (state.shortfallSeconds > h.graceSeconds) drain += h.moraleDrainPerSecond;
-  if (state.stage >= 2) {
-    drain += Math.min(
-      m.unemployedDrainPerSecond * idleVillagers(state.owned),
-      m.unemployedDrainCap,
-    );
-  }
+  for (const driver of moraleDrivers(state, hunger)) drain -= driver.perSecond;
+  if (state.policies.extendedShifts) state.drift += p.extendedShifts.driftPerSecond * dt;
+  if (state.policies.rationsOptimisation) state.drift += p.rationsOptimisation.driftPerSecond * dt;
 
   state.morale += (m.recoveryPerSecond * (100 - state.morale) - drain) * dt;
   state.morale = Math.max(0, Math.min(100, state.morale));

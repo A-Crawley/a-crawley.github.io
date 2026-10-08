@@ -243,6 +243,20 @@ export const CONFIG = {
     walkoutOutputFactor: 0.5,
     walkoutMoraleAfter: 45,
     walkoutCooldown: 120,
+    /** GAME-28: what the village's circumstances do to morale, per second. */
+    drivers: {
+      /** Every bed is taken. */
+      crowdedDrain: 0.04,
+      /** No rest day for this long (seconds); counted from the start for a village that never rested. */
+      restlessAfterSeconds: 1200,
+      restlessDrain: 0.02,
+      /** Food in the store covers this many seconds of eating and the village is gaining food. */
+      fedCoverSeconds: 60,
+      fedLift: 0.1,
+      /** This many free beds or more. */
+      roomBeds: 3,
+      roomLift: 0.05,
+    },
   },
 
   /** Policies. Drift is measured in raw points; positive is compassion. */

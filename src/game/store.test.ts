@@ -11,6 +11,8 @@ function setup() {
   const initialState = createGameState(time);
   initialState.owned.forager = 5;
   initialState.population = 10;
+  initialState.owned.hut = 1; // a spare bed: being full would dent morale
+  initialState.arrivalTimer = -Infinity;
   initialState.owned.granary = 100;
   const store = createGameStore({ now: () => time, initialState });
   return {

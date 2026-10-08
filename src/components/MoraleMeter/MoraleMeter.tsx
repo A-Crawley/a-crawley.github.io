@@ -5,6 +5,8 @@ export interface MoraleMeterProps {
   morale: number;
   /** Set while output is affected by something other than the level itself. */
   status?: "resting" | "walkout";
+  /** What is moving morale, strongest first. Only the top two are shown. */
+  reasons?: ReadonlyArray<{ label: string; lifting: boolean }>;
 }
 
 function describe(morale: number): string {
@@ -21,7 +23,10 @@ const STATUS_TEXT = {
 } as const;
 
 /** How the village feels, as a labelled bar and a few words. */
-export function MoraleMeter({ morale, status }: MoraleMeterProps) {
+export function MoraleMeter({ morale, status, reasons = [] }: MoraleMeterProps) {
+  const top = reasons.slice(0, 2);
+  const falling = top.filter((r) => !r.lifting).map((r) => r.label);
+  const rising = top.filter((r) => r.lifting).map((r) => r.label);
   const value = Math.round(Math.max(0, Math.min(100, morale)));
   return (
     <Box component="section" aria-label="Morale">
@@ -39,6 +44,16 @@ export function MoraleMeter({ morale, status }: MoraleMeterProps) {
         aria-valuetext={`${value} out of 100, ${describe(value)}`}
         sx={{ height: 8, borderRadius: 4 }}
       />
+      {falling.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Falling: {falling.join(", ")}
+        </Typography>
+      )}
+      {rising.length > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Rising: {rising.join(", ")}
+        </Typography>
+      )}
       {status && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {STATUS_TEXT[status]}

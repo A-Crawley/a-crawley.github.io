@@ -22,6 +22,7 @@ import {
   isResting,
   itemDef,
   maxAffordableOf,
+  moraleDrivers,
   netFoodRate,
   purchaseLimit,
   quotePurchase,
@@ -426,6 +427,8 @@ describe("food upkeep", () => {
     const state = createState();
     state.population = 10;
     state.owned.forager = 10;
+    state.owned.hut = 1; // a spare bed, so being full does not dent morale
+    state.arrivalTimer = -Infinity; // and nobody arrives, so the upkeep stays put
     return state;
   }
 
@@ -488,6 +491,8 @@ describe("food upkeep", () => {
     const state = createState();
     state.population = 10;
     state.owned.woodcutter = 10;
+    state.owned.hut = 1;
+    state.arrivalTimer = -Infinity;
     state.morale = 100;
     for (let i = 0; i < grace; i++) step(state, 1, false);
     expect(state.morale).toBe(100);
@@ -606,5 +611,75 @@ describe("storage", () => {
     state.food = 50;
     expect(clampStocks(state)).toBe(false);
     expect(state.food).toBe(50);
+  });
+});
+
+describe("morale drivers", () => {
+  function working(): SimState {
+    const state = createState();
+    state.owned.forager = 3;
+    state.owned.hut = 1;
+    state.population = 3;
+    return state;
+  }
+  const ids = (state: SimState, strain = true) => moraleDrivers(state, strain).map((d) => d.id);
+
+  it("has nothing to say about a village with no jobs", () => {
+    expect(moraleDrivers(createState())).toEqual([]);
+  });
+
+  it("lifts a fed village with room to spare", () => {
+    const state = working();
+    state.food = 500;
+    expect(ids(state)).toEqual(expect.arrayContaining(["fed", "room"]));
+  });
+
+  it("drains a village with every bed taken", () => {
+    const state = working();
+    state.population = bedsOf(state.owned);
+    expect(ids(state)).toContain("crowded");
+    expect(ids(state)).not.toContain("room");
+  });
+
+  it("drains a village that has gone too long without a rest day, until it takes one", () => {
+    const state = working();
+    state.time = CONFIG.morale.drivers.restlessAfterSeconds + 1;
+    expect(ids(state)).toContain("restless");
+    startRestDay(state);
+    expect(ids(state)).not.toContain("restless");
+  });
+
+  it("drains a hungry village once the grace period has passed", () => {
+    const state = working();
+    state.shortfallSeconds = VILLAGE.hunger.graceSeconds + 1;
+    expect(ids(state)).toContain("hungry");
+    expect(ids(state)).not.toContain("fed");
+  });
+
+  it("lists the strongest push first", () => {
+    const state = working();
+    state.shortfallSeconds = VILLAGE.hunger.graceSeconds + 1;
+    state.population = bedsOf(state.owned);
+    const list = moraleDrivers(state);
+    expect(list[0].id).toBe("hungry");
+    const sizes = list.map((d) => Math.abs(d.perSecond));
+    expect(sizes).toEqual([...sizes].sort((a, b) => b - a));
+  });
+
+  it("skips crowding and overdue rest while the player is away", () => {
+    const state = working();
+    state.population = bedsOf(state.owned);
+    state.time = CONFIG.morale.drivers.restlessAfterSeconds + 1;
+    expect(ids(state, false)).not.toContain("crowded");
+    expect(ids(state, false)).not.toContain("restless");
+  });
+
+  it("pulls morale down in a crowded village", () => {
+    const state = working();
+    state.food = 500;
+    state.population = bedsOf(state.owned);
+    state.arrivalTimer = -Infinity;
+    for (let i = 0; i < 120; i++) step(state, 1, false);
+    expect(state.morale).toBeLessThan(100);
   });
 });

@@ -182,3 +182,14 @@ Storage is revealed (`item:granary`, `item:woodshed`, and the `storage` unlock t
 ceiling on the counters) once the matching stock reaches 60% of its ceiling. The greedy sim player
 never builds it (it makes nothing, so the payback rule skips it) and `neverBought` ignores storage.
 Save version 7 adds the two counts.
+
+## Morale drivers (GAME-28)
+
+`moraleDrivers(state, strain)` lists everything pushing morale at this moment, strongest first.
+`step` sums it and the morale meter shows the top two ("Falling: Hungry", "Rising: Well fed"), so
+the words and the maths cannot disagree. Drains: extended shifts, short rations, hunger past the
+grace period, idle villagers (stage 2+), crowding (every bed taken, 0.04/s) and no rest day for
+20 minutes (0.02/s). Lifts: well fed (a minute of food stored and gaining, 0.1/s) and three or more
+free beds (0.05/s). Lifts only shrink the gap to 100, so a happy village changes nothing visible.
+Crowding and overdue rest are not counted while the player is away (`strain = false`). None of
+these touch drift: that stays with the policies and rest days.

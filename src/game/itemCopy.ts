@@ -1,6 +1,6 @@
 import { CONFIG, ITEMS } from "./config.ts";
 import type { Currency, ItemId, Stage } from "./config.ts";
-import type { Policies } from "./engine.ts";
+import type { MoraleDriverId, Policies } from "./engine.ts";
 import { formatRate } from "./format.ts";
 
 export interface ItemCopy {
@@ -114,3 +114,15 @@ export function sighting(stage: Stage, seconds: number): string {
   }
   return `The number in the sky reads ${count}. It no longer looks like a count. It looks like a countdown.`;
 }
+
+/** Short words for what is moving morale, shown beside the meter. */
+export const MORALE_DRIVER_LABELS: Record<MoraleDriverId, string> = {
+  extendedShifts: "Extended shifts",
+  rations: "Short rations",
+  hungry: "Hungry",
+  idle: "Idle hands",
+  crowded: "Crowded",
+  restless: "Overdue a day off",
+  fed: "Well fed",
+  room: "Room to spare",
+};

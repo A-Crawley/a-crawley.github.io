@@ -45,7 +45,9 @@ describe("tick", () => {
   it("produces resources in proportion to the time elapsed", () => {
     const state = createGameState(START);
     state.owned.forager = 5;
-    state.population = 10; // a full village, so the upkeep stays the same
+    state.population = 10; // the upkeep stays the same: a spare bed, and nobody arrives
+    state.owned.hut = 1;
+    state.arrivalTimer = -Infinity;
     const next = tick(state, START + 10 * SECOND);
     expect(next.food).toBeCloseTo((5 * CONFIG.output.forager - upkeepPerSecond(state)) * 10, 5);
     expect(next.time).toBe(10);
