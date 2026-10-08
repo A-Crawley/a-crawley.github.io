@@ -1,4 +1,4 @@
-import { milestoneMultiplier, unitCost } from "./economy.ts";
+import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemDef, ItemId, Stage } from "./config.ts";
 
@@ -159,6 +159,74 @@ export function canAfford(state: SimState, def: ItemDef): boolean {
 export function buy(state: SimState, def: ItemDef): void {
   state[def.currency] -= costOf(state, def);
   state.owned[def.id] += 1;
+}
+
+/** How a purchase is sized: an exact number of units, or as many as the player can afford. */
+export type BuyQuantity = 1 | 10 | 100 | "max";
+
+export const BUY_QUANTITIES: readonly BuyQuantity[] = [1, 10, 100, "max"];
+
+/** Price of the first unit with the food discount applied: the base the geometric formulas use. */
+function effectiveBase(state: SimState, def: ItemDef): number {
+  const discounted = def.currency === "food" && state.policies.rationsOptimisation;
+  return discounted ? def.base * CONFIG.policies.rationsOptimisation.foodCostFactor : def.base;
+}
+
+/**
+ * The most units of an item the player may still buy. Research and exploits end their stage at a
+ * goal, so buying past it is not allowed; everything else is unlimited.
+ */
+export function purchaseLimit(state: SimState, def: ItemDef): number {
+  const goal =
+    def.id === "research"
+      ? CONFIG.researchLevels
+      : def.id === "exploit"
+        ? CONFIG.exploitsGoal
+        : null;
+  return goal === null ? Infinity : Math.max(0, goal - state.owned[def.id]);
+}
+
+/** Total cost of buying `count` more units of an item, using the closed-form sum. */
+export function bulkCostOf(state: SimState, def: ItemDef, count: number): number {
+  return bulkCost(effectiveBase(state, def), def.growth, state.owned[def.id], count);
+}
+
+/** Most units the player can afford right now, up to the item's limit. */
+export function maxAffordableOf(state: SimState, def: ItemDef): number {
+  const affordable = maxAffordable(
+    effectiveBase(state, def),
+    def.growth,
+    state.owned[def.id],
+    state[def.currency],
+  );
+  return Math.min(affordable, purchaseLimit(state, def));
+}
+
+export interface PurchaseQuote {
+  /** Units this purchase would buy. For an unaffordable "max" this is 1, so a price can be shown. */
+  count: number;
+  /** What those units cost. */
+  cost: number;
+  /** Whether the purchase can go ahead right now. */
+  affordable: boolean;
+}
+
+/** What a purchase of the given size would buy and cost, and whether it can go ahead. */
+export function quotePurchase(state: SimState, def: ItemDef, quantity: BuyQuantity): PurchaseQuote {
+  const limit = purchaseLimit(state, def);
+  if (quantity === "max") {
+    const count = maxAffordableOf(state, def);
+    if (count > 0) return { count, cost: bulkCostOf(state, def, count), affordable: true };
+    return { count: 1, cost: bulkCostOf(state, def, 1), affordable: false };
+  }
+  const cost = bulkCostOf(state, def, quantity);
+  return { count: quantity, cost, affordable: quantity <= limit && state[def.currency] >= cost };
+}
+
+/** Buy `count` units at once, paying the closed-form total. The caller checks it is allowed. */
+export function buyMany(state: SimState, def: ItemDef, count: number): void {
+  state[def.currency] -= bulkCostOf(state, def, count);
+  state.owned[def.id] += count;
 }
 
 export function canRest(state: SimState): boolean {

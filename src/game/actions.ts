@@ -1,16 +1,16 @@
 import type { ItemId } from "./config.ts";
 import {
   advanceStage,
-  buy,
-  canAfford,
+  buyMany,
   canRest,
   foodPerClick,
   isAvailable,
   isFinished,
   itemDef,
+  quotePurchase,
   startRestDay,
 } from "./engine.ts";
-import type { Policies } from "./engine.ts";
+import type { BuyQuantity, Policies } from "./engine.ts";
 import type { GameState } from "./state.ts";
 
 /**
@@ -27,12 +27,18 @@ export function gatherFood(state: GameState): GameState {
   return next;
 }
 
-/** Buy one unit of a job, machine, research level or exploit. */
-export function buyItem(state: GameState, id: ItemId): GameState {
+/**
+ * Buy a job, machine, research level or exploit: 1, 10 or 100 units, or as many as the player can
+ * afford ("max"). A fixed amount is all or nothing: if the player can't pay for every unit, nothing
+ * is bought. Anything not allowed returns the same state object.
+ */
+export function buyItem(state: GameState, id: ItemId, quantity: BuyQuantity = 1): GameState {
   const def = itemDef(id);
-  if (isFinished(state) || !isAvailable(state, def) || !canAfford(state, def)) return state;
+  if (isFinished(state) || !isAvailable(state, def)) return state;
+  const quote = quotePurchase(state, def, quantity);
+  if (!quote.affordable) return state;
   const next = structuredClone(state);
-  buy(next, def);
+  buyMany(next, def, quote.count);
   advanceStage(next);
   return next;
 }

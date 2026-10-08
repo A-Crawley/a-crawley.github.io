@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { buyItem, gatherFood, setPolicy, takeRestDay } from "../game/actions.ts";
 import type { ItemId } from "../game/config.ts";
-import type { Policies } from "../game/engine.ts";
+import type { BuyQuantity, Policies } from "../game/engine.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
 import { createGameState } from "../game/state.ts";
@@ -29,7 +29,8 @@ export interface UseGame {
   state: GameState;
   loadStatus: LoadStatus;
   gatherFood(): void;
-  buyItem(id: ItemId): void;
+  /** Buy 1, 10 or 100 units, or as many as can be afforded. Fixed amounts are all or nothing. */
+  buyItem(id: ItemId, quantity?: BuyQuantity): void;
   setPolicy(policy: keyof Policies, on: boolean): void;
   takeRestDay(): void;
   /** The current game as a copy-and-paste save string. */
@@ -99,7 +100,10 @@ export function useGame(options?: UseGameOptions): UseGame {
     state,
     loadStatus,
     gatherFood: useCallback(() => store.dispatch(gatherFood), [store]),
-    buyItem: useCallback((id: ItemId) => store.dispatch((s) => buyItem(s, id)), [store]),
+    buyItem: useCallback(
+      (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),
+      [store],
+    ),
     setPolicy: useCallback(
       (policy: keyof Policies, on: boolean) => store.dispatch((s) => setPolicy(s, policy, on)),
       [store],
