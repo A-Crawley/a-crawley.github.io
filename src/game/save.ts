@@ -1,6 +1,8 @@
 import { ITEMS, VILLAGE } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { STATE_VERSION } from "./state.ts";
+import { isUpgradeId } from "./upgrades.ts";
+import type { UpgradeId } from "./upgrades.ts";
 import type { GameState } from "./state.ts";
 import { isAchievementId } from "./achievements.ts";
 import type { AchievementId } from "./achievements.ts";
@@ -44,6 +46,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   }),
   // 7 -> 8: displaced workers can be retrained, redeployed or released. Nobody has been yet.
   7: (save) => ({ ...save, version: 8, operators: 0, redeployed: 0, released: 0 }),
+  // 8 -> 9: one-off upgrades are saved. An old save has bought none.
+  8: (save) => ({ ...save, version: 9, upgrades: [] }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -180,6 +184,13 @@ export function validateState(raw: unknown): SaveResult<GameState> {
     achievements.push(id);
   }
 
+  if (!Array.isArray(raw.upgrades)) return fail("upgrades");
+  const upgrades: UpgradeId[] = [];
+  for (const id of raw.upgrades as unknown[]) {
+    if (!isUpgradeId(id) || upgrades.includes(id)) return fail("upgrades");
+    upgrades.push(id);
+  }
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -213,6 +224,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       operators: raw.operators as number,
       redeployed: raw.redeployed as number,
       released: raw.released as number,
+      upgrades,
       unlocked,
       ending,
       achievements,

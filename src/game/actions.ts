@@ -1,4 +1,3 @@
-import { DISPLACED } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import {
   advanceStage,
@@ -11,12 +10,15 @@ import {
   isFinished,
   itemDef,
   quotePurchase,
+  retrainCost,
   redeployOne,
   releaseOne,
   retrainOne,
   startRestDay,
 } from "./engine.ts";
 import type { BuyQuantity, Policies } from "./engine.ts";
+import { isUpgradeAvailable, upgradeDef } from "./upgrades.ts";
+import type { UpgradeId } from "./upgrades.ts";
 import type { GameState } from "./state.ts";
 import { settle, withSettled } from "./settle.ts";
 import { isUnlocked, unlock } from "./unlocks.ts";
@@ -84,7 +86,7 @@ export function lookUp(state: GameState): GameState {
 
 /** Whether the village can pay to retrain someone, and has someone to retrain. */
 export function canRetrain(state: GameState): boolean {
-  return !isFinished(state) && idleHands(state) > 0 && state.food >= DISPLACED.retrainFood;
+  return !isFinished(state) && idleHands(state) > 0 && state.food >= retrainCost(state);
 }
 
 /** Run one of the workforce changes on a copy of the state. Returns the same state if it can't happen. */
@@ -109,4 +111,17 @@ export function retrain(state: GameState): GameState {
 /** Let an idle villager go. They stop eating, morale takes a hit, and the drift moves towards efficiency. */
 export function release(state: GameState): GameState {
   return workforce(state, releaseOne);
+}
+
+/** Buy a one-off upgrade. Does nothing if it is owned, not yet relevant, or too dear. */
+export function buyUpgrade(state: GameState, id: UpgradeId): GameState {
+  const def = upgradeDef(id);
+  if (isFinished(state) || !isUpgradeAvailable(state, def) || state[def.currency] < def.cost) {
+    return state;
+  }
+  const next = structuredClone(state);
+  next[def.currency] -= def.cost;
+  next.upgrades.push(id);
+  settle(next);
+  return next;
 }

@@ -5,7 +5,7 @@ import type { Ending } from "./ending.ts";
 import type { UnlockId } from "./unlocks.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives

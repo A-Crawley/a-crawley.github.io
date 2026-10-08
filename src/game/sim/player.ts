@@ -1,4 +1,4 @@
-import { CONFIG, DISPLACED, ITEMS } from "../config.ts";
+import { CONFIG, ITEMS } from "../config.ts";
 import type { ItemDef, ItemId, Stage } from "../config.ts";
 import {
   advanceStage,
@@ -16,6 +16,7 @@ import {
   isResting,
   redeployOne,
   releaseOne,
+  retrainCost,
   retrainOne,
   idleHands,
   ratesFor,
@@ -24,6 +25,8 @@ import {
   unemployed,
 } from "../engine.ts";
 import type { Rates, SimState } from "../engine.ts";
+import { isUpgradeAvailable, upgradeDef } from "../upgrades.ts";
+import type { UpgradeId } from "../upgrades.ts";
 
 /** Decides policies and rest days each second. */
 export interface Strategy {
@@ -65,7 +68,7 @@ export const STRATEGIES: readonly Strategy[] = [
       if (canRest(state) && !isResting(state)) startRestDay(state);
       // Retrain when there is food to spare, else find the displaced a job.
       while (idleHands(state) > 0) {
-        if (state.food >= 2 * DISPLACED.retrainFood && retrainOne(state)) continue;
+        if (state.food >= 2 * retrainCost(state) && retrainOne(state)) continue;
         redeployOne(state);
       }
     },
@@ -134,6 +137,32 @@ export function chooseHousing(state: SimState): ItemDef | null {
   return best;
 }
 
+/** Upgrades the greedy player buys: those that raise output and pay back within the stage's limit. */
+const BOT_UPGRADES: readonly UpgradeId[] = [
+  "betterBaskets",
+  "sharperAxes",
+  "preventiveMaintenance",
+];
+
+/** Buy every output upgrade on offer that is affordable and pays for itself in time. */
+export function buyUpgrades(state: SimState): UpgradeId[] {
+  const bought: UpgradeId[] = [];
+  for (const id of BOT_UPGRADES) {
+    const def = upgradeDef(id);
+    if (!isUpgradeAvailable(state, def) || state[def.currency] < def.cost) continue;
+    const now = weighted(ratesFor(state), state.stage);
+    const after = weighted(ratesFor({ ...state, upgrades: [...state.upgrades, id] }), state.stage);
+    const gain = after - now;
+    const payback =
+      gain > 0 ? (def.cost * CONFIG.value[state.stage][def.currency]) / gain : Infinity;
+    if (payback > Math.min(CONFIG.maxPaybackSeconds[state.stage], 600)) continue;
+    state[def.currency] -= def.cost;
+    state.upgrades.push(id);
+    bought.push(id);
+  }
+  return bought;
+}
+
 export interface NextPurchase {
   /** What to buy as soon as it is affordable, or null to wait without buying anything. */
   item: ItemDef | null;
@@ -154,7 +183,7 @@ export function chooseNext(state: SimState): NextPurchase {
     return { item: target, waitingForVillager: false, waitingForBed: false };
   }
   const waitingForVillager = canAfford(state, target);
-  const full = state.population >= bedsOf(state.owned);
+  const full = state.population >= bedsOf(state.owned, state.upgrades);
   return {
     item: full ? chooseHousing(state) : null,
     waitingForVillager,
@@ -220,6 +249,8 @@ export function runSimulation(strategy: Strategy): RunResult {
 
     peakPopulation = Math.max(peakPopulation, state.population);
     longestShortfallSeconds = Math.max(longestShortfallSeconds, state.shortfallSeconds);
+
+    buyUpgrades(state);
 
     // Buy as much as the greedy player can afford this second.
     let counted = false;

@@ -187,3 +187,11 @@ Result: 125.4 / 122.7 / 123.2 min (efficient / balanced / compassionate). Effici
 longer fastest, because releasing people removes free hires: cruelty does not clearly pay, which
 suits the story. Bots: efficient releases in stage 3 and uses odd jobs before; balanced uses odd
 jobs; compassionate retrains when it has 500 food spare, else odd jobs.
+
+## Upgrades (GAME-30)
+
+With +25% output upgrades the sim ran 101.5 min balanced, under the 105 guard. At +15%/+15%/+5%
+(the bot buys only these): 118.1 / 115.7 / 115.8 min (efficient / balanced / compassionate). Runs
+are now around 2 minutes under where GAME-29 left them; players who also buy the price and bed
+upgrades will be faster still. If runs end up too short, raise the stage 2 costs rather than
+shrinking the upgrades: they should feel worth buying.

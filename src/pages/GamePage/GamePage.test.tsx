@@ -587,3 +587,22 @@ describe("GamePage workforce", () => {
     expect(screen.queryByRole("region", { name: "Workforce transition" })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage upgrades", () => {
+  it("offers an upgrade once it applies and buying it spends the resource", async () => {
+    const user = setupWith((s) => {
+      s.owned.forager = 3;
+      s.population = 10;
+      s.food = 200;
+    });
+    expect(screen.getByRole("heading", { name: "Upgrades" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Buy Better baskets" }));
+    expect(screen.queryByRole("button", { name: "Buy Better baskets" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Bought: Better baskets/)).toBeInTheDocument();
+  });
+
+  it("shows no upgrades at the start", () => {
+    setupWith(() => {});
+    expect(screen.queryByRole("heading", { name: "Upgrades" })).not.toBeInTheDocument();
+  });
+});

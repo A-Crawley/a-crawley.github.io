@@ -1,5 +1,7 @@
 import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
 import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
+import { hasUpgrade, UPGRADE_EFFECTS } from "./upgrades.ts";
+import type { UpgradeId } from "./upgrades.ts";
 import type { Currency, ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
@@ -37,6 +39,8 @@ export interface SimState {
   /** Idle villagers moved into jobs, and let go, over the whole run. */
   redeployed: number;
   released: number;
+  /** One-off purchases made, in order. */
+  upgrades: UpgradeId[];
 }
 
 export interface Rates {
@@ -83,6 +87,7 @@ export function createState(): SimState {
     operators: 0,
     redeployed: 0,
     released: 0,
+    upgrades: [],
   };
 }
 
@@ -106,10 +111,15 @@ export function jobsHeld(owned: Counts): number {
   return owned.forager + owned.woodcutter + owned.builder;
 }
 
-/** Beds in the village: the starting beds plus everything built. */
-export function bedsOf(owned: Counts): number {
+/** Beds in the village: the starting beds plus everything built (huts sleep more with the upgrade). */
+export function bedsOf(owned: Counts, upgrades: readonly UpgradeId[] = []): number {
   let beds: number = VILLAGE.startBeds;
-  for (const def of ITEMS) beds += (def.beds ?? 0) * owned[def.id];
+  for (const def of ITEMS) {
+    const perUnit =
+      (def.beds ?? 0) +
+      (def.id === "hut" && upgrades.includes("sturdierHuts") ? UPGRADE_EFFECTS.sturdierHuts : 0);
+    beds += perUnit * owned[def.id];
+  }
   return beds;
 }
 
@@ -156,10 +166,17 @@ export function redeployOne(state: SimState): boolean {
   return true;
 }
 
+/** Food to retrain one villager. */
+export function retrainCost(state: SimState): number {
+  const factor = hasUpgrade(state, "onboardingDeck") ? UPGRADE_EFFECTS.onboardingDeck : 1;
+  return DISPLACED.retrainFood * factor;
+}
+
 /** Turn an idle villager into a machine operator for food. Returns false when it can't be done. */
 export function retrainOne(state: SimState): boolean {
-  if (idleHands(state) === 0 || state.food < DISPLACED.retrainFood) return false;
-  state.food -= DISPLACED.retrainFood;
+  const cost = retrainCost(state);
+  if (idleHands(state) === 0 || state.food < cost) return false;
+  state.food -= cost;
   state.operators += 1;
   state.drift += DISPLACED.retrainDrift;
   return true;
@@ -249,17 +266,21 @@ export function ratesFor(
   const woodcutters = Math.max(0, owned.woodcutter - owned.sawmillBot);
   const builders = Math.max(0, owned.builder - owned.builderDrone);
 
-  const operated = operatorFactor(owned, state.operators);
+  const operated =
+    operatorFactor(owned, state.operators) *
+    (hasUpgrade(state, "preventiveMaintenance") ? UPGRADE_EFFECTS.preventiveMaintenance : 1);
+  const basket = hasUpgrade(state, "betterBaskets") ? UPGRADE_EFFECTS.betterBaskets : 1;
+  const axe = hasUpgrade(state, "sharperAxes") ? UPGRADE_EFFECTS.sharperAxes : 1;
   const odd = oddJobbers({ ...state, owned }) * DISPLACED.oddJobFood;
   const clicks = includeClicks ? CONFIG.clicksPerSecond * CONFIG.clickValue : 0;
   const food =
-    (foragers * output.forager * ms("forager") +
+    (foragers * output.forager * ms("forager") * basket +
       owned.autoForager * output.autoForager * ms("autoForager") * operated +
       odd +
       clicks) *
     global;
   const wood =
-    (woodcutters * output.woodcutter * ms("woodcutter") +
+    (woodcutters * output.woodcutter * ms("woodcutter") * axe +
       owned.sawmillBot * output.sawmillBot * ms("sawmillBot") * operated) *
     global;
   const infra =
@@ -293,6 +314,7 @@ export function isJob(id: ItemId): boolean {
 export function capOf(state: SimState, currency: Currency): number {
   if (currency === "infra") return Infinity;
   let built: number = STORAGE.base[currency];
+  if (currency === "food" && hasUpgrade(state, "rootCellar")) built += UPGRADE_EFFECTS.rootCellar;
   let dearest = 0;
   for (const def of ITEMS) {
     if (def.stores?.currency === currency) built += def.stores.amount * state.owned[def.id];
@@ -321,13 +343,26 @@ export function clampStocks(state: SimState): boolean {
   return lost;
 }
 
-/** Cost of the next unit of an item, including the rations policy discount on food prices. */
+/** Cost of the next unit of an item, with every price discount applied. */
 export function costOf(state: SimState, def: ItemDef): number {
-  let cost = unitCost(def.base, def.growth, state.owned[def.id]);
+  return unitCost(effectiveBase(state, def), def.growth, state.owned[def.id]);
+}
+
+const MACHINE_IDS: readonly ItemId[] = ["autoForager", "sawmillBot", "builderDrone"];
+
+/** Everything that changes the price of the first unit: rations, the spreadsheet and the contract. */
+function priceFactor(state: SimState, def: ItemDef): number {
+  let factor = 1;
   if (def.currency === "food" && state.policies.rationsOptimisation) {
-    cost *= CONFIG.policies.rationsOptimisation.foodCostFactor;
+    factor *= CONFIG.policies.rationsOptimisation.foodCostFactor;
   }
-  return cost;
+  if (def.id === "builder" && hasUpgrade(state, "sharedSpreadsheet")) {
+    factor *= UPGRADE_EFFECTS.sharedSpreadsheet;
+  }
+  if (MACHINE_IDS.includes(def.id) && hasUpgrade(state, "maintenanceContract")) {
+    factor *= UPGRADE_EFFECTS.maintenanceContract;
+  }
+  return factor;
 }
 
 export function canAfford(state: SimState, def: ItemDef): boolean {
@@ -346,8 +381,7 @@ export const BUY_QUANTITIES: readonly BuyQuantity[] = [1, 10, 100, "max"];
 
 /** Price of the first unit with the food discount applied: the base the geometric formulas use. */
 function effectiveBase(state: SimState, def: ItemDef): number {
-  const discounted = def.currency === "food" && state.policies.rationsOptimisation;
-  return discounted ? def.base * CONFIG.policies.rationsOptimisation.foodCostFactor : def.base;
+  return def.base * priceFactor(state, def);
 }
 
 /**
@@ -485,7 +519,7 @@ export function moraleDrivers(state: SimState, strain = true): MoraleDriver[] {
     const odd = Math.min(DISPLACED.oddJobDrain * oddJobbers(state), DISPLACED.oddJobDrainCap);
     add("idle", -Math.min(idle + odd, m.unemployedDrainCap));
   }
-  const freeBeds = bedsOf(state.owned) - state.population;
+  const freeBeds = bedsOf(state.owned, state.upgrades) - state.population;
   if (strain && jobsHeld(state.owned) > 0) {
     if (freeBeds <= 0) add("crowded", -d.crowdedDrain);
     const lastRest = state.restDays > 0 ? state.restReadyAt - p.restDay.cooldown : 0;
@@ -550,7 +584,7 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
     // Nobody new moves in while people displaced by machines are still waiting for work.
     idleHands(state) === 0 &&
     state.arrivalTimer >= VILLAGE.arrivalSeconds &&
-    state.population < bedsOf(state.owned)
+    state.population < bedsOf(state.owned, state.upgrades)
   ) {
     state.population += 1;
     state.arrivalTimer = 0;

@@ -211,3 +211,23 @@ Redeploying does not hire into a real job: a free real hire was worth about 30 m
 arrival. The pure changes live in the engine (`redeployOne`, `retrainOne`, `releaseOne`); the
 actions wrap them. Save version 8 adds `operators`, `redeployed` and `released`. Away time
 changes none of this.
+
+## Upgrades (GAME-30)
+
+`src/game/upgrades.ts` is a pure rule module: eight one-off purchases, each with a price in food or
+wood, the stages it is offered in and a `requires` check on what it improves. The effect numbers
+live in `UPGRADE_EFFECTS`; the engine reads them through `hasUpgrade`. Bought upgrades are saved as
+a list of ids (`GameState.upgrades`, save version 9).
+
+- Output: Better baskets (foragers +15%), Sharper axes (woodcutters +15%), Preventive maintenance
+  (machines +5%), via `ratesFor`.
+- Prices: Shared spreadsheet (builders −20%), Maintenance contract (machines −15%), via
+  `priceFactor`, which also handles the rations discount. Bulk buying uses the same base.
+- Beds: Sturdier huts (+2 beds per hut), `bedsOf(owned, upgrades)`.
+- Storage: Root cellar (+400 food), stage 1 only: later the price safeguard in `capOf` already
+  holds more than that, so it would do nothing.
+- Retraining: Onboarding deck (−40%), `retrainCost`.
+
+An upgrade is revealed (`upgrade:<id>` unlock) once it applies and the player holds half its price,
+and stays. A test checks that every upgrade changes something visible. The sim bot buys only the
+three output upgrades, when they pay back within 10 minutes.

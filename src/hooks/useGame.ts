@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   breakOut,
   buyItem,
+  buyUpgrade,
   gatherFood,
   lookUp,
   redeploy,
@@ -13,6 +14,7 @@ import {
 import { withSettled } from "../game/settle.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
+import type { UpgradeId } from "../game/upgrades.ts";
 import type { AwaySummary } from "../game/offline.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
@@ -50,6 +52,8 @@ export interface UseGame {
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
   setPolicy(policy: keyof Policies, on: boolean): void;
   takeRestDay(): void;
+  /** Buy a one-off upgrade. */
+  buyUpgrade(id: UpgradeId): void;
   /** Give an idle villager odd jobs, for free. */
   redeploy(): void;
   /** Pay food to turn an idle villager into a machine operator. */
@@ -152,6 +156,7 @@ export function useGame(options?: UseGameOptions): UseGame {
       (policy: keyof Policies, on: boolean) => store.dispatch((s) => setPolicy(s, policy, on)),
       [store],
     ),
+    buyUpgrade: useCallback((id: UpgradeId) => store.dispatch((s) => buyUpgrade(s, id)), [store]),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
     redeploy: useCallback(() => store.dispatch(redeploy), [store]),
     retrain: useCallback(() => store.dispatch(retrain), [store]),
