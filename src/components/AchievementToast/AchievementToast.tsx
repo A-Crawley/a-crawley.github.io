@@ -12,6 +12,9 @@ export interface AchievementToastProps {
 export function AchievementToast({ title, onClose, raised = false }: AchievementToastProps) {
   return (
     <Snackbar
+      // One Snackbar per achievement: its hide timer only starts when it opens, so reusing one for
+      // the next in the queue left that next toast on screen for good.
+      key={title ?? "none"}
       open={title !== null}
       autoHideDuration={4000}
       onClose={(_event, reason) => {
