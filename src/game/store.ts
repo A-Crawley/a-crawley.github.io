@@ -2,6 +2,7 @@ import { catchUp, mergeAway } from "./offline.ts";
 import type { AwaySummary } from "./offline.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
+import { withUnlocks } from "./unlocks.ts";
 
 export type GameAction = (state: GameState) => GameState;
 
@@ -30,7 +31,8 @@ export interface GameStoreOptions {
 
 export function createGameStore(options: GameStoreOptions = {}): GameStore {
   const now = options.now ?? Date.now;
-  let state = options.initialState ?? createGameState(now());
+  // A loaded save may predate some unlocks, so settle them before anything is shown.
+  let state = withUnlocks(options.initialState ?? createGameState(now()));
   let away: AwaySummary | null = null;
   const listeners = new Set<() => void>();
 
@@ -74,7 +76,7 @@ export function createGameStore(options: GameStoreOptions = {}): GameStore {
     },
     replace(next) {
       away = null;
-      setState(next);
+      setState(withUnlocks(next));
     },
   };
 }

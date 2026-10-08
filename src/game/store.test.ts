@@ -15,6 +15,25 @@ function setup() {
   };
 }
 
+describe("createGameStore unlocks", () => {
+  it("settles the unlocks a loaded save has earned before anything is shown", () => {
+    const initialState = createGameState(1_000_000);
+    initialState.owned.forager = 6;
+    const store = createGameStore({ now: () => 1_000_000, initialState });
+    expect(store.getState().unlocked).toEqual(
+      expect.arrayContaining(["item:forager", "morale", "lookUp"]),
+    );
+  });
+
+  it("settles a replacement state too, such as an imported save", () => {
+    const store = createGameStore({ now: () => 1_000_000 });
+    const imported = createGameState(1_000_000);
+    imported.owned.forager = 6;
+    store.replace(imported);
+    expect(store.getState().unlocked).toContain("lookUp");
+  });
+});
+
 describe("createGameStore", () => {
   it("holds the initial state", () => {
     const { store } = setup();

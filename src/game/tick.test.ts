@@ -3,6 +3,7 @@ import { startRestDay } from "./engine.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
 import { MAX_TICK_SECONDS, tick } from "./tick.ts";
+import { withUnlocks } from "./unlocks.ts";
 
 const START = 1_700_000_000_000;
 const SECOND = 1000;
@@ -13,7 +14,8 @@ function village(): GameState {
   state.owned.woodcutter = 4;
   state.owned.builder = 3;
   state.policies.extendedShifts = true;
-  return state;
+  // Settled, as a running game always is, so a tick with no time passing changes nothing.
+  return withUnlocks(state);
 }
 
 describe("tick", () => {

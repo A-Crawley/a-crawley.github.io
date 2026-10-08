@@ -12,6 +12,7 @@ import {
 } from "./engine.ts";
 import type { BuyQuantity, Policies } from "./engine.ts";
 import type { GameState } from "./state.ts";
+import { applyUnlocks, isUnlocked, unlock } from "./unlocks.ts";
 
 /**
  * Player actions. Each one returns a new state. When an action is not allowed (not enough
@@ -24,6 +25,7 @@ export function gatherFood(state: GameState): GameState {
   if (isFinished(state)) return state;
   const next = structuredClone(state);
   next.food += foodPerClick(next);
+  applyUnlocks(next);
   return next;
 }
 
@@ -40,6 +42,7 @@ export function buyItem(state: GameState, id: ItemId, quantity: BuyQuantity = 1)
   const next = structuredClone(state);
   buyMany(next, def, quote.count);
   advanceStage(next);
+  applyUnlocks(next);
   return next;
 }
 
@@ -57,4 +60,13 @@ export function takeRestDay(state: GameState): GameState {
   const next = structuredClone(state);
   startRestDay(next);
   return next;
+}
+
+/**
+ * Press "Look up". It does nothing until the button has unlocked; the first look is remembered, so
+ * the log can mention it. Later looks change nothing.
+ */
+export function lookUp(state: GameState): GameState {
+  if (!isUnlocked(state, "lookUp")) return state;
+  return unlock(state, "lookedUp");
 }
