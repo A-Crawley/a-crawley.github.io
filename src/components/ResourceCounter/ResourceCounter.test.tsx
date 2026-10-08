@@ -39,4 +39,19 @@ describe("ResourceCounter", () => {
     expect(region).toHaveTextContent("1.23e6");
     expect(region).toHaveTextContent("+1.25e4 per second");
   });
+
+  it("shows what is left after the villagers have eaten", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={3} upkeep={1} />);
+    expect(screen.getByText("+2.0 per second after villagers eat 1.0")).toBeInTheDocument();
+  });
+
+  it("says the stock is falling when the villagers eat more than is made", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={1} upkeep={2.5} />);
+    expect(screen.getByText("Falling by 1.5 per second: villagers eat 2.5")).toBeInTheDocument();
+  });
+
+  it("says when food made and eaten balance", () => {
+    render(<ResourceCounter label="Food" value={5} perSecond={2} upkeep={2} />);
+    expect(screen.getByText("Holding steady: villagers eat 2.0")).toBeInTheDocument();
+  });
 });

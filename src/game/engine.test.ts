@@ -1,4 +1,4 @@
-import { CONFIG, ITEMS } from "./config.ts";
+import { CONFIG, ITEMS, VILLAGE } from "./config.ts";
 import type { ItemDef } from "./config.ts";
 import {
   advanceStage,
@@ -15,15 +15,18 @@ import {
   idleVillagers,
   isAvailable,
   isFinished,
+  isHungry,
   isResting,
   itemDef,
   maxAffordableOf,
+  netFoodRate,
   purchaseLimit,
   quotePurchase,
   ratesFor,
   startRestDay,
   step,
   unemployed,
+  upkeepPerSecond,
 } from "./engine.ts";
 import type { SimState } from "./engine.ts";
 
@@ -411,5 +414,138 @@ describe("the village", () => {
     state.owned.hut = 2;
     state.owned.house = 3;
     expect(bedsOf(state.owned)).toBe(10 + 2 * 5 + 3 * 25);
+  });
+});
+
+describe("food upkeep", () => {
+  /** A village of ten with one forager's worth of work, so the numbers are easy to follow. */
+  function fed(): SimState {
+    const state = createState();
+    state.population = 10;
+    state.owned.forager = 10;
+    return state;
+  }
+
+  it("is zero until someone has a job", () => {
+    const state = createState();
+    state.population = 10;
+    expect(upkeepPerSecond(state)).toBe(0);
+    step(state, 1, false);
+    expect(state.food).toBe(0);
+    expect(state.shortfallSeconds).toBe(0);
+  });
+
+  it("is a tenth of a food per villager, working or not", () => {
+    const state = fed();
+    expect(upkeepPerSecond(state)).toBeCloseTo(1, 10);
+    state.population = 20;
+    expect(upkeepPerSecond(state)).toBeCloseTo(2, 10);
+  });
+
+  it("is cut by Rations Optimisation", () => {
+    const state = fed();
+    state.policies.rationsOptimisation = true;
+    expect(upkeepPerSecond(state)).toBeCloseTo(0.7, 10);
+  });
+
+  it("comes out of what the village makes", () => {
+    const state = fed();
+    const made = ratesFor(state, state.owned, false).food;
+    step(state, 1, false);
+    expect(state.food).toBeCloseTo(made - 1, 10);
+    expect(netFoodRate(state)).toBeCloseTo(made - 1, 10);
+  });
+
+  it("never takes food below nothing, and counts the seconds of shortfall", () => {
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 10; // eats, makes no food
+    step(state, 1, false);
+    expect(state.food).toBe(0);
+    expect(state.shortfallSeconds).toBe(1);
+    step(state, 1, false);
+    expect(state.shortfallSeconds).toBe(2);
+    state.food = 100;
+    step(state, 1, false);
+    expect(state.shortfallSeconds).toBe(0);
+  });
+
+  it("is hungry only after a few seconds, not for a blip", () => {
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 10;
+    for (let i = 0; i < 4; i++) step(state, 1, false);
+    expect(isHungry(state)).toBe(false);
+    step(state, 1, false);
+    expect(isHungry(state)).toBe(true);
+  });
+
+  it("costs morale only once the shortfall outlasts the grace period", () => {
+    const grace = VILLAGE.hunger.graceSeconds;
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 10;
+    state.morale = 100;
+    for (let i = 0; i < grace; i++) step(state, 1, false);
+    expect(state.morale).toBe(100);
+    for (let i = 0; i < 10; i++) step(state, 1, false);
+    expect(state.morale).toBeLessThan(100);
+  });
+
+  it("sends someone without a job away first, after a long famine", () => {
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 6; // four villagers have no job
+    state.shortfallSeconds = VILLAGE.hunger.starveAfterSeconds - 1;
+    step(state, 1, false);
+    expect(state.population).toBe(9);
+    expect(state.owned.woodcutter).toBe(6);
+    expect(state.shortfallSeconds).toBe(
+      VILLAGE.hunger.starveAfterSeconds - VILLAGE.hunger.leaveSeconds,
+    );
+  });
+
+  it("loses a worker when there is nobody without a job, from the biggest job", () => {
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 6;
+    state.owned.builder = 4;
+    state.shortfallSeconds = VILLAGE.hunger.starveAfterSeconds - 1;
+    step(state, 1, false);
+    expect(state.population).toBe(9);
+    expect(state.owned.woodcutter).toBe(5);
+    expect(state.owned.builder).toBe(4);
+  });
+
+  it("does not lose a worker a machine has already replaced", () => {
+    const state = createState();
+    state.stage = 2;
+    state.population = 4;
+    state.owned.woodcutter = 4;
+    state.owned.sawmillBot = 4; // all four are free; the machines do the work
+    state.shortfallSeconds = VILLAGE.hunger.starveAfterSeconds - 1;
+    step(state, 1, false);
+    expect(state.population).toBe(3);
+    expect(state.owned.woodcutter).toBe(4);
+  });
+
+  it("keeps new villagers from arriving while the village is hungry", () => {
+    const state = createState();
+    state.owned.woodcutter = 3;
+    state.shortfallSeconds = 10;
+    for (let i = 0; i < 12; i++) step(state, 1, false);
+    // Nobody new came in, because there was not enough food to go round.
+    expect(state.population).toBe(3);
+  });
+
+  it("lets a famine pass with no cost when hunger is switched off", () => {
+    const state = createState();
+    state.population = 10;
+    state.owned.woodcutter = 10;
+    for (let i = 0; i < 200; i++) step(state, 1, false, false);
+    expect(state.population).toBe(10);
+    expect(state.morale).toBeGreaterThan(90);
+    expect(state.shortfallSeconds).toBe(0);
+    expect(state.food).toBe(0);
   });
 });

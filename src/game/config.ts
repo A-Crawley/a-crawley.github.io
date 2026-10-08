@@ -143,6 +143,19 @@ export const VILLAGE = {
   startBeds: 10,
   /** Seconds between arrivals while there is a free bed. */
   arrivalSeconds: 4,
+  /**
+   * Food each villager eats per second, working or not. It must stay well under what one forager
+   * makes (0.4): at 0.6 every hire made the village poorer and the early game starved (GAME-22).
+   */
+  upkeepPerVillager: 0.1,
+  hunger: {
+    /** A shortfall this long (seconds) starts to cost morale, so a rest day is not a famine. */
+    graceSeconds: 20,
+    moraleDrainPerSecond: 0.5,
+    /** After this long (seconds) a villager leaves, then another every `leaveSeconds`. */
+    starveAfterSeconds: 60,
+    leaveSeconds: 10,
+  },
 } as const;
 
 export const CONFIG = {
@@ -201,6 +214,8 @@ export const CONFIG = {
     extendedShifts: { outputFactor: 1.35, moraleDrainPerSecond: 0.6, driftPerSecond: -1 },
     rationsOptimisation: {
       foodCostFactor: 0.8,
+      /** Villagers eat this much of their usual upkeep. */
+      upkeepFactor: 0.7,
       moraleDrainPerSecond: 0.3,
       driftPerSecond: -0.5,
     },

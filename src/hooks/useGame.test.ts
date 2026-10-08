@@ -18,6 +18,14 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+/** A full village of ten with ten foragers: it makes more food than it eats (8 against 1 a second). */
+function steadyVillage() {
+  const state = createGameState(Date.now());
+  state.owned.forager = 10;
+  state.population = 10;
+  return state;
+}
+
 function clickTimes(result: { current: ReturnType<typeof useGame> }, times: number) {
   for (let i = 0; i < times; i++) act(() => result.current.gatherFood());
 }
@@ -41,12 +49,16 @@ describe("useGame", () => {
     act(() => result.current.buyItem("forager"));
     expect(result.current.state.owned.forager).toBe(1);
     expect(result.current.state.food).toBe(0);
+  });
 
+  it("earns food over time, after the villagers have eaten", () => {
+    const { result } = renderHook(() => useGame({ initialState: steadyVillage() }));
     act(() => {
       vi.advanceTimersByTime(10_000);
     });
-    expect(result.current.state.food).toBeGreaterThan(3.5);
-    expect(result.current.state.food).toBeLessThan(4.5);
+    // 8 a second made, 1 a second eaten.
+    expect(result.current.state.food).toBeGreaterThan(65);
+    expect(result.current.state.food).toBeLessThan(75);
   });
 
   it("refreshes the state on a timer", () => {
@@ -59,9 +71,7 @@ describe("useGame", () => {
   });
 
   it("catches up on a long gap as soon as a hidden tab becomes visible", () => {
-    const { result } = renderHook(() => useGame());
-    clickTimes(result, 10);
-    act(() => result.current.buyItem("forager"));
+    const { result } = renderHook(() => useGame({ initialState: steadyVillage() }));
 
     // The tab was in the background for an hour, so no timer ran. Only the clock moved.
     vi.setSystemTime(new Date(START.getTime() + 60 * 60 * 1000));
@@ -300,9 +310,7 @@ describe("useGame while away", () => {
 
   it("shows a summary straight away when an old save is loaded", () => {
     const storage = memoryStorage();
-    const first = renderHook(() => useGame({ storage }));
-    clickTimes(first.result, 10);
-    act(() => first.result.current.buyItem("forager"));
+    const first = renderHook(() => useGame({ storage, initialState: steadyVillage() }));
     act(() => {
       vi.advanceTimersByTime(AUTOSAVE_INTERVAL_MS);
     });

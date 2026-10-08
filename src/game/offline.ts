@@ -47,6 +47,8 @@ const POLICY_KEYS: ReadonlyArray<keyof Policies> = ["extendedShifts", "rationsOp
  *   morale or pushes the hidden drift. Nobody is there to run them.
  * - Without policies, morale can't fall low enough for a walkout (even with every villager laid
  *   off it settles around 50), so nothing like that happens while away.
+ * - Nobody goes hungry on the player's watch: a shortfall of food while away costs no morale and no
+ *   villagers. The stock just stays at nothing.
  * - Away time is credited at CONFIG.offlineRate (a quarter), so 8 hours away is 2 hours of village
  *   time. This keeps a long absence from skipping a game meant to take about 2 hours.
  * - At most MAX_AWAY_SECONDS is replayed, using the same step-by-step `tick`, so morale, walkouts
@@ -70,7 +72,7 @@ export function catchUp(state: GameState, now: number): CatchUp {
 
   // The village works at a fraction of normal speed while nobody is watching.
   const creditedSeconds = countedSeconds * CONFIG.offlineRate;
-  const returned = tick(departed, state.lastTickAt + creditedSeconds * 1000);
+  const returned = tick(departed, state.lastTickAt + creditedSeconds * 1000, { hunger: false });
   // Time past the cap is let go, and play resumes from now.
   returned.lastTickAt = Math.max(now, returned.lastTickAt);
 

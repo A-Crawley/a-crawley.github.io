@@ -1,12 +1,16 @@
 import { gatherFood } from "./actions.ts";
-import { CONFIG } from "./config.ts";
+import { CONFIG, VILLAGE } from "./config.ts";
 import { createGameState } from "./state.ts";
 import { createGameStore } from "./store.ts";
+
+/** Five foragers feeding a full village of ten, so the food per second stays the same. */
+const NET_FOOD = 5 * 0.4 - 10 * VILLAGE.upkeepPerVillager;
 
 function setup() {
   let time = 1_000_000;
   const initialState = createGameState(time);
   initialState.owned.forager = 5;
+  initialState.population = 10;
   const store = createGameStore({ now: () => time, initialState });
   return {
     store,
@@ -64,7 +68,7 @@ describe("createGameStore", () => {
     const { store, advance } = setup();
     advance(10);
     store.tick();
-    expect(store.getState().food).toBeCloseTo(5 * 0.4 * 10, 5);
+    expect(store.getState().food).toBeCloseTo(NET_FOOD * 10, 5);
   });
 
   it("catches up to the current time before applying an action", () => {
@@ -72,7 +76,7 @@ describe("createGameStore", () => {
     advance(10);
     store.dispatch(gatherFood);
     // Ten seconds of foraging plus the click that came after it.
-    expect(store.getState().food).toBeCloseTo(5 * 0.4 * 10 + 1, 5);
+    expect(store.getState().food).toBeCloseTo(NET_FOOD * 10 + 1, 5);
   });
 
   it("tells subscribers about changes, and stops once they unsubscribe", () => {
@@ -120,7 +124,7 @@ describe("createGameStore: being away", () => {
     store.tick();
     const away = store.getAway();
     expect(away?.awaySeconds).toBe(2 * 3600);
-    expect(away?.gained.food).toBeCloseTo(5 * 0.4 * 2 * 3600 * CONFIG.offlineRate, 3);
+    expect(away?.gained.food).toBeCloseTo(NET_FOOD * 2 * 3600 * CONFIG.offlineRate, 3);
     expect(listener).toHaveBeenCalled();
   });
 
@@ -129,7 +133,7 @@ describe("createGameStore: being away", () => {
     advance(3600);
     store.dispatch(gatherFood);
     expect(store.getAway()).not.toBeNull();
-    expect(store.getState().food).toBeCloseTo(5 * 0.4 * 3600 * CONFIG.offlineRate + 1, 3);
+    expect(store.getState().food).toBeCloseTo(NET_FOOD * 3600 * CONFIG.offlineRate + 1, 3);
   });
 
   it("clears the summary when it is dismissed", () => {

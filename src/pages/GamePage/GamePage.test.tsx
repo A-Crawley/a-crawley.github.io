@@ -52,7 +52,7 @@ describe("GamePage", () => {
     expect(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ })).toBeDisabled();
   });
 
-  it("lets the player hire the first forager and then produces food by itself", async () => {
+  it("lets the player hire the first forager, and shows what the villagers eat", async () => {
     const user = setup();
     for (let i = 0; i < 10; i++)
       await user.click(screen.getByRole("button", { name: "Gather food" }));
@@ -62,16 +62,24 @@ describe("GamePage", () => {
 
     const food = screen.getByRole("region", { name: "Food" });
     expect(food).toHaveTextContent("0");
-    expect(food).toHaveTextContent("+0.4 per second");
+    // One forager makes 0.4 a second; the village of three eats 0.3.
+    expect(food).toHaveTextContent("+0.1 per second after villagers eat 0.3");
     expect(screen.getByText(/hired\. They describe the role/)).toBeInTheDocument();
+  });
 
-    await vi.advanceTimersByTimeAsync(30_000);
-    // shouldAdvanceTime lets real time leak in, so a slow runner can add a few seconds: 12 ± slack.
-    const produced = Number(
+  it("produces food by itself once the village is fed", async () => {
+    setupWith((s) => {
+      s.owned.forager = 5;
+      s.population = 5;
+      s.owned.hut = 0;
+    });
+    await vi.advanceTimersByTimeAsync(10_000);
+    // 5 foragers make 2 a second; five to seven villagers eat 0.5 to 0.7. Real time may leak in.
+    const food = Number(
       screen.getByRole("region", { name: "Food" }).textContent?.match(/^Food(\d+)/)?.[1],
     );
-    expect(produced).toBeGreaterThanOrEqual(11);
-    expect(produced).toBeLessThanOrEqual(20);
+    expect(food).toBeGreaterThanOrEqual(12);
+    expect(food).toBeLessThanOrEqual(22);
   });
 });
 
@@ -175,6 +183,7 @@ describe("GamePage while away", () => {
   it("shows a summary for a game last played hours ago, and closes it", async () => {
     const user = setupWith((s) => {
       s.owned.forager = 10;
+      s.population = 10;
       s.lastTickAt = Date.now() - 3 * 3600 * 1000;
     });
     const dialog = await screen.findByRole("dialog", { name: "Welcome back" });
@@ -182,10 +191,10 @@ describe("GamePage while away", () => {
     expect(dialog).toHaveTextContent("Food+");
     await user.click(screen.getByRole("button", { name: "Back to work" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    // 10 foragers at 0.4/s, doubled by the 10-owned milestone, for 3 hours at a quarter speed:
-    // 8 × 10,800 × 0.25.
+    // 10 foragers at 0.4/s, doubled by the 10-owned milestone, less the 1/s that ten villagers eat,
+    // for 3 hours at a quarter speed: (8 − 1) × 10,800 × 0.25.
     expect(dialog).toHaveTextContent("25% speed");
-    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("21.6K");
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("18.9K");
   });
 
   it("shows no summary for a game saved a moment ago", () => {

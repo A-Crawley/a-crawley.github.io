@@ -1,4 +1,5 @@
 import { logLines } from "./log.ts";
+import { withSettled } from "./settle.ts";
 import { createGameState } from "./state.ts";
 
 const ids = (state: ReturnType<typeof createGameState>) => logLines(state).map((line) => line.id);
@@ -75,5 +76,35 @@ describe("logLines", () => {
     const text = logLines(state).map((line) => line.text);
     expect(text.some((t) => t.startsWith("Machines arrive"))).toBe(true);
     expect(text.some((t) => t.includes("seam"))).toBe(true);
+  });
+
+  it("warns when the village goes hungry, and again as it gets worse", () => {
+    const state = createGameState(0);
+    state.shortfallSeconds = 2;
+    expect(ids(state)).not.toContain("hungry");
+    state.shortfallSeconds = 6;
+    expect(ids(state)).toContain("hungry");
+    expect(ids(state)).not.toContain("hungry-morale");
+    state.shortfallSeconds = 25;
+    expect(ids(state)).toContain("hungry-morale");
+    expect(ids(state)).not.toContain("hungry-leaving");
+    state.shortfallSeconds = 55;
+    expect(ids(state)).toContain("hungry-leaving");
+  });
+
+  it("stops warning once the village is fed again", () => {
+    const state = createGameState(0);
+    state.shortfallSeconds = 30;
+    state.shortfallSeconds = 0;
+    expect(ids(state)).not.toContain("hungry");
+  });
+
+  it("explains rations the first time anyone is hired", () => {
+    const state = withSettled(createGameState(0));
+    expect(logLines(state).some((line) => /eating was voluntary/.test(line.text))).toBe(false);
+    state.owned.forager = 1;
+    expect(
+      logLines(withSettled(state)).some((line) => /eating was voluntary/.test(line.text)),
+    ).toBe(true);
   });
 });

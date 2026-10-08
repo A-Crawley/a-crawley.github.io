@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.ts";
-import { startRestDay } from "./engine.ts";
+import { startRestDay, upkeepPerSecond } from "./engine.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
 import { MAX_TICK_SECONDS, tick } from "./tick.ts";
@@ -45,8 +45,9 @@ describe("tick", () => {
   it("produces resources in proportion to the time elapsed", () => {
     const state = createGameState(START);
     state.owned.forager = 5;
+    state.population = 10; // a full village, so the upkeep stays the same
     const next = tick(state, START + 10 * SECOND);
-    expect(next.food).toBeCloseTo(5 * CONFIG.output.forager * 10, 5);
+    expect(next.food).toBeCloseTo((5 * CONFIG.output.forager - upkeepPerSecond(state)) * 10, 5);
     expect(next.time).toBe(10);
   });
 

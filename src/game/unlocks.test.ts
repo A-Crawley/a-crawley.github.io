@@ -259,11 +259,13 @@ describe("through play", () => {
     expect(at("lookUp")).toBeLessThan(5 * 60);
     // Beds now compete with builders for the early food and wood, so Horizon comes a little later.
     expect(at("horizon")).toBeLessThan(15 * 60);
-    // Nothing leaves a gap of more than half an hour once the game is under way (a perfect bot
-    // plays far faster than a person, so a person only sees these later).
+    // Nothing leaves a gap of more than 35 minutes once the game is under way (a perfect bot plays
+    // far faster than a person, so a person only sees these later). The longest is the stretch
+    // between the research halfway mark and "nearly done", which food upkeep stretched past half
+    // an hour. Upgrades and events (GAME-30, GAME-31) are meant to fill it.
     const times = [...metAt.values()].sort((a, b) => a - b);
     for (let i = 1; i < times.length; i++) {
-      expect(times[i]! - times[i - 1]!).toBeLessThan(30 * 60);
+      expect(times[i]! - times[i - 1]!).toBeLessThan(35 * 60);
     }
   });
 });

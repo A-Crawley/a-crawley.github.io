@@ -153,6 +153,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
   {
     id: "village",
     when: (s) => totalJobs(s) >= 1,
+    log: "Rations have been introduced. Until today, eating was voluntary.",
   },
   {
     id: "housing",

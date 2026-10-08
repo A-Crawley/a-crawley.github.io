@@ -1,3 +1,4 @@
+import { CONFIG, VILLAGE } from "../config.ts";
 import { createState } from "../engine.ts";
 import { chooseTarget, paybackSeconds, runSimulation, STRATEGIES } from "./player.ts";
 import type { RunResult } from "./player.ts";
@@ -106,6 +107,17 @@ describe("full playthrough", () => {
       expect(result.purchases.some((p) => p.item === "hut")).toBe(true);
       expect(result.purchases.some((p) => p.item === "house")).toBe(true);
     }
+  });
+
+  // GAME-24: villagers eat. A healthy run never lets the village go hungry for long enough to notice.
+  it("never lets the village go hungry long enough to cost morale", () => {
+    for (const result of Object.values(results)) {
+      expect(result.longestShortfallSeconds).toBeLessThan(VILLAGE.hunger.graceSeconds);
+    }
+  });
+
+  it("keeps upkeep well under what one forager makes", () => {
+    expect(VILLAGE.upkeepPerVillager).toBeLessThan(CONFIG.output.forager / 2);
   });
 
   it("keeps time spent waiting for villagers to a few minutes", () => {

@@ -34,6 +34,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 4 -> 5: the village has people and beds. An old save gets a few spare hands on top of its jobs,
   // and enough houses for everyone, so nobody is homeless on the day the update arrives.
   4: migratePopulation,
+  // 5 -> 6: hunger is tracked. A save starts fed.
+  5: (save) => ({ ...save, version: 6, shortfallSeconds: 0 }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -103,6 +105,7 @@ const NON_NEGATIVE_FIELDS = [
   "restDays",
   "lastTickAt",
   "arrivalTimer",
+  "shortfallSeconds",
 ] as const;
 
 const POLICY_FIELDS = ["extendedShifts", "rationsOptimisation"] as const;
@@ -195,6 +198,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       restDays: raw.restDays as number,
       population: raw.population,
       arrivalTimer: raw.arrivalTimer as number,
+      shortfallSeconds: raw.shortfallSeconds as number,
       unlocked,
       ending,
       achievements,

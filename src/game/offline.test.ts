@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.ts";
-import { ratesFor } from "./engine.ts";
+import { ratesFor, upkeepPerSecond } from "./engine.ts";
 import { AWAY_AFTER_SECONDS, catchUp, MAX_AWAY_SECONDS, mergeAway } from "./offline.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
@@ -14,7 +14,14 @@ function village(): GameState {
   state.owned.forager = 10;
   state.owned.woodcutter = 4;
   state.owned.builder = 2;
+  // A full village, so nobody arrives and the upkeep stays the same while time passes.
+  state.population = 10;
   return state;
+}
+
+/** Food made per second once the villagers have eaten. */
+function netFood(state: GameState): number {
+  return ratesFor(state, state.owned, false).food - upkeepPerSecond(state);
 }
 
 describe("catchUp: short gaps", () => {
@@ -46,7 +53,7 @@ describe("catchUp: being away", () => {
     const { state: after, away } = catchUp(state, at(seconds));
     const rates = ratesFor(state, state.owned, false);
     // Away time is credited at a fraction of normal speed.
-    expect(after.food).toBeCloseTo(rates.food * seconds * RATE, 3);
+    expect(after.food).toBeCloseTo(netFood(state) * seconds * RATE, 3);
     expect(after.wood).toBeCloseTo(rates.wood * seconds * RATE, 3);
     expect(after.infra).toBeCloseTo(rates.infra * seconds * RATE, 3);
     expect(away).toMatchObject({
@@ -70,10 +77,7 @@ describe("catchUp: being away", () => {
     // No morale or drift cost, and no bonus output either.
     expect(after.morale).toBe(100);
     expect(after.drift).toBe(0);
-    expect(after.food).toBeCloseTo(
-      ratesFor(village(), village().owned, false).food * 3600 * RATE,
-      3,
-    );
+    expect(after.food).toBeCloseTo(netFood(village()) * 3600 * RATE, 3);
   });
 
   it("lists only the policies that were actually on", () => {
@@ -124,8 +128,7 @@ describe("catchUp: the cap", () => {
   it("counts only the first 8 hours of a longer gap, and says so", () => {
     const state = village();
     const { state: after, away } = catchUp(state, at(3 * MAX_AWAY_SECONDS));
-    const rates = ratesFor(state, state.owned, false);
-    expect(after.food).toBeCloseTo(rates.food * MAX_AWAY_SECONDS * RATE, 2);
+    expect(after.food).toBeCloseTo(netFood(state) * MAX_AWAY_SECONDS * RATE, 2);
     expect(away).toMatchObject({
       awaySeconds: 3 * MAX_AWAY_SECONDS,
       countedSeconds: MAX_AWAY_SECONDS,
@@ -139,7 +142,7 @@ describe("catchUp: the cap", () => {
     const { state: after } = catchUp(state, now);
     expect(after.lastTickAt).toBe(now);
     const later = tick(after, now + 10_000);
-    expect(later.food - after.food).toBeCloseTo(ratesFor(after, after.owned, false).food * 10, 5);
+    expect(later.food - after.food).toBeCloseTo(netFood(after) * 10, 5);
   });
 
   it("replays a full 8 hours quickly", () => {
@@ -220,5 +223,28 @@ describe("catchUp: waiting at the final choice", () => {
     const result = catchUp(state, at(3 * 60 * 60));
     expect(result.away).toBeNull();
     expect(result.state.food).toBe(state.food);
+  });
+});
+
+describe("catchUp: hunger while away", () => {
+  /** Ten villagers, all woodcutters: they eat and make no food, so the village is in famine. */
+  function starving(): GameState {
+    const state = createGameState(START);
+    state.population = 10;
+    state.owned.woodcutter = 10;
+    return state;
+  }
+
+  it("costs no villagers and no morale, however long the player is gone", () => {
+    const { state: after } = catchUp(starving(), at(MAX_AWAY_SECONDS));
+    expect(after.population).toBe(10);
+    expect(after.owned.woodcutter).toBe(10);
+    expect(after.morale).toBe(100);
+    expect(after.food).toBe(0);
+  });
+
+  it("does cost them while the player is there to see it", () => {
+    const played = tick(starving(), at(100));
+    expect(played.population).toBeLessThan(10);
   });
 });
