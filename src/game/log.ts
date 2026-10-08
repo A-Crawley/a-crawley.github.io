@@ -8,6 +8,8 @@ export interface LogLine {
 }
 
 const FORAGER_TITLE = itemDef("forager").label;
+const WOODCUTTER_TITLE = itemDef("woodcutter").label;
+const BUILDER_TITLE = itemDef("builder").label;
 
 /**
  * The village log, oldest first. It is derived from the state rather than stored, so it never needs
@@ -48,6 +50,16 @@ export function logLines(state: GameState): LogLine[] {
     foragers >= 10,
     "ten-foragers",
     "Ten foragers. Output doubles. Nobody is told why, which is considered good management.",
+  );
+  add(
+    owned.woodcutter >= 1,
+    "woodcutter-hired",
+    `${WOODCUTTER_TITLE} hired. The trees were not consulted.`,
+  );
+  add(
+    owned.builder >= 1,
+    "builder-hired",
+    `${BUILDER_TITLE} hired. Nobody can say what is being built, only that it is on schedule.`,
   );
   return lines;
 }

@@ -39,4 +39,16 @@ describe("logLines", () => {
     ]);
     expect(new Set(all).size).toBe(all.length);
   });
+
+  it("notes the first woodcutter and builder", () => {
+    const state = createGameState(0);
+    state.owned.woodcutter = 1;
+    state.owned.builder = 1;
+    const all = ids(state);
+    expect(all).toContain("woodcutter-hired");
+    expect(all).toContain("builder-hired");
+    const text = logLines(state).map((line) => line.text);
+    expect(text.some((t) => t.includes("Timber Operations Lead"))).toBe(true);
+    expect(text.some((t) => t.includes("Infrastructure Delivery Partner"))).toBe(true);
+  });
 });

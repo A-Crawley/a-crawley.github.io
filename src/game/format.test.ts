@@ -28,14 +28,27 @@ describe("formatAmount", () => {
 });
 
 describe("formatRate", () => {
-  it("keeps one decimal for small rates", () => {
+  it("shows slow rates with two decimals so they never read as zero", () => {
     expect(formatRate(0)).toBe("0");
+    expect(formatRate(0.03)).toBe("0.03");
+    expect(formatRate(0.25)).toBe("0.25");
+    expect(formatRate(0.4)).toBe("0.4");
     expect(formatRate(0.5)).toBe("0.5");
+  });
+
+  it("uses one decimal from 1 up to 100", () => {
+    expect(formatRate(1)).toBe("1.0");
     expect(formatRate(12.34)).toBe("12.3");
+    expect(formatRate(13)).toBe("13.0");
   });
 
   it("goes compact for large rates", () => {
     expect(formatRate(250)).toBe("250");
     expect(formatRate(12_500)).toBe("12.5K");
+  });
+
+  it("treats junk as zero", () => {
+    expect(formatRate(-1)).toBe("0");
+    expect(formatRate(Number.NaN)).toBe("0");
   });
 });
