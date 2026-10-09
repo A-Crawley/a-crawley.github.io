@@ -232,6 +232,27 @@ An upgrade is revealed (`upgrade:<id>` unlock) once it applies and the player ho
 and stays. A test checks that every upgrade changes something visible. The sim bot buys only the
 three output upgrades, when they pay back within 10 minutes.
 
+## Village events (GAME-31)
+
+`src/game/events.ts`. Eight events, each with two choices and a trigger on the village's state
+(hungry, food store full, no spare beds, four or more idle hands, low morale, and so on). Each is
+offered at most once.
+
+- State: `events { resolved[], pending, nextAt }` on `GameState` (save version 10, migration 9 to 10).
+  Times are game seconds, so away time (credited at the offline rate) counts as it does elsewhere.
+- Timing: the first event can appear at 600 s. After one appears the next is allowed 300 to 599 s
+  later, by a fixed pattern (`eventGapSeconds`), not a random roll, so the same game gives the same
+  events. Only one is ever waiting.
+- Default: an unanswered event decides itself after 300 s with its free, less kind choice
+  (`defaultChoice`). A test checks that every default costs nothing and lowers the drift.
+- Away: `catchUp` ticks with `expireEvents: false`, so at most one event queues and nothing is
+  decided while the player is gone. Its 300 s clock starts when they return.
+- Effects: a choice may cost food or wood (scaled to the store's capacity), then moves morale and
+  the drift, and some give a one-off 60 to 90 seconds of production. The drift per event is 150 to
+  500, and a test keeps the whole set under 3500 of the 16000 scale.
+- Screen: `VillageEventCard`, an inline card in the page-wide notices slot. It never blocks Gather.
+- Dev tools: "Next village event" makes the next one due now.
+
 ## Developer tools
 
 Open the game with `/game/?dev=1` to turn them on (remembered on that device; `?dev=0` or the

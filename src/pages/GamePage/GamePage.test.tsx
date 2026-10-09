@@ -685,3 +685,32 @@ describe("GamePage layouts", () => {
     expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("1");
   });
 });
+
+describe("GamePage village events", () => {
+  function setupEvent() {
+    return setupWith((s) => {
+      s.stage = 2;
+      s.owned.forager = 5;
+      s.food = 400;
+      s.morale = 50;
+      s.events.pending = { id: "leanWeek", since: 0 };
+    });
+  }
+
+  it("shows the waiting event beside the usual controls, and answers it", async () => {
+    const user = setupEvent();
+    expect(screen.getByRole("region", { name: "A lean week" })).toBeInTheDocument();
+    // It does not take the game over: Gather food still works.
+    expect(screen.getByRole("button", { name: /Gather food/ })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: /Share what is left/ }));
+    expect(screen.queryByRole("region", { name: "A lean week" })).not.toBeInTheDocument();
+    expect(screen.getByText(/shared out equally/)).toBeInTheDocument();
+  });
+
+  it("shows nothing when no event is waiting", () => {
+    setupWith((s) => {
+      s.stage = 2;
+    });
+    expect(screen.queryByRole("region", { name: "A lean week" })).not.toBeInTheDocument();
+  });
+});

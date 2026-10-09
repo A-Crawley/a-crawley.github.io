@@ -14,6 +14,7 @@ function props(over: Partial<DevToolsProps> = {}): DevToolsProps {
     onGrant: () => {},
     onRefresh: () => {},
     onVillagers: () => {},
+    onEvent: () => {},
     onDrift: () => {},
     onTurnOff: () => {},
     ...over,
@@ -55,6 +56,7 @@ describe("DevTools", () => {
     const handlers = {
       onGrant: vi.fn(),
       onVillagers: vi.fn(),
+      onEvent: vi.fn(),
       onRefresh: vi.fn(),
       onDrift: vi.fn(),
       onTurnOff: vi.fn(),
@@ -62,11 +64,13 @@ describe("DevTools", () => {
     render(<DevTools {...props(handlers)} />);
     await user.click(screen.getByRole("button", { name: "More food and wood" }));
     await user.click(screen.getByRole("button", { name: "10 villagers" }));
+    await user.click(screen.getByRole("button", { name: "Next village event" }));
     await user.click(screen.getByRole("button", { name: "Full morale" }));
     await user.click(screen.getByRole("button", { name: "Efficient" }));
     await user.click(screen.getByRole("button", { name: "Turn off developer tools" }));
     expect(handlers.onGrant).toHaveBeenCalled();
     expect(handlers.onVillagers).toHaveBeenCalled();
+    expect(handlers.onEvent).toHaveBeenCalled();
     expect(handlers.onRefresh).toHaveBeenCalled();
     expect(handlers.onDrift).toHaveBeenCalledWith("efficient");
     expect(handlers.onTurnOff).toHaveBeenCalled();

@@ -11,6 +11,7 @@ export interface DevToolsProps {
   onGrant: () => void;
   onRefresh: () => void;
   onVillagers: () => void;
+  onEvent: () => void;
   onDrift: (kind: "compassionate" | "neutral" | "efficient") => void;
   onTurnOff: () => void;
 }
@@ -53,6 +54,7 @@ export function DevTools({
   onGrant,
   onRefresh,
   onVillagers,
+  onEvent,
   onDrift,
   onTurnOff,
 }: DevToolsProps) {
@@ -96,6 +98,9 @@ export function DevTools({
         </Button>
         <Button variant="outlined" onClick={onVillagers}>
           10 villagers
+        </Button>
+        <Button variant="outlined" onClick={onEvent}>
+          Next village event
         </Button>
         <Button variant="outlined" onClick={onRefresh}>
           Full morale

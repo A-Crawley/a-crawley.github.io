@@ -1,5 +1,6 @@
 import { VILLAGE } from "./config.ts";
 import { isHungry, itemDef } from "./engine.ts";
+import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
 import { UNLOCKS } from "./unlocks.ts";
 
@@ -94,6 +95,15 @@ export function logLines(state: GameState): LogLine[] {
     "released",
     "Some villagers have been released. The note says this was difficult, and thanks them for their flexibility.",
   );
+  // Answered events, in the order they were answered.
+  for (const { id, choice, auto } of state.events.resolved) {
+    const picked = eventChoice(eventDef(id), choice);
+    if (!picked) continue;
+    lines.push({
+      id: `event:${id}`,
+      text: auto ? `${picked.log} Nobody answered, so it was decided for them.` : picked.log,
+    });
+  }
   // Reveal lines come last, in the order the player met them.
   for (const id of state.unlocked) {
     const log = UNLOCKS.find((unlock) => unlock.id === id)?.log;

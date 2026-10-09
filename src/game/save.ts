@@ -8,6 +8,8 @@ import { isAchievementId } from "./achievements.ts";
 import type { AchievementId } from "./achievements.ts";
 import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
+import { eventChoice, eventDef, isEventId } from "./events.ts";
+import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
 import { isUnlockId } from "./unlocks.ts";
 import type { UnlockId } from "./unlocks.ts";
 
@@ -48,6 +50,16 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   7: (save) => ({ ...save, version: 8, operators: 0, redeployed: 0, released: 0 }),
   // 8 -> 9: one-off upgrades are saved. An old save has bought none.
   8: (save) => ({ ...save, version: 9, upgrades: [] }),
+  // 9 -> 10: village events. Nothing has happened yet; the first can come a few minutes on.
+  9: (save) => ({
+    ...save,
+    version: 10,
+    events: {
+      resolved: [],
+      pending: null,
+      nextAt: (typeof save.time === "number" && Number.isFinite(save.time) ? save.time : 0) + 300,
+    },
+  }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -129,6 +141,28 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function validateEvents(raw: unknown): EventsState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.resolved) || !isFiniteNumber(raw.nextAt)) return null;
+  if (raw.nextAt < 0) return null;
+  const resolved: ResolvedEvent[] = [];
+  for (const entry of raw.resolved as unknown[]) {
+    if (!isRecord(entry) || !isEventId(entry.id) || typeof entry.auto !== "boolean") return null;
+    if (resolved.some((r) => r.id === entry.id)) return null;
+    if (typeof entry.choice !== "string" || !eventChoice(eventDef(entry.id), entry.choice)) {
+      return null;
+    }
+    resolved.push({ id: entry.id, choice: entry.choice, auto: entry.auto });
+  }
+  let pending: PendingEvent | null = null;
+  if (raw.pending !== null) {
+    if (!isRecord(raw.pending) || !isEventId(raw.pending.id)) return null;
+    const { id, since } = raw.pending;
+    if (!isFiniteNumber(since) || since < 0 || resolved.some((r) => r.id === id)) return null;
+    pending = { id, since };
+  }
+  return { resolved, pending, nextAt: raw.nextAt };
+}
+
 /**
  * Check that an upgraded save has exactly the shape and ranges of a GameState, and copy out only
  * the known fields. Anything odd is rejected rather than repaired.
@@ -191,6 +225,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
     upgrades.push(id);
   }
 
+  const events = validateEvents(raw.events);
+  if (!events) return fail("events");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -225,6 +262,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       redeployed: raw.redeployed as number,
       released: raw.released as number,
       upgrades,
+      events,
       unlocked,
       ending,
       achievements,
