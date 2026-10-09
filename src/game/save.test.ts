@@ -423,3 +423,35 @@ describe("upgrades in a save", () => {
     expect(validateState({ ...raw(), upgrades: "rootCellar" }).ok).toBe(false);
   });
 });
+
+describe("village events in a save", () => {
+  it("upgrades a version 9 save with no events seen and the first a few minutes away", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 9, time: 1000 };
+    delete old.events;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.events).toEqual({ resolved: [], pending: null, nextAt: 1300 });
+  });
+
+  it("round-trips answered and waiting events", () => {
+    const state = playedState();
+    state.events = {
+      resolved: [{ id: "leanWeek", choice: "share", auto: false }],
+      pending: { id: "frost", since: 4000 },
+      nextAt: 4600,
+    };
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("rejects unknown, repeated or contradictory events", () => {
+    const bad = (events: unknown) => validateState({ ...raw(), events }).ok;
+    const base = { resolved: [], pending: null, nextAt: 0 };
+    expect(bad({ ...base, resolved: [{ id: "nope", choice: "x", auto: false }] })).toBe(false);
+    expect(bad({ ...base, resolved: [{ id: "frost", choice: "nope", auto: false }] })).toBe(false);
+    const once = { id: "frost", choice: "work", auto: true };
+    expect(bad({ ...base, resolved: [once, once] })).toBe(false);
+    expect(bad({ ...base, resolved: [once], pending: { id: "frost", since: 1 } })).toBe(false);
+    expect(bad({ ...base, pending: { id: "frost", since: -1 } })).toBe(false);
+    expect(bad({ ...base, nextAt: -1 })).toBe(false);
+    expect(bad(null)).toBe(false);
+  });
+});

@@ -195,3 +195,15 @@ With +25% output upgrades the sim ran 101.5 min balanced, under the 105 guard. A
 are now around 2 minutes under where GAME-29 left them; players who also buy the price and bed
 upgrades will be faster still. If runs end up too short, raise the stage 2 costs rather than
 shrinking the upgrades: they should feel worth buying.
+
+## Village events (GAME-31)
+
+Events are not in the simulation bot, which ignores them (the default applies after 300 s), so the
+three run totals are unchanged. The balance argument is by bounds instead:
+
+- Rewards are one-off (60 to 90 seconds of production), at most about 8 events per run, so a run can
+  gain at most a few minutes of production from them, and only by taking the choice that costs morale.
+- The kinder choice costs food or wood, or pays nothing, so it is never free of cost.
+- Total possible drift from all eight is under 3500 of 16000 (about 0.1 on the compassion index).
+
+What a hand-played run does with them is not yet measured. Worth checking when playtesting.

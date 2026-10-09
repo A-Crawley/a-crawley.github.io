@@ -2,10 +2,12 @@ import { createState } from "./engine.ts";
 import type { SimState } from "./engine.ts";
 import type { AchievementId } from "./achievements.ts";
 import type { Ending } from "./ending.ts";
+import { createEventsState } from "./events.ts";
+import type { EventsState } from "./events.ts";
 import type { UnlockId } from "./unlocks.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 9;
+export const STATE_VERSION = 10;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -23,6 +25,8 @@ export interface GameState extends SimState {
   ending: Ending | null;
   /** Achievements earned, in the order they were awarded. */
   achievements: AchievementId[];
+  /** Village events: the one waiting for an answer, and the ones already answered. */
+  events: EventsState;
 }
 
 export function createGameState(now: number): GameState {
@@ -33,5 +37,6 @@ export function createGameState(now: number): GameState {
     unlocked: [],
     ending: null,
     achievements: [],
+    events: createEventsState(),
   };
 }

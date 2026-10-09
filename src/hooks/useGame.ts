@@ -3,6 +3,7 @@ import {
   breakOut,
   buyItem,
   buyUpgrade,
+  chooseEvent,
   gatherFood,
   lookUp,
   redeploy,
@@ -54,6 +55,8 @@ export interface UseGame {
   takeRestDay(): void;
   /** Buy a one-off upgrade. */
   buyUpgrade(id: UpgradeId): void;
+  /** Answer the village event that is waiting. */
+  chooseEvent(choiceId: string): void;
   /** Give an idle villager odd jobs, for free. */
   redeploy(): void;
   /** Pay food to turn an idle villager into a machine operator. */
@@ -164,6 +167,10 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store],
     ),
     takeRestDay: useCallback(() => store.dispatch(takeRestDay), [store]),
+    chooseEvent: useCallback(
+      (choiceId: string) => store.dispatch((s) => chooseEvent(s, choiceId)),
+      [store],
+    ),
     redeploy: useCallback(() => store.dispatch(redeploy), [store]),
     retrain: useCallback(() => store.dispatch(retrain), [store]),
     release: useCallback(() => store.dispatch(release), [store]),

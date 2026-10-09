@@ -49,7 +49,7 @@ import { logLines } from "../../game/log.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
-import { formatDuration } from "../../game/format.ts";
+import { formatAmount, formatDuration } from "../../game/format.ts";
 import { isUnlocked } from "../../game/unlocks.ts";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
@@ -84,12 +84,15 @@ import {
   autoplay,
   BOT_NAMES,
   grantResources,
+  nextEventNow,
   refreshVillage,
   setDriftKind,
   skipTime,
 } from "../../game/dev.ts";
 import type { BotName } from "../../game/dev.ts";
 import { readDevMode, DEV_KEY } from "../../game/devMode.ts";
+import { AUTO_AFTER_SECONDS, canAffordChoice, choiceCost, eventDef } from "../../game/events.ts";
+import { VillageEventCard } from "../../components/VillageEventCard";
 import { VillagePanel } from "../../components/VillagePanel";
 import { WorkforcePanel } from "../../components/WorkforcePanel";
 
@@ -284,6 +287,34 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         </Panel>
       );
     }
+  }
+
+  let eventCard: ReactNode = null;
+  if (playing && state.events.pending) {
+    const { id, since } = state.events.pending;
+    const def = eventDef(id);
+    eventCard = (
+      <VillageEventCard
+        title={def.title}
+        body={def.body}
+        secondsLeft={since + AUTO_AFTER_SECONDS - state.time}
+        choices={def.choices.map((choice) => {
+          const cost = choiceCost(state, choice);
+          const parts = [
+            cost.food ? `${formatAmount(cost.food, settings.notation)} food` : null,
+            cost.wood ? `${formatAmount(cost.wood, settings.notation)} wood` : null,
+          ].filter((part): part is string => part !== null);
+          return {
+            id: choice.id,
+            label: choice.label,
+            detail: choice.detail,
+            cost: parts.length > 0 ? parts.join(" and ") : null,
+            disabled: !canAffordChoice(state, choice),
+          };
+        })}
+        onChoose={game.chooseEvent}
+      />
+    );
   }
 
   const statusPanels: ReactNode[] = [];
@@ -535,6 +566,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               onGrant={() => game.apply(grantResources)}
               onRefresh={() => game.apply(refreshVillage)}
               onVillagers={() => game.apply((s) => addVillagers(s, 10))}
+              onEvent={() => game.apply(nextEventNow)}
               onDrift={(kind) => game.apply((s) => setDriftKind(s, kind))}
               onTurnOff={() => {
                 try {
@@ -591,21 +623,25 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
             </Box>
           }
           notices={
-            (game.loadStatus === "corrupt" || game.loadStatus === "unavailable") && (
-              <Box sx={{ mb: 2 }}>
-                {game.loadStatus === "corrupt" && (
-                  <Alert severity="warning">
-                    Your saved game could not be read, so a new one was started. The old save was
-                    kept as a backup.
-                  </Alert>
-                )}
-                {game.loadStatus === "unavailable" && (
-                  <Alert severity="info">
-                    This browser is not letting the game save. Progress will be lost when you leave.
-                  </Alert>
-                )}
-              </Box>
-            )
+            <>
+              {eventCard}
+              {(game.loadStatus === "corrupt" || game.loadStatus === "unavailable") && (
+                <Box sx={{ mb: 2 }}>
+                  {game.loadStatus === "corrupt" && (
+                    <Alert severity="warning">
+                      Your saved game could not be read, so a new one was started. The old save was
+                      kept as a backup.
+                    </Alert>
+                  )}
+                  {game.loadStatus === "unavailable" && (
+                    <Alert severity="info">
+                      This browser is not letting the game save. Progress will be lost when you
+                      leave.
+                    </Alert>
+                  )}
+                </Box>
+              )}
+            </>
           }
           hud={hud}
           status={status}

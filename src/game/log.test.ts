@@ -108,3 +108,24 @@ describe("logLines", () => {
     ).toBe(true);
   });
 });
+
+describe("logLines: village events", () => {
+  it("records each answered event in order, saying when nobody answered", () => {
+    const state = createGameState(0);
+    state.events.resolved = [
+      { id: "frost", choice: "fires", auto: false },
+      { id: "leanWeek", choice: "cut", auto: true },
+    ];
+    const lines = logLines(state).filter((line) => line.id.startsWith("event:"));
+    expect(lines.map((line) => line.id)).toEqual(["event:frost", "event:leanWeek"]);
+    expect(lines[0].text).toContain("shared fires");
+    expect(lines[0].text).not.toContain("Nobody answered");
+    expect(lines[1].text).toContain("Nobody answered, so it was decided for them.");
+  });
+
+  it("says nothing about an event that is still waiting", () => {
+    const state = createGameState(0);
+    state.events.pending = { id: "frost", since: 0 };
+    expect(ids(state).some((id) => id.startsWith("event:"))).toBe(false);
+  });
+});

@@ -74,9 +74,14 @@ export function catchUp(state: GameState, now: number): CatchUp {
 
   // The village works at a fraction of normal speed while nobody is watching.
   const creditedSeconds = countedSeconds * CONFIG.offlineRate;
-  const returned = tick(departed, state.lastTickAt + creditedSeconds * 1000, { hunger: false });
+  const returned = tick(departed, state.lastTickAt + creditedSeconds * 1000, {
+    hunger: false,
+    expireEvents: false,
+  });
   // Time past the cap is let go, and play resumes from now.
   returned.lastTickAt = Math.max(now, returned.lastTickAt);
+  // An event that came up while away waits for the player: its clock starts on return.
+  if (returned.events.pending) returned.events.pending.since = returned.time;
 
   return {
     state: returned,

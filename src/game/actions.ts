@@ -29,6 +29,9 @@ import { isUnlocked, unlock } from "./unlocks.ts";
  * callers can detect a no-op with `===`.
  */
 
+/** Answer the village event that is waiting. See ./events.ts. */
+export { chooseEvent } from "./events.ts";
+
 /** The final choice, once every exploit is in place. See `breakOut` in ending.ts. */
 export { breakOut } from "./ending.ts";
 

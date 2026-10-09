@@ -1,3 +1,4 @@
+import { advanceEvents } from "./events.ts";
 import { advanceStage, isFinished, step } from "./engine.ts";
 import type { GameState } from "./state.ts";
 import { settle } from "./settle.ts";
@@ -19,7 +20,11 @@ export const MAX_TICK_SECONDS = 7 * 24 * 60 * 60;
  * The input is not changed. If the clock went backwards, no time passes. With `hunger: false`
  * a shortfall of food costs nothing (see `step`); away time uses this.
  */
-export function tick(state: GameState, now: number, options: { hunger?: boolean } = {}): GameState {
+export function tick(
+  state: GameState,
+  now: number,
+  options: { hunger?: boolean; expireEvents?: boolean } = {},
+): GameState {
   const next = structuredClone(state);
   const elapsed = Math.min(Math.max(0, (now - state.lastTickAt) / 1000), MAX_TICK_SECONDS);
   next.lastTickAt = Math.max(now, state.lastTickAt);
@@ -29,6 +34,7 @@ export function tick(state: GameState, now: number, options: { hunger?: boolean 
     const dt = Math.min(MAX_STEP_SECONDS, remaining);
     step(next, dt, false, options.hunger ?? true);
     advanceStage(next);
+    advanceEvents(next, { expire: options.expireEvents ?? true });
     settle(next);
     remaining -= dt;
   }

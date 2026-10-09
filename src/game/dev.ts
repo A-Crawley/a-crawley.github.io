@@ -99,3 +99,10 @@ export function setDriftKind(state: GameState, kind: DriftKind): GameState {
   next.drift = kind === "neutral" ? 0 : kind === "compassionate" ? 12000 : -12000;
   return next;
 }
+
+/** Make the next event appear now, if the village is in a situation for one. */
+export function nextEventNow(state: GameState): GameState {
+  const next = structuredClone(state);
+  next.events.nextAt = next.time;
+  return next;
+}
