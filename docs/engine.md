@@ -253,6 +253,18 @@ offered at most once.
 - Screen: `VillageEventCard`, an inline card in the page-wide notices slot. It never blocks Gather.
 - Dev tools: "Next village event" makes the next one due now.
 
+## Retiring the Gather button
+
+`gatherRetired` unlock in `src/game/unlocks.ts`. Clicking is counted in the economy as 2 clicks a
+second, so `clickShareOfFood` (the clicking part of food income) falls as the village grows. When it
+drops under 1% (`GATHER_RETIRES_BELOW`) the unlock is set for good: the big button leaves the
+thumb-reach slot and a small "Gather food" button moves to the status panels.
+
+`showGatherButton` brings the big one back while food is under 1 or the village is hungry, since
+clicking is the way out of a collapse. In the simulation bot runs the unlock lands at minute 12 to
+20, in stage 1. A person clicking faster than 2/s retires it later. The economy is unchanged: the
+small button still gives the same food per click.
+
 ## Developer tools
 
 Open the game with `/game/?dev=1` to turn them on (remembered on that device; `?dev=0` or the

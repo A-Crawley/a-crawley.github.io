@@ -714,3 +714,38 @@ describe("GamePage village events", () => {
     expect(screen.queryByRole("region", { name: "A lean week" })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage Gather button retiring", () => {
+  function retiredVillage(change: (s: GameState) => void = () => {}) {
+    return setupWith((s) => {
+      s.stage = 2;
+      s.owned.forager = 200;
+      s.population = 200;
+      s.owned.house = 10;
+      s.food = 100;
+      s.unlocked.push("gatherRetired", "village");
+      change(s);
+    });
+  }
+
+  it("is the big button at first", () => {
+    setupWith(() => {});
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeInTheDocument();
+  });
+
+  it("is replaced by a small one once it has retired", async () => {
+    const user = retiredVillage();
+    expect(screen.queryByRole("button", { name: "Gather food" })).not.toBeInTheDocument();
+    const small = screen.getByRole("button", { name: /Gather food \(\+/ });
+    await user.click(small);
+    expect(small).toBeInTheDocument();
+  });
+
+  it("comes back as the big button when the village runs out of food", () => {
+    retiredVillage((s) => {
+      s.food = 0;
+    });
+    expect(screen.getByRole("button", { name: "Gather food" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Gather food \(\+/ })).not.toBeInTheDocument();
+  });
+});

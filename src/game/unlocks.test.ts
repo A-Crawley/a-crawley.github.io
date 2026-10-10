@@ -9,11 +9,14 @@ import { tick } from "./tick.ts";
 import {
   applyUnlocks,
   BULK_AFTER_OWNED,
+  clickShareOfFood,
+  GATHER_RETIRES_BELOW,
   isUnlockId,
   isUnlocked,
   LOOK_UP_AFTER_FORAGERS,
   pendingUnlocks,
   POLICIES_AFTER_JOBS,
+  showGatherButton,
   unlock,
   UNLOCKS,
   withUnlocks,
@@ -358,5 +361,52 @@ describe("storage reveal", () => {
     const next = withUnlocks(state);
     expect(next.unlocked).toContain("item:woodshed");
     expect(next.unlocked).not.toContain("item:granary");
+  });
+});
+
+describe("the Gather button retiring", () => {
+  /** A village whose foragers make far more than clicking does. */
+  function busy(): GameState {
+    const state = fresh();
+    state.owned.forager = 200;
+    state.population = 200;
+    state.owned.house = 10;
+    state.food = 100;
+    return state;
+  }
+
+  it("is the whole income at the start, and a sliver of it once the village is busy", () => {
+    expect(clickShareOfFood(fresh())).toBe(1);
+    expect(clickShareOfFood(busy())).toBeLessThan(GATHER_RETIRES_BELOW);
+  });
+
+  it("stays while clicking still matters", () => {
+    const state = fresh();
+    state.owned.forager = 5;
+    expect(withUnlocks(state).unlocked).not.toContain("gatherRetired");
+    expect(showGatherButton(withUnlocks(state))).toBe(true);
+  });
+
+  it("retires once clicking is under the threshold, and says so in the log", () => {
+    const next = withUnlocks(busy());
+    expect(next.unlocked).toContain("gatherRetired");
+    expect(showGatherButton(next)).toBe(false);
+    expect(logLines(next).some((line) => /Gather button has been reassigned/.test(line.text))).toBe(
+      true,
+    );
+  });
+
+  it("stays retired when income later falls, but comes back while the village is in trouble", () => {
+    const retired = withUnlocks(busy());
+    // Income halves: still retired.
+    retired.owned.forager = 100;
+    expect(showGatherButton(retired)).toBe(false);
+    // Out of food: back.
+    retired.food = 0;
+    expect(showGatherButton(retired)).toBe(true);
+    // Hungry: back.
+    retired.food = 100;
+    retired.shortfallSeconds = 30;
+    expect(showGatherButton(retired)).toBe(true);
   });
 });
