@@ -54,4 +54,23 @@ describe("LookUpAction: pause and wait", () => {
     render(<LookUpAction unlocked sighting="A number hangs." onLookUp={() => {}} />);
     expect(screen.getByRole("status")).toHaveTextContent("A number hangs.");
   });
+  it("keeps the sighting and caption slots in place whatever they say", () => {
+    const { rerender } = render(<LookUpAction unlocked sighting={null} onLookUp={() => {}} />);
+    const slots = () => ({
+      sighting: screen.getByRole("status").className,
+      captions: document.querySelectorAll("p").length,
+    });
+    const before = slots();
+    rerender(
+      <LookUpAction
+        unlocked
+        sighting="A thin line has been drawn across the sky, just under the number."
+        waitSeconds={12}
+        onLookUp={() => {}}
+      />,
+    );
+    expect(slots()).toEqual(before);
+    rerender(<LookUpAction unlocked sighting="Short." onLookUp={() => {}} />);
+    expect(slots()).toEqual(before);
+  });
 });

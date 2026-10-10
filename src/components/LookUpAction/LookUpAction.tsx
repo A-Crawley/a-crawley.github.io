@@ -39,10 +39,21 @@ export function LookUpAction({
       >
         Look up
       </Button>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} role="status">
+      {/* Room for three lines, so a long sighting does not push the shop down. */}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mt: 0.5, lineHeight: 1.5, minHeight: "4.5em" }}
+        role="status"
+      >
         {sighting ?? "Something is different about the sky."}
       </Typography>
-      <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        component="p"
+        sx={{ mt: 0.5, lineHeight: 1.5, minHeight: "1.5em" }}
+      >
         {waiting
           ? `Ready again in ${waitSeconds} ${waitSeconds === 1 ? "second" : "seconds"}.`
           : pauseSeconds
