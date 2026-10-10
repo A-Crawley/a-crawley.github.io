@@ -98,4 +98,8 @@ The `test-engineer` agent can write or review tests.
 - Run the full command list above and fix failures before opening a PR.
 - In PR descriptions, state what changed, why, how it was verified, and anything to check after
   deploy. Be upfront about trade-offs and anything you couldn't verify.
+- A change a player would notice gets a dev log entry: a Markdown file in `src/devlog/entries/`
+  named `YYYY-MM-DD-short-title.md`, with `title`, `date` and `summary` in a `---` header, then
+  plain paragraphs, `- ` lists, `**bold**` and `` `code` ``. Write it for players, not engineers,
+  and say what is untested. It shows in the game's "Dev log" panel.
 - Don't commit `build/`, `node_modules/`, `.env*` files, or secrets.

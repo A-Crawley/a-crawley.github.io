@@ -79,6 +79,8 @@ import { UpgradeList } from "../../components/UpgradeList";
 import { isUpgradeAvailable, upgradeDef, UPGRADES } from "../../game/upgrades.ts";
 import type { UpgradeId } from "../../game/upgrades.ts";
 import { DevTools } from "../../components/DevTools";
+import { DevLog } from "../../components/DevLog";
+import { DEV_LOG } from "../../devlog/entries.ts";
 import {
   addVillagers,
   autoplay,
@@ -540,6 +542,12 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         </AccordionSummary>
         <AccordionDetails>
           <AchievementList items={achievementItems} />
+        </AccordionDetails>
+      </Accordion>
+      <Accordion disableGutters variant="outlined">
+        <AccordionSummary>Dev log</AccordionSummary>
+        <AccordionDetails>
+          <DevLog entries={DEV_LOG.entries} />
         </AccordionDetails>
       </Accordion>
       <Accordion disableGutters variant="outlined">

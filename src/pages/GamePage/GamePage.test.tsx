@@ -749,3 +749,11 @@ describe("GamePage Gather button retiring", () => {
     expect(screen.queryByRole("button", { name: /Gather food \(\+/ })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage dev log", () => {
+  it("offers the dev log, newest entry first", async () => {
+    const user = setupWith(() => {});
+    await user.click(screen.getByRole("button", { name: "Dev log" }));
+    expect(screen.getByText("The Gather button retires, and this dev log")).toBeInTheDocument();
+  });
+});
