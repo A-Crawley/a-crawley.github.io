@@ -50,7 +50,7 @@ import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
-import { isUnlocked } from "../../game/unlocks.ts";
+import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
 import { useNewAchievements } from "../../hooks/useNewAchievements.ts";
@@ -317,6 +317,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
     );
   }
 
+  const gatherOnShow = playing && showGatherButton(state);
   const statusPanels: ReactNode[] = [];
   if (playing) {
     if (showMorale) {
@@ -362,6 +363,15 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         </Panel>,
       );
     }
+    if (unlocked("gatherRetired") && !gatherOnShow) {
+      statusPanels.push(
+        <Panel key="gather-small">
+          <Button variant="text" onClick={game.gatherFood}>
+            Gather food (+{formatAmount(foodPerClick(state), settings.notation)})
+          </Button>
+        </Panel>,
+      );
+    }
     if (unlocked("workforce")) {
       statusPanels.push(
         <Panel key="workforce">
@@ -380,7 +390,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
   }
   const status = statusPanels.length > 0 ? <>{statusPanels}</> : null;
 
-  const actions = playing ? (
+  const actions = gatherOnShow ? (
     <GatherButton label="Gather food" gain={foodPerClick(state)} onGather={game.gatherFood} />
   ) : null;
 

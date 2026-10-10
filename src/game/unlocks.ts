@@ -2,7 +2,7 @@ import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { isUpgradeAvailable, UPGRADES } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
-import { bedsOf, capOf, costOf, idleHands, isAvailable } from "./engine.ts";
+import { bedsOf, capOf, costOf, idleHands, isAvailable, isHungry, ratesFor } from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import type { GameState } from "./state.ts";
@@ -25,7 +25,26 @@ export const BULK_AFTER_OWNED = 10;
 /** Foragers hired before the "Look up" button comes alive. */
 export const LOOK_UP_AFTER_FORAGERS = 5;
 
+/** The Gather button retires once clicking is under this share (1%) of the village's food income. */
+export const GATHER_RETIRES_BELOW = 0.01;
+
+/** The part of the village's food income that comes from clicking, from 0 to 1. */
+export function clickShareOfFood(state: GameState): number {
+  const total = ratesFor(state).food;
+  if (total <= 0) return 1;
+  return Math.max(0, (total - ratesFor(state, state.owned, false).food) / total);
+}
+
+/**
+ * Whether the big Gather button is on screen. Once it has retired it comes back only while the
+ * village is in trouble (out of food, or hungry), because clicking is the way out of that.
+ */
+export function showGatherButton(state: GameState): boolean {
+  return !isUnlocked(state, "gatherRetired") || state.food < 1 || isHungry(state);
+}
+
 export type UnlockId =
+  | "gatherRetired"
   | `item:${ItemId}`
   | `upgrade:${UpgradeId}`
   | "wood"
@@ -192,6 +211,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
       s.food >= capOf(s, "food") * STORAGE_REVEAL_FRACTION ||
       s.wood >= capOf(s, "wood") * STORAGE_REVEAL_FRACTION,
     log: "The village has more than it can keep. A storage review has been scheduled for the harvest, which has already happened.",
+  },
+  {
+    id: "gatherRetired",
+    when: (s) => clickShareOfFood(s) < GATHER_RETIRES_BELOW,
+    log: "The Gather button has been reassigned. It is not sure to what, and keeps a smaller desk in the village panel.",
   },
   {
     id: "workforce",
