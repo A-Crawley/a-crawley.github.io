@@ -8,7 +8,7 @@ export interface MoraleMeterProps {
   status?: "resting" | "walkout";
   /** What is moving morale, strongest first. Only the top two are shown. */
   reasons?: ReadonlyArray<{ label: string; lifting: boolean }>;
-  /** One tight row for a sticky strip: the bar and a word for it, and the status if there is one. */
+  /** One tight row for a sticky strip: the bar and a word for it. A rest day or walkout takes the place of that word, so the row never grows. */
   compact?: boolean;
 }
 
@@ -19,6 +19,9 @@ function describe(morale: number): string {
   if (morale >= 20) return "Close to a walkout";
   return "Unrest";
 }
+
+/** The one word that takes the place of the mood in the compact row. */
+const STATUS_WORD = { resting: "Resting", walkout: "Walkout" } as const;
 
 const STATUS_TEXT = {
   resting: "Rest day: nobody is producing anything, on purpose.",
@@ -44,18 +47,14 @@ export function MoraleMeter({ morale, status, reasons = [], compact = false }: M
             value={value}
             color={value < 30 ? "error" : "primary"}
             aria-labelledby={labelId}
-            aria-valuetext={`${value} out of 100, ${describe(value)}`}
+            // The row has no room for the sentence, so a screen reader gets it here instead.
+            aria-valuetext={`${value} out of 100, ${describe(value)}${status ? `. ${STATUS_TEXT[status]}` : ""}`}
             sx={{ height: 8, borderRadius: 4, flexGrow: 1 }}
           />
           <Typography variant="body2" sx={{ minWidth: "7.5em", textAlign: "right" }}>
-            {describe(value)}
+            {status ? STATUS_WORD[status] : describe(value)}
           </Typography>
         </Box>
-        {status && (
-          <Typography variant="body2" color="text.secondary">
-            {STATUS_TEXT[status]}
-          </Typography>
-        )}
       </Box>
     );
   }

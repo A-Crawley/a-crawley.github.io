@@ -69,9 +69,29 @@ describe("MoraleMeter compact", () => {
     expect(screen.queryByText(/Falling/)).not.toBeInTheDocument();
   });
 
-  it("still says when there is a rest day or a walkout", () => {
-    render(<MoraleMeter morale={50} compact status="walkout" />);
-    expect(screen.getByText(/Walkout/)).toBeInTheDocument();
+  it("still says when there is a rest day or a walkout, in place of the mood word", () => {
+    const { rerender } = render(<MoraleMeter morale={50} compact status="walkout" />);
+    expect(screen.getByText("Walkout")).toBeInTheDocument();
+    expect(screen.queryByText("Strained")).not.toBeInTheDocument();
+    rerender(<MoraleMeter morale={50} compact status="resting" />);
+    expect(screen.getByText("Resting")).toBeInTheDocument();
+    rerender(<MoraleMeter morale={50} compact />);
+    expect(screen.getByText("Strained")).toBeInTheDocument();
+  });
+
+  it("does not add a line for a status, so the row keeps its height", () => {
+    const { container, rerender } = render(<MoraleMeter morale={50} compact />);
+    const before = container.querySelectorAll("p, span.MuiTypography-root").length;
+    rerender(<MoraleMeter morale={50} compact status="resting" />);
+    expect(container.querySelectorAll("p, span.MuiTypography-root").length).toBe(before);
+  });
+
+  it("gives screen readers the full sentence on the bar", () => {
+    render(<MoraleMeter morale={50} compact status="resting" />);
+    expect(screen.getByRole("progressbar", { name: "Morale" })).toHaveAttribute(
+      "aria-valuetext",
+      expect.stringContaining("Rest day: nobody is producing anything"),
+    );
   });
 
   it("can sit beside the full meter without clashing", () => {
