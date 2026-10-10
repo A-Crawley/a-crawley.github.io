@@ -206,6 +206,17 @@ three run totals are unchanged. The balance argument is by bounds instead:
 - The kinder choice costs food or wood, or pays nothing, so it is never free of cost.
 - Total possible drift from all eight is under 3500 of 16000 (about 0.1 on the compassion index).
 
+### Stage 1 and stage 3 events (GAME-39)
+
+Six more events: four in stage 1 (a stranger asks to stay, a stash in the woods, an argument about
+breaks, someone who keeps looking up) and two in stage 3 (a message from the rival, copied methods).
+None of them changes population, beds, jobs or any rate. The two that give anything give 45 seconds
+of food at most (the stash), as the harder, less kind choice. Drift per event is 200 to 300, and the
+guard in `events.test.ts` for the whole set moved from 3500 to 4500 (of 16000, about 0.28 of the
+range if every event went one way, which needs every choice to be the same kind). The bot still
+ignores events, so the simulation is unchanged: efficient 118.1, balanced 115.7, compassionate 115.8
+minutes. With 14 events and one every 5 to 10 minutes, a run sees about 12 to 15 of them at most.
+
 What a hand-played run does with them is not yet measured. Worth checking when playtesting.
 
 ## Look up (GAME-35)

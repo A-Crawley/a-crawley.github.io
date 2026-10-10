@@ -234,7 +234,7 @@ three output upgrades, when they pay back within 10 minutes.
 
 ## Village events (GAME-31)
 
-`src/game/events.ts`. Eight events, each with two choices and a trigger on the village's state
+`src/game/events.ts`. Fourteen events (GAME-39 added four for stage 1 and two for stage 3, with no save change), each with two choices and a trigger on the village's state
 (hungry, food store full, no spare beds, four or more idle hands, low morale, and so on). Each is
 offered at most once.
 
@@ -249,8 +249,9 @@ offered at most once.
   decided while the player is gone. Its 300 s clock starts when they return.
 - Effects: a choice may cost food or wood (scaled to the store's capacity), then moves morale and
   the drift, and some give a one-off 60 to 90 seconds of production. The drift per event is 150 to
-  500, and a test keeps the whole set under 3500 of the 16000 scale.
-- Screen: `VillageEventCard`, an inline card in the page-wide notices slot. It never blocks Gather.
+  500, and a test keeps the whole set under 4500 of the 16000 scale.
+- Stage gating: stage 1 events (`stranger`, `foundStash`, `restDispute`, `skyWatcher`) need `stage === 1` and stage 3 events (`rivalMessage`, `copiedWork`) need `stage === 3`, so each stage gets its own. `eligibleEvent` takes the first unseen eligible event in list order, so `leanWeek` still comes first. The 600 s first-event floor is unchanged. Event text is fixed, so the rival's tone shows only through the drift each choice moves.
+- Screen: `VillageEventCard`, floated out of the page flow (above the dock on a phone, bottom corner elsewhere) by the `sheet` slot of `GameLayout` (GAME-43). It never blocks Gather.
 - Dev tools: "Next village event" makes the next one due now.
 
 ## Stage performance reviews (GAME-36)

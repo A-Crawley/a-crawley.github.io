@@ -90,7 +90,8 @@ describe("events: content", () => {
         )
       );
     }, 0);
-    expect(total).toBeLessThan(3500);
+    // 14 events, none over 500: about a quarter of the 16000 drift scale, and each is optional.
+    expect(total).toBeLessThan(4500);
   });
 });
 
@@ -237,5 +238,128 @@ describe("events: waiting too long", () => {
     state.events.pending = { id: "leanWeek", since: state.time };
     const later = tick(state, START + (AUTO_AFTER_SECONDS + 2) * 1000);
     expect(later.events.resolved[0]).toEqual({ id: "leanWeek", choice: "cut", auto: true });
+  });
+});
+
+describe("events: stage 1 and stage 3", () => {
+  /** A village at the given stage with the first event due and nothing else going on. */
+  function at(stage: 1 | 3, over: (s: GameState) => void = () => {}): GameState {
+    const state = createGameState(START);
+    state.stage = stage;
+    state.time = 1000;
+    state.food = 100;
+    state.wood = 100;
+    state.morale = 70;
+    over(state);
+    return state;
+  }
+
+  const cases: ReadonlyArray<{
+    id: EventId;
+    stage: 1 | 3;
+    ready: (s: GameState) => void;
+    notReady: (s: GameState) => void;
+  }> = [
+    {
+      id: "stranger",
+      stage: 1,
+      ready: (s) => (s.population = 5),
+      notReady: (s) => (s.population = 4),
+    },
+    {
+      id: "foundStash",
+      stage: 1,
+      ready: (s) => (s.owned.forager = 1),
+      notReady: (s) => (s.owned.forager = 0),
+    },
+    {
+      id: "restDispute",
+      stage: 1,
+      ready: (s) => (s.owned.forager = 8),
+      notReady: (s) => (s.owned.forager = 7),
+    },
+    {
+      id: "skyWatcher",
+      stage: 1,
+      ready: (s) => s.unlocked.push("lookUp"),
+      notReady: () => {},
+    },
+    {
+      id: "rivalMessage",
+      stage: 3,
+      ready: (s) => (s.owned.exploit = 2),
+      notReady: (s) => (s.owned.exploit = 1),
+    },
+    {
+      id: "copiedWork",
+      stage: 3,
+      ready: (s) => (s.owned.exploit = 8),
+      notReady: (s) => (s.owned.exploit = 7),
+    },
+  ];
+
+  for (const { id, stage, ready, notReady } of cases) {
+    describe(id, () => {
+      it("is offered in its stage when the village is in the situation", () => {
+        const state = at(stage, ready);
+        // Keep the other events for the stage out of the way.
+        state.events.resolved = EVENTS.filter((d) => d.id !== id).map((d) => ({
+          id: d.id,
+          choice: d.defaultChoice,
+          auto: true,
+        }));
+        advanceEvents(state);
+        expect(state.events.pending?.id).toBe(id);
+      });
+
+      it("is not offered before the village is in the situation", () => {
+        const state = at(stage, notReady);
+        expect(eligibleEvent(state)?.id).not.toBe(id);
+      });
+
+      it("is not offered in the wrong stage", () => {
+        const state = at(stage, ready);
+        state.stage = 2;
+        expect(eligibleEvent(state)?.id).not.toBe(id);
+      });
+
+      it("is not offered twice", () => {
+        const state = at(stage, ready);
+        state.events.resolved.push({ id, choice: eventDef(id).defaultChoice, auto: false });
+        expect(eligibleEvent(state)?.id).not.toBe(id);
+      });
+
+      it("decides itself with its free, less kind choice when nobody answers", () => {
+        const state = at(stage, ready);
+        state.events.pending = { id, since: state.time };
+        const drift = state.drift;
+        advanceEvents(state);
+        expect(state.events.pending?.id).toBe(id);
+        state.time += AUTO_AFTER_SECONDS;
+        advanceEvents(state);
+        expect(state.events.pending).toBeNull();
+        const last = state.events.resolved[state.events.resolved.length - 1];
+        expect(last).toEqual({ id, choice: eventDef(id).defaultChoice, auto: true });
+        expect(state.drift).toBeLessThan(drift);
+      });
+    });
+  }
+
+  it("never offers a stage 1 event once the village has moved on, or a stage 3 event early", () => {
+    const stage1 = new Set<EventId>(["stranger", "foundStash", "restDispute", "skyWatcher"]);
+    const stage3 = new Set<EventId>(["rivalMessage", "copiedWork"]);
+    for (const def of EVENTS) {
+      for (const stage of [1, 2, 3] as const) {
+        const state = createGameState(START);
+        state.stage = stage;
+        state.population = 30;
+        state.owned.forager = 10;
+        state.owned.exploit = 10;
+        state.unlocked.push("lookUp");
+        state.food = state.wood = 1000;
+        if (stage1.has(def.id) && stage !== 1) expect(def.when(state), def.id).toBe(false);
+        if (stage3.has(def.id) && stage !== 3) expect(def.when(state), def.id).toBe(false);
+      }
+    }
   });
 });

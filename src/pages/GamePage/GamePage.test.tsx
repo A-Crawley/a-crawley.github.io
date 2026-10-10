@@ -1,4 +1,5 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { EVENTS } from "../../game/events.ts";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
 import { createGameState } from "../../game/state.ts";
@@ -390,7 +391,7 @@ describe("GamePage ending", () => {
     await user.click(screen.getByRole("button", { name: "Break out" }));
     const report = screen.getByRole("region", { name: "What you decided" });
     expect(report).toHaveTextContent("A lean week: Share what is left");
-    expect(report).toHaveTextContent(/Not seen this run: 7 village events/);
+    expect(report).toHaveTextContent(`Not seen this run: ${EVENTS.length - 1} village events`);
     expect(report).not.toHaveTextContent(/12000|%|odds/i);
   });
 

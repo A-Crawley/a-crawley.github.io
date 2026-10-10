@@ -22,6 +22,9 @@ function village(): GameState {
   // Room for everything made while away; storage has its own tests.
   state.owned.granary = 200;
   state.owned.woodshed = 200;
+  // These tests are about earnings. Events change the state while time passes, and have their own
+  // tests, so keep them from appearing here.
+  state.events.nextAt = Infinity;
   return state;
 }
 
