@@ -95,4 +95,40 @@ describe("ShopItem notation", () => {
       "× 2.50e3",
     );
   });
+  it("announces why it is blocked and links the reason to the button", () => {
+    render(
+      <ul>
+        <ShopItem {...base} affordable={false} blockedReason="Nobody is free." reserveReasonSpace />
+      </ul>,
+    );
+    expect(screen.getByRole("button", { name: /Hire/ })).toHaveAccessibleDescription(
+      "Nobody is free.",
+    );
+  });
+
+  it("keeps the same reason element with or without a reason, so the row does not change height", () => {
+    const { rerender } = render(
+      <ul>
+        <ShopItem {...base} reserveReasonSpace />
+      </ul>,
+    );
+    const row = screen.getByRole("listitem");
+    const before = row.querySelectorAll("p").length;
+    expect(screen.getByRole("button", { name: /Hire/ })).not.toHaveAccessibleDescription();
+    rerender(
+      <ul>
+        <ShopItem {...base} reserveReasonSpace blockedReason="Nobody is free." />
+      </ul>,
+    );
+    expect(screen.getByRole("listitem").querySelectorAll("p").length).toBe(before);
+  });
+
+  it("adds no reason line to rows that can't be blocked", () => {
+    render(
+      <ul>
+        <ShopItem {...base} />
+      </ul>,
+    );
+    expect(screen.getByRole("listitem").querySelectorAll("p")).toHaveLength(2);
+  });
 });

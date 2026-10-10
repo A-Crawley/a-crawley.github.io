@@ -486,7 +486,7 @@ describe("GamePage village", () => {
       s.owned.forager = 3;
     });
     expect(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ })).toBeDisabled();
-    expect(screen.getAllByText(/Nobody is free to take the job/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Nobody is free\. Build beds/).length).toBeGreaterThan(0);
   });
 
   it("shows the village panel once there is a job", () => {

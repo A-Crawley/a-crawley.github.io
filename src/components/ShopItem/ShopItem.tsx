@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 
@@ -17,6 +18,11 @@ export interface ShopItemProps {
   affordable: boolean;
   /** Why it can't be bought even when the player could pay, e.g. nobody free to hire. */
   blockedReason?: string;
+  /**
+   * Keep room for the reason even when there is none, so the row does not change height when it
+   * appears or goes. Set it on rows that can be blocked.
+   */
+  reserveReasonSpace?: boolean;
   onBuy: () => void;
 }
 
@@ -32,9 +38,11 @@ export function ShopItem({
   output,
   affordable,
   blockedReason,
+  reserveReasonSpace = false,
   onBuy,
 }: ShopItemProps) {
   const format = useNumberFormat();
+  const reasonId = useId();
   return (
     <Box
       component="li"
@@ -62,8 +70,14 @@ export function ShopItem({
         <Typography variant="body2" color="text.secondary">
           Makes {output}
         </Typography>
-        {blockedReason && (
-          <Typography variant="body2" color="secondary.main">
+        {(blockedReason || reserveReasonSpace) && (
+          <Typography
+            id={reasonId}
+            variant="body2"
+            color="secondary.main"
+            // Two lines of body2 (1.43 line height), so the row is the same height either way.
+            sx={reserveReasonSpace ? { minHeight: "2.86em" } : undefined}
+          >
             {blockedReason}
           </Typography>
         )}
@@ -73,6 +87,7 @@ export function ShopItem({
         color={affordable ? "primary" : "inherit"}
         disabled={!affordable}
         onClick={onBuy}
+        aria-describedby={blockedReason ? reasonId : undefined}
         aria-label={`${actionLabel} ${count > 1 ? `${count} × ` : ""}${name}`}
         sx={{
           flexShrink: 0,

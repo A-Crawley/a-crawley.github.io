@@ -452,10 +452,9 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
                         currency={CURRENCY_NAME[def.currency]}
                         output={copy.output}
                         affordable={quote.affordable}
+                        reserveReasonSpace={isJob(def.id)}
                         blockedReason={
-                          noOneFree
-                            ? "Nobody is free to take the job. More villagers move in when there are beds."
-                            : undefined
+                          noOneFree ? "Nobody is free. Build beds for more." : undefined
                         }
                         onBuy={() => game.buyItem(def.id, quantity)}
                       />
