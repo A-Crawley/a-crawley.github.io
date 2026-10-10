@@ -78,4 +78,26 @@ describe("GameLayout", () => {
     expect(screen.getByText("Shop")).toBeVisible();
     expect(screen.queryByText("Resources")).not.toBeInTheDocument();
   });
+  describe("sheet", () => {
+    for (const mode of ["phone", "tablet", "desktop"] as const) {
+      it(`shows it on a ${mode} without leaving a gap in the page`, () => {
+        const { rerender } = render(<GameLayout {...parts({ mode })} />);
+        const shop = screen.getByText("Shop");
+        const before = shop.parentElement?.innerHTML;
+        rerender(<GameLayout {...parts({ mode, sheet: <p>The village asks</p> })} />);
+        expect(screen.getByText("The village asks")).toBeVisible();
+        // Out of the flow: the shop's own markup and its surroundings are unchanged.
+        expect(screen.getByText("Shop").parentElement?.innerHTML).toBe(before);
+        let node: HTMLElement | null = screen.getByText("The village asks");
+        while (node && getComputedStyle(node).position !== "fixed") node = node.parentElement;
+        expect(node).not.toBeNull();
+      });
+    }
+
+    it("keeps the main action reachable while it is showing on a phone", () => {
+      render(<GameLayout {...parts({ mode: "phone", sheet: <p>The village asks</p> })} />);
+      expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
+      expect(screen.getByRole("tab", { name: "Build" })).toBeVisible();
+    });
+  });
 });
