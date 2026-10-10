@@ -207,3 +207,13 @@ three run totals are unchanged. The balance argument is by bounds instead:
 - Total possible drift from all eight is under 3500 of 16000 (about 0.1 on the compassion index).
 
 What a hand-played run does with them is not yet measured. Worth checking when playtesting.
+
+## Look up (GAME-35)
+
+The simulation bots never look up, so the three run totals are unchanged. Bounds instead:
+
+- Pausing for 3.5 s every 30 s is the worst case, about 12% of output, and it buys only +2 morale
+  per look (0.067 a second at most, less than the +0.1 a second a well-fed village gets). Spamming it
+  is a loss, not a trick.
+- Drift: 40 per first sighting, 13 sightings, so under 3.5% of the scale in total.
+- Not yet measured with a person playing.

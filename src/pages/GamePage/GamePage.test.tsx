@@ -242,7 +242,7 @@ describe("GamePage unlocks", () => {
     expect(button).not.toHaveAttribute("aria-disabled");
     expect(screen.getByText("Something is different about the sky.")).toBeInTheDocument();
     await user.click(button);
-    expect(screen.getByText(/A number hangs in the sky: \d+\./)).toBeInTheDocument();
+    expect(screen.getAllByText(/A number hangs in the sky\./).length).toBeGreaterThan(0);
     expect(screen.getByText(/Someone looked up\. They are not saying/)).toBeInTheDocument();
   });
 
@@ -821,5 +821,26 @@ describe("GamePage performance review", () => {
   it("does not show up in stage 1", () => {
     setupWith(() => {});
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("GamePage Look up ritual", () => {
+  it("reveals a sighting, then makes the player wait, and lists it in Sky notes", async () => {
+    const user = setupWith((s) => {
+      s.unlocked.push("lookUp");
+    });
+    await user.click(screen.getByRole("button", { name: "Look up" }));
+    expect(screen.getAllByText(/A number hangs in the sky/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Look up" })).toBeDisabled();
+    expect(screen.getByText(/Ready again in \d+ seconds?\./)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Sky notes \(1\// }));
+    expect(screen.getAllByText(/A number hangs in the sky/).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("has no Sky notes before anything has been seen", () => {
+    setupWith((s) => {
+      s.unlocked.push("lookUp");
+    });
+    expect(screen.queryByRole("button", { name: /Sky notes/ })).not.toBeInTheDocument();
   });
 });

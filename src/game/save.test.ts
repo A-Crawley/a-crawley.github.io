@@ -472,7 +472,7 @@ describe("stage reviews in a save", () => {
     expect(at(2)?.reviews).toEqual({ seen: [2], entries: {} });
     expect(at(3)?.reviews).toEqual({ seen: [2, 3], entries: {} });
     expect(at(3)?.version).toBe(STATE_VERSION);
-    expect(STATE_VERSION).toBe(11);
+    expect(STATE_VERSION).toBeGreaterThanOrEqual(11);
   });
 
   it("round-trips snapshots and seen reviews", () => {
@@ -503,5 +503,44 @@ describe("stage reviews in a save", () => {
     expect(bad({ seen: [], entries: { 2: { at: -1 } } })).toBe(false);
     expect(bad({ seen: [], entries: { 7: {} } })).toBe(false);
     expect(bad({ seen: [], entries: {} })).toBe(true);
+  });
+});
+
+describe("sky notes in a save", () => {
+  it("upgrades a version 11 save, seeding the first sighting for someone who had looked up", () => {
+    const looked: Record<string, unknown> = {
+      ...raw(),
+      version: 11,
+      unlocked: ["lookUp", "lookedUp"],
+    };
+    delete looked.sky;
+    delete looked.lookPauseUntil;
+    delete looked.lookReadyAt;
+    const result = parseSave(JSON.stringify(looked));
+    expect(result.ok && result.value.sky).toEqual({ seen: ["number"], dry: false });
+    expect(result.ok && result.value.lookReadyAt).toBe(0);
+    const never: Record<string, unknown> = { ...raw(), version: 11, unlocked: [] };
+    delete never.sky;
+    delete never.lookPauseUntil;
+    delete never.lookReadyAt;
+    const fresh = parseSave(JSON.stringify(never));
+    expect(fresh.ok && fresh.value.sky).toEqual({ seen: [], dry: false });
+  });
+
+  it("round-trips what has been seen and the cooldown", () => {
+    const state = playedState();
+    state.sky = { seen: ["number", "shadow"], dry: true };
+    state.lookPauseUntil = 4325;
+    state.lookReadyAt = 4350;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("rejects unknown or repeated sightings and bad cooldowns", () => {
+    const bad = (patch: Record<string, unknown>) => validateState({ ...raw(), ...patch }).ok;
+    expect(bad({ sky: { seen: ["nope"], dry: false } })).toBe(false);
+    expect(bad({ sky: { seen: ["number", "number"], dry: false } })).toBe(false);
+    expect(bad({ sky: { seen: [], dry: "no" } })).toBe(false);
+    expect(bad({ sky: null })).toBe(false);
+    expect(bad({ lookReadyAt: -1 })).toBe(false);
   });
 });

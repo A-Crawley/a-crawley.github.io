@@ -28,3 +28,30 @@ describe("LookUpAction", () => {
     expect(screen.getByText("A number hangs in the sky.")).toBeInTheDocument();
   });
 });
+
+describe("LookUpAction: pause and wait", () => {
+  it("says plainly what a look costs", () => {
+    render(<LookUpAction unlocked sighting={null} pauseSeconds={3.5} onLookUp={() => {}} />);
+    expect(screen.getByText("Looking up pauses work for 3.5 seconds.")).toBeInTheDocument();
+  });
+
+  it("is disabled with the time left while it cools down", async () => {
+    const onLookUp = vi.fn();
+    render(<LookUpAction unlocked sighting="A number." waitSeconds={12} onLookUp={onLookUp} />);
+    const button = screen.getByRole("button", { name: "Look up" });
+    expect(button).toBeDisabled();
+    expect(screen.getByText("Ready again in 12 seconds.")).toBeInTheDocument();
+    await userEvent.setup({ pointerEventsCheck: 0 }).click(button);
+    expect(onLookUp).not.toHaveBeenCalled();
+  });
+
+  it("uses the singular for one second", () => {
+    render(<LookUpAction unlocked sighting={null} waitSeconds={1} onLookUp={() => {}} />);
+    expect(screen.getByText("Ready again in 1 second.")).toBeInTheDocument();
+  });
+
+  it("announces the sighting to screen readers", () => {
+    render(<LookUpAction unlocked sighting="A number hangs." onLookUp={() => {}} />);
+    expect(screen.getByRole("status")).toHaveTextContent("A number hangs.");
+  });
+});
