@@ -688,7 +688,7 @@ describe("GamePage layouts", () => {
     expect(screen.getByRole("log", { name: "Village log" })).toBeVisible();
   });
 
-  it("folds a phone into tabs, with Gather food always to hand", async () => {
+  it("folds a phone into tabs, with Gather food at the top of Build", async () => {
     const user = setupLayout("phone");
     expect(screen.getByRole("tab", { name: "Build" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
@@ -696,6 +696,10 @@ describe("GamePage layouts", () => {
     expect(screen.getByRole("log", { name: "Village log", hidden: true })).not.toBeVisible();
     await user.click(screen.getByRole("tab", { name: "Log and more" }));
     expect(screen.getByRole("log", { name: "Village log" })).toBeVisible();
+    // Gather food belongs to the Build tab; the tab bar itself never goes away.
+    expect(screen.getByRole("button", { name: "Gather food", hidden: true })).not.toBeVisible();
+    expect(screen.getByRole("tab", { name: "Build" })).toBeVisible();
+    await user.click(screen.getByRole("tab", { name: "Build" }));
     expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
   });
 

@@ -52,13 +52,36 @@ describe("GameLayout", () => {
     expect(screen.getByText("Log")).not.toBeVisible();
   });
 
-  it("keeps the resources and the main action in view whichever tab is open", () => {
+  it("keeps the resources and the tab bar in view whichever tab is open", () => {
     render(<GameLayout {...parts({ mode: "phone" })} />);
+    for (const name of ["Village", "Log and more", "Build"]) {
+      fireEvent.click(screen.getByRole("tab", { name }));
+      expect(screen.getByText("Resources")).toBeVisible();
+      for (const tab of ["Build", "Village", "Log and more"]) {
+        expect(screen.getByRole("tab", { name: tab })).toBeVisible();
+      }
+    }
+  });
+
+  it("puts the main action at the top of the Build tab, not in the bottom bar", () => {
+    render(<GameLayout {...parts({ mode: "phone" })} />);
+    const build = screen.getByRole("tabpanel", { name: "Build" });
+    const gather = screen.getByRole("button", { name: "Gather food" });
+    expect(build).toContainElement(gather);
+    expect(gather.compareDocumentPosition(screen.getByText("Shop"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByRole("tablist")).not.toContainElement(gather);
     fireEvent.click(screen.getByRole("tab", { name: "Village" }));
-    expect(screen.getByText("Village state")).toBeVisible();
-    expect(screen.getByText("Shop")).not.toBeVisible();
-    expect(screen.getByText("Resources")).toBeVisible();
-    expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
+    expect(gather).not.toBeVisible();
+  });
+
+  it("keeps the tab bar the same whether or not there is a main action", () => {
+    const { rerender } = render(<GameLayout {...parts({ mode: "phone" })} />);
+    const tabs = () => screen.getAllByRole("tab").map((t) => t.textContent);
+    const before = tabs();
+    rerender(<GameLayout {...parts({ mode: "phone", actions: null })} />);
+    expect(tabs()).toEqual(before);
   });
 
   it("links each tab to its panel", () => {
@@ -94,7 +117,7 @@ describe("GameLayout", () => {
       });
     }
 
-    it("keeps the main action reachable while it is showing on a phone", () => {
+    it("keeps the main action and the tabs reachable while it is showing on a phone", () => {
       render(<GameLayout {...parts({ mode: "phone", sheet: <p>The village asks</p> })} />);
       expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
       expect(screen.getByRole("tab", { name: "Build" })).toBeVisible();
