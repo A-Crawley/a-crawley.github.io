@@ -47,6 +47,7 @@ import {
 import { logLines } from "../../game/log.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
+import { runReport } from "../../game/runReport.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
@@ -530,6 +531,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
           reveal={REVEAL}
           verdict={VERDICT[temperamentOf(state.drift)]}
           stats={statRows}
+          report={runReport(state)}
           onNewGame={game.resetGame}
         />
       )}

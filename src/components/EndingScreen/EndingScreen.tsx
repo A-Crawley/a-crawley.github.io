@@ -16,6 +16,19 @@ export interface EndingStat {
   value: string;
 }
 
+export interface EndingReportEvent {
+  title: string;
+  choice: string;
+  auto: boolean;
+}
+
+export interface EndingReport {
+  events: readonly EndingReportEvent[];
+  unseenEvents: number;
+  unseenAchievements: number;
+  hint: string | null;
+}
+
 export interface EndingScreenProps {
   title: string;
   /** What happened at the exit. */
@@ -25,8 +38,25 @@ export interface EndingScreenProps {
   /** One line on how the run read. */
   verdict: string;
   stats: readonly EndingStat[];
+  /** What was decided and what was missed. */
+  report: EndingReport;
   /** Starts a new game. Only called after the player confirms. */
   onNewGame: () => void;
+}
+
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
+function missed(report: EndingReport): string {
+  const parts = [];
+  if (report.unseenEvents > 0) {
+    parts.push(plural(report.unseenEvents, "village event", "village events"));
+  }
+  if (report.unseenAchievements > 0) {
+    parts.push(plural(report.unseenAchievements, "achievement", "achievements"));
+  }
+  return parts.join(" and ");
 }
 
 /** The end of the game: what happened, the reveal, a few stats, and a way to start again. */
@@ -36,6 +66,7 @@ export function EndingScreen({
   reveal,
   verdict,
   stats,
+  report,
   onNewGame,
 }: EndingScreenProps) {
   const [confirming, setConfirming] = useState(false);
@@ -77,6 +108,33 @@ export function EndingScreen({
             </Box>
           ))}
         </Box>
+      </Box>
+      <Box component="section" aria-labelledby="run-report-title">
+        <Typography id="run-report-title" component="h3" variant="h6">
+          What you decided
+        </Typography>
+        {report.events.length === 0 ? (
+          <Typography color="text.secondary">No village events came up in this run.</Typography>
+        ) : (
+          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+            {report.events.map(({ title, choice, auto }) => (
+              <Typography component="li" key={title} sx={{ py: 0.25 }}>
+                <strong>{title}:</strong> {choice}
+                {auto ? " (nobody answered, so it was decided for you)" : ""}
+              </Typography>
+            ))}
+          </Box>
+        )}
+        {(report.unseenEvents > 0 || report.unseenAchievements > 0) && (
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+            Not seen this run: {missed(report)}.
+          </Typography>
+        )}
+        {report.hint && (
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+            {report.hint}
+          </Typography>
+        )}
       </Box>
       <Button variant="outlined" color="inherit" onClick={() => setConfirming(true)}>
         Start a new game
