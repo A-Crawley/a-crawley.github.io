@@ -18,7 +18,7 @@ export interface GameLayoutProps {
   hud?: ReactNode;
   /** Village state: morale, population, workforce. The rest of the left rail. */
   status?: ReactNode;
-  /** The main action. A thumb-reach dock on a phone, the top of the middle column elsewhere. */
+  /** The main action. The top of the Build tab on a phone, the top of the middle column elsewhere. */
   actions?: ReactNode;
   /** The shop and everything the player spends on. */
   main: ReactNode;
@@ -30,12 +30,13 @@ type TabId = "build" | "village" | "more";
 
 const RAIL_WIDTH = 320;
 const SIDE_WIDTH = 340;
-const DOCK_SPACE = "calc(168px + env(safe-area-inset-bottom))";
+// The tab bar is 52 px, plus some air above it so the last row is never tucked behind it.
+const DOCK_SPACE = "calc(76px + env(safe-area-inset-bottom))";
 
 /**
  * Arranges the game's parts for the window. The same parts, three arrangements:
- * - phone: one column. Resources stick to the top, the main action and a tab bar sit at the
- *   bottom within thumb reach, and the tabs fold the rest away so the page is not one long scroll.
+ * - phone: one column. Resources stick to the top, the tab bar sits at the bottom within
+ *   thumb reach and never goes away, the main action leads the Build tab, and the tabs fold the rest away so the page is not one long scroll.
  * - tablet: resources across the top, then the shop beside the village state and the log.
  * - desktop: a dashboard. A left rail of resources and village state that stays in view, the shop
  *   in the middle and the log and settings on the right. Nothing is hidden behind a tap.
@@ -153,7 +154,15 @@ type PhoneProps = Omit<GameLayoutProps, "mode">;
 function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side }: PhoneProps) {
   const [tab, setTab] = useState<TabId>("build");
   const panels: Array<{ id: TabId; content: ReactNode }> = [
-    { id: "build", content: main },
+    {
+      id: "build",
+      content: (
+        <>
+          {actions}
+          {main}
+        </>
+      ),
+    },
     ...(status ? [{ id: "village" as const, content: status }] : []),
     { id: "more", content: side },
   ];
@@ -211,7 +220,6 @@ function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side 
           {sheet && (
             <Box sx={{ px: 2, pt: 1.5, maxHeight: "55vh", overflowY: "auto" }}>{sheet}</Box>
           )}
-          {actions && <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>{actions}</Box>}
           <Tabs
             value={current}
             onChange={(_event, next: TabId) => setTab(next)}
