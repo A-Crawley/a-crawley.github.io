@@ -1,6 +1,7 @@
 import { CONFIG } from "./config.ts";
 import { capOf, ratesFor, upkeepPerSecond } from "./engine.ts";
 import { AWAY_AFTER_SECONDS, catchUp, MAX_AWAY_SECONDS, mergeAway } from "./offline.ts";
+import { pendingReview } from "./review.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
 import { tick } from "./tick.ts";
@@ -267,5 +268,24 @@ describe("catchUp: storage while away", () => {
   it("reports nothing when the stores had room", () => {
     const { away } = catchUp(village(), at(3600));
     expect(away?.storageFull).toEqual([]);
+  });
+});
+
+describe("catchUp: a stage review while away", () => {
+  it("records the review for a stage crossed while away, ready to show after the welcome back", () => {
+    const state = village();
+    state.owned.builder = 200;
+    state.infra = CONFIG.infraGate - 1;
+    const result = catchUp(state, at(2 * 3600));
+    expect(result.away?.stageFrom).toBe(1);
+    expect(result.away?.stageTo).toBeGreaterThanOrEqual(2);
+    expect(pendingReview(result.state)?.stage).toBe(2);
+    expect(result.state.reviews.seen).toEqual([]);
+  });
+
+  it("has no review waiting when no stage was crossed", () => {
+    const result = catchUp(village(), at(2 * 3600));
+    expect(result.away?.stageTo).toBe(1);
+    expect(pendingReview(result.state)).toBeNull();
   });
 });

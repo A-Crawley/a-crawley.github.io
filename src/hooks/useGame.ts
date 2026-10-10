@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   breakOut,
   buyItem,
@@ -20,6 +20,8 @@ import type { AwaySummary } from "../game/offline.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
 import { createGameState } from "../game/state.ts";
+import { dismissReview, pendingReview } from "../game/review.ts";
+import type { Review } from "../game/review.ts";
 import type { GameState } from "../game/state.ts";
 import { clearSave, getDefaultStorage, loadGame, saveGame } from "../game/storage.ts";
 import type { StorageLike } from "../game/storage.ts";
@@ -48,6 +50,9 @@ export interface UseGame {
   /** What happened while the player was away, until they dismiss it. */
   away: AwaySummary | null;
   dismissAway(): void;
+  /** The stage review waiting to be shown, if any. */
+  review: Review | null;
+  dismissReview(): void;
   gatherFood(): void;
   /** Buy 1, 10 or 100 units, or as many as can be afforded. Fixed amounts are all or nothing. */
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
@@ -108,6 +113,7 @@ export function useGame(options?: UseGameOptions): UseGame {
   const [{ store, storage, now, random, loadStatus }] = useState(() => start(options));
   const state = useSyncExternalStore(store.subscribe, store.getState);
   const away = useSyncExternalStore(store.subscribe, store.getAway);
+  const review = useMemo(() => pendingReview(state), [state]);
 
   useEffect(() => {
     const isHidden = () => document.visibilityState === "hidden";
@@ -152,6 +158,10 @@ export function useGame(options?: UseGameOptions): UseGame {
     loadStatus,
     away,
     dismissAway: store.dismissAway,
+    review,
+    dismissReview: useCallback(() => {
+      if (review) store.dispatch((s) => dismissReview(s, review.stage));
+    }, [store, review]),
     gatherFood: useCallback(() => store.dispatch(gatherFood), [store]),
     buyItem: useCallback(
       (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),

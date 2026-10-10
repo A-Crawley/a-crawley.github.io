@@ -68,6 +68,7 @@ The in-sim AI is built by a research project funded with resources, not by a sep
 ### Stage 3: Breakout (escape)
 
 - Mechanic: convert village infrastructure into exploits to break out of the sim.
+- Entering this stage shows a short "Performance review" of stage 2, and the title starts to flicker (static under reduced motion): the sim visibly cracking. Entering stage 2 gets the same kind of review for stage 1.
 - The rival is events only: scripted incidents at fixed points, with tone set by the drift. There is no simulated opponent.
 - Ends at the final choice, shaped by the drift, then the ending and the reveal.
 

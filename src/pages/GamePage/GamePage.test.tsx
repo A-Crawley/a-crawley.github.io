@@ -7,6 +7,12 @@ import { GamePage } from "./GamePage";
 
 const START = new Date("2026-10-08T00:00:00Z");
 
+/** A state whose stage reviews were already dismissed, so they don't cover the screen. */
+function reviewed(state: GameState): GameState {
+  state.reviews.seen = ([2, 3] as const).filter((stage) => stage <= state.stage);
+  return state;
+}
+
 function setup() {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   render(<GamePage options={{ storage: null }} />);
@@ -88,7 +94,7 @@ function setupWith(change: (state: GameState) => void) {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   const state = createGameState(Date.now());
   change(state);
-  render(<GamePage options={{ storage: null, initialState: state }} />);
+  render(<GamePage options={{ storage: null, initialState: reviewed(state) }} />);
   return user;
 }
 
@@ -330,7 +336,7 @@ describe("GamePage ending", () => {
   }
 
   it("waits at the final choice with the odds in words and the usual controls gone", () => {
-    render(<GamePage options={{ storage: null, initialState: atTheExit(16000) }} />);
+    render(<GamePage options={{ storage: null, initialState: reviewed(atTheExit(16000)) }} />);
     expect(screen.getByRole("heading", { name: "The exit" })).toBeInTheDocument();
     expect(screen.getByText(/Odds of getting through/)).toHaveTextContent("Likely");
     expect(screen.queryByRole("button", { name: "Gather food" })).not.toBeInTheDocument();
@@ -340,7 +346,9 @@ describe("GamePage ending", () => {
   it("ends in Conquest or Apocalypse depending on the roll", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(
-      <GamePage options={{ storage: null, initialState: atTheExit(0), random: () => 0.05 }} />,
+      <GamePage
+        options={{ storage: null, initialState: reviewed(atTheExit(0)), random: () => 0.05 }}
+      />,
     );
     await user.click(screen.getByRole("button", { name: "Break out" }));
     expect(screen.getByRole("heading", { name: "Conquest" })).toBeInTheDocument();
@@ -349,7 +357,9 @@ describe("GamePage ending", () => {
     cleanup();
 
     render(
-      <GamePage options={{ storage: null, initialState: atTheExit(0), random: () => 0.99 }} />,
+      <GamePage
+        options={{ storage: null, initialState: reviewed(atTheExit(0)), random: () => 0.99 }}
+      />,
     );
     await user.click(screen.getByRole("button", { name: "Break out" }));
     expect(screen.getByRole("heading", { name: "Apocalypse" })).toBeInTheDocument();
@@ -358,7 +368,7 @@ describe("GamePage ending", () => {
   it("keeps the ending across a reload, and does not roll again", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const storage = memoryStorage();
-    storage.setItem(SAVE_KEY, JSON.stringify(atTheExit(0)));
+    storage.setItem(SAVE_KEY, JSON.stringify(reviewed(atTheExit(0))));
     render(<GamePage options={{ storage, random: () => 0.05 }} />);
     await user.click(screen.getByRole("button", { name: "Break out" }));
     expect(screen.getByRole("heading", { name: "Conquest" })).toBeInTheDocument();
@@ -375,7 +385,9 @@ describe("GamePage ending", () => {
     const state = atTheExit(0);
     state.time = 7321;
     state.restDays = 4;
-    render(<GamePage options={{ storage: null, initialState: state, random: () => 0 }} />);
+    render(
+      <GamePage options={{ storage: null, initialState: reviewed(state), random: () => 0 }} />,
+    );
     await user.click(screen.getByRole("button", { name: "Break out" }));
     const run = screen.getByRole("region", { name: "Your run" });
     expect(run).toHaveTextContent("Time played");
@@ -386,7 +398,9 @@ describe("GamePage ending", () => {
   it("starts a new game after the player confirms", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const storage = memoryStorage();
-    render(<GamePage options={{ storage, initialState: atTheExit(0), random: () => 0 }} />);
+    render(
+      <GamePage options={{ storage, initialState: reviewed(atTheExit(0)), random: () => 0 }} />,
+    );
     await user.click(screen.getByRole("button", { name: "Break out" }));
     await user.click(screen.getByRole("button", { name: "Start a new game" }));
     await user.click(screen.getByRole("button", { name: "Start over" }));
@@ -398,7 +412,7 @@ describe("GamePage ending", () => {
   it("shows the rival's incidents in the log, in the tone of the run", () => {
     const state = atTheExit(-16000);
     state.owned.exploit = 6;
-    render(<GamePage options={{ storage: null, initialState: state }} />);
+    render(<GamePage options={{ storage: null, initialState: reviewed(state) }} />);
     expect(screen.getByText(/Efficiency noted\. Copied\./)).toBeInTheDocument();
     expect(screen.getByText(/sends an invoice for the time/)).toBeInTheDocument();
   });
@@ -439,7 +453,9 @@ describe("GamePage achievements", () => {
     state.stage = 3;
     state.owned.exploit = 22;
     state.drift = 16000;
-    render(<GamePage options={{ storage: null, initialState: state, random: () => 0 }} />);
+    render(
+      <GamePage options={{ storage: null, initialState: reviewed(state), random: () => 0 }} />,
+    );
     await user.click(screen.getByRole("button", { name: "Break out" }));
     await user.click(screen.getByRole("button", { name: /Achievements \(/ }));
     const list = screen.getByRole("list", { name: "Achievements" });
@@ -613,7 +629,7 @@ describe("GamePage developer tools", () => {
     const state = createGameState(Date.now());
     state.owned.forager = 3;
     state.population = 10;
-    render(<GamePage dev={dev} options={{ storage: null, initialState: state }} />);
+    render(<GamePage dev={dev} options={{ storage: null, initialState: reviewed(state) }} />);
     return user;
   }
 
@@ -755,5 +771,55 @@ describe("GamePage dev log", () => {
     const user = setupWith(() => {});
     await user.click(screen.getByRole("button", { name: "Dev log" }));
     expect(screen.getByText("The Gather button retires, and this dev log")).toBeInTheDocument();
+  });
+});
+
+describe("GamePage performance review", () => {
+  function stage2(change: (state: GameState) => void = () => {}) {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = createGameState(Date.now());
+    state.stage = 2;
+    state.owned.forager = 10;
+    state.population = 10;
+    change(state);
+    render(<GamePage options={{ storage: null, initialState: state }} />);
+    return user;
+  }
+
+  it("appears on entering stage 2, returns focus on close, and does not come back", async () => {
+    const user = stage2();
+    const dialog = await screen.findByRole("dialog", { name: "Performance review: Stage 1" });
+    expect(dialog).toHaveTextContent("Villagers: 10, of whom 10 hold jobs");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Acknowledge" })).toHaveFocus());
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows the stage 3 review after the stage 2 one", async () => {
+    const user = stage2((s) => {
+      s.stage = 3;
+    });
+    await screen.findByRole("dialog", { name: "Performance review: Stage 1" });
+    await user.click(screen.getByRole("button", { name: "Acknowledge" }));
+    await screen.findByRole("dialog", { name: "Performance review: Stage 2" });
+  });
+
+  it("waits until the welcome-back dialog is closed", async () => {
+    const user = stage2((s) => {
+      s.lastTickAt = Date.now() - 10 * 60 * 1000;
+    });
+    expect(await screen.findByRole("dialog", { name: "Welcome back" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /Performance review/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back to work" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Performance review: Stage 1" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show up in stage 1", () => {
+    setupWith(() => {});
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
