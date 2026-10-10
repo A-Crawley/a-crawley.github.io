@@ -22,6 +22,12 @@ import type { GameState } from "./state.ts";
 
 export type EventId =
   | "leanWeek"
+  | "stranger"
+  | "foundStash"
+  | "restDispute"
+  | "skyWatcher"
+  | "rivalMessage"
+  | "copiedWork"
   | "overflowingStore"
   | "crowdedBeds"
   | "idleHands"
@@ -129,6 +135,154 @@ export const EVENTS: readonly EventDef[] = [
         detail: "Costs nothing. Morale falls.",
         log: "Portions were cut for the good of the village. The village was not consulted.",
         apply: (s) => bump(s, -8, -250),
+      },
+    ],
+  },
+  {
+    id: "stranger",
+    title: "A stranger asks to stay",
+    body: "Someone has walked in from the hills with a bag and a hopeful look. They can't say where from.",
+    when: (s) => s.stage === 1 && s.population >= 5,
+    defaultChoice: "turnAway",
+    choices: [
+      {
+        id: "welcome",
+        label: "Make room",
+        detail: "Costs food. Morale rises a little.",
+        log: "The stranger was given a meal and a corner. By evening they were telling everyone how things used to be done.",
+        cost: (s) => ({ food: share(s, "food", 0.1, 15) }),
+        apply: (s) => bump(s, 4, 200),
+      },
+      {
+        id: "turnAway",
+        label: "Point them down the road",
+        detail: "Costs nothing. Morale falls a little.",
+        log: "The stranger was pointed down the road. Someone watched them go for longer than was comfortable.",
+        apply: (s) => bump(s, -3, -200),
+      },
+    ],
+  },
+  {
+    id: "foundStash",
+    title: "A stash in the woods",
+    body: "A forager has found a buried store of food. Nobody remembers burying it.",
+    when: (s) => s.stage === 1 && s.owned.forager > 0 && s.time >= 900,
+    defaultChoice: "keep",
+    choices: [
+      {
+        id: "shareStash",
+        label: "Share it out",
+        detail: "Costs nothing, and gives nothing. Morale rises.",
+        log: "The stash was shared out on the spot. It was gone by dusk, and people were warm about it for days.",
+        apply: (s) => bump(s, 8, 250),
+      },
+      {
+        id: "keep",
+        label: "Put it in the store",
+        detail: "Gives food. Morale falls a little.",
+        log: "The stash went into the store. It was logged as found, not shared.",
+        apply: (s) => {
+          windfall(s, "food", 45);
+          bump(s, -4, -250);
+        },
+      },
+    ],
+  },
+  {
+    id: "restDispute",
+    title: "An argument about breaks",
+    body: "Two groups are disagreeing, loudly, about whether sitting down counts as work.",
+    when: (s) => s.stage === 1 && s.owned.forager + s.owned.woodcutter + s.owned.builder >= 8,
+    defaultChoice: "holdLine",
+    choices: [
+      {
+        id: "allowBreaks",
+        label: "Allow proper breaks",
+        detail: "Costs food. Morale rises.",
+        log: "Breaks were allowed. A few people discovered they had been tired for some time.",
+        cost: (s) => ({ food: share(s, "food", 0.12, 15) }),
+        apply: (s) => bump(s, 6, 250),
+      },
+      {
+        id: "holdLine",
+        label: "Say sitting is not work",
+        detail: "Costs nothing. Morale falls.",
+        log: "It was ruled that sitting is not work. The ruling was received in silence, sitting.",
+        apply: (s) => bump(s, -5, -250),
+      },
+    ],
+  },
+  {
+    id: "skyWatcher",
+    title: "Someone keeps looking up",
+    body: "A villager insists the number in the sky has changed, and has started writing it down.",
+    when: (s) => s.stage === 1 && s.unlocked.includes("lookUp"),
+    defaultChoice: "lightTrick",
+    choices: [
+      {
+        id: "listen",
+        label: "Hear them out",
+        detail: "Costs nothing. Morale rises a little.",
+        log: "They were heard out, and given a better notebook. Several others began to look up as well.",
+        // A small kindness that costs nothing would break the "kind costs or gives less" rule, so it
+        // costs a little food for the notebooks.
+        cost: (s) => ({ food: share(s, "food", 0.05, 10) }),
+        apply: (s) => bump(s, 3, 200),
+      },
+      {
+        id: "lightTrick",
+        label: "Call it a trick of the light",
+        detail: "Costs nothing. Morale falls a little.",
+        log: "It was explained that the sky does that. The villager stopped writing, but did not stop looking.",
+        apply: (s) => bump(s, -2, -200),
+      },
+    ],
+  },
+  {
+    id: "rivalMessage",
+    title: "A message from the other side",
+    body: "Something that is not quite a villager has left a note, signed with a number that looks familiar.",
+    when: (s) => s.stage === 3 && s.owned.exploit >= 2,
+    defaultChoice: "ignore",
+    choices: [
+      {
+        id: "reply",
+        label: "Write back, honestly",
+        detail: "Costs food. Morale rises.",
+        log: "A reply was sent that said what was true. There was no answer, but the silence was different.",
+        cost: (s) => ({ food: share(s, "food", 0.1, 20) }),
+        apply: (s) => bump(s, 6, 300),
+      },
+      {
+        id: "ignore",
+        label: "File it and move on",
+        detail: "Costs nothing. Morale falls a little.",
+        log: "The note was filed under pending. It has not stopped being pending.",
+        apply: (s) => bump(s, -3, -300),
+      },
+    ],
+  },
+  {
+    id: "copiedWork",
+    title: "Our methods, copied",
+    body: "Someone has been reading the village's notes and building the same machines, a little faster.",
+    when: (s) => s.stage === 3 && s.owned.exploit >= 8,
+    defaultChoice: "lockDown",
+    choices: [
+      {
+        id: "openBooks",
+        label: "Open the books",
+        detail: "Costs wood. Morale rises.",
+        log: "The notes were left out in the open. Whoever was reading them was seen to slow down.",
+        cost: (s) => ({ wood: Math.min(s.wood, share(s, "wood", 0.1, 20)) }),
+        apply: (s) => bump(s, 6, 300),
+      },
+      {
+        id: "lockDown",
+        label: "Lock everything down",
+        detail: "Costs nothing. Morale falls.",
+        log: "Everything was locked down. Several villagers lost access to their own work.",
+        apply: (s) => bump(s, -6, -300),
       },
     ],
   },
