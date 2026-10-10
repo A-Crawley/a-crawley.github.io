@@ -455,3 +455,53 @@ describe("village events in a save", () => {
     expect(bad(null)).toBe(false);
   });
 });
+
+describe("stage reviews in a save", () => {
+  function oldSave(stage: number): Record<string, unknown> {
+    const old: Record<string, unknown> = { ...raw(), version: 10, stage };
+    delete old.reviews;
+    return old;
+  }
+
+  it("upgrades a version 10 save by marking the stages it has passed as seen", () => {
+    const at = (stage: number) => {
+      const result = parseSave(JSON.stringify(oldSave(stage)));
+      return result.ok ? result.value : null;
+    };
+    expect(at(1)?.reviews).toEqual({ seen: [], entries: {} });
+    expect(at(2)?.reviews).toEqual({ seen: [2], entries: {} });
+    expect(at(3)?.reviews).toEqual({ seen: [2, 3], entries: {} });
+    expect(at(3)?.version).toBe(STATE_VERSION);
+    expect(STATE_VERSION).toBe(11);
+  });
+
+  it("round-trips snapshots and seen reviews", () => {
+    const state = playedState();
+    state.reviews = {
+      seen: [2],
+      entries: {
+        2: {
+          at: 1500,
+          seconds: 1500,
+          jobs: 35,
+          villagers: 60,
+          walkouts: 1,
+          restDays: 0,
+          temperament: "gentle",
+        },
+      },
+    };
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("rejects reviews that are missing, odd, or ahead of the stage", () => {
+    const bad = (reviews: unknown) => validateState({ ...raw(), reviews }).ok;
+    expect(bad(undefined)).toBe(false);
+    expect(bad({ seen: [4], entries: {} })).toBe(false);
+    expect(bad({ seen: [3], entries: {} })).toBe(false); // the played state is only in stage 2
+    expect(bad({ seen: [2, 2], entries: {} })).toBe(false);
+    expect(bad({ seen: [], entries: { 2: { at: -1 } } })).toBe(false);
+    expect(bad({ seen: [], entries: { 7: {} } })).toBe(false);
+    expect(bad({ seen: [], entries: {} })).toBe(true);
+  });
+});

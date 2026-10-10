@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { isReviewStage } from "./review.ts";
+import type { ReviewSnapshot, ReviewsState, ReviewStage } from "./review.ts";
 import { isUnlockId } from "./unlocks.ts";
 import type { UnlockId } from "./unlocks.ts";
 
@@ -60,6 +62,13 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       nextAt: (typeof save.time === "number" && Number.isFinite(save.time) ? save.time : 0) + 300,
     },
   }),
+  // 10 -> 11: stage performance reviews. Stages the save has already reached count as seen, so
+  // nobody is shown a review for something they played through before the update.
+  10: (save) => {
+    const stage = save.stage === 2 || save.stage === 3 ? save.stage : 1;
+    const seen = [2, 3].filter((s) => s <= stage);
+    return { ...save, version: 11, reviews: { seen, entries: {} } };
+  },
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -163,6 +172,40 @@ function validateEvents(raw: unknown): EventsState | null {
   return { resolved, pending, nextAt: raw.nextAt };
 }
 
+const TEMPERAMENT_WORDS = ["gentle", "wary", "ruthless"];
+
+function validateReviews(raw: unknown, stage: number): ReviewsState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.seen) || !isRecord(raw.entries)) return null;
+  const seen: ReviewStage[] = [];
+  for (const s of raw.seen as unknown[]) {
+    if (!isReviewStage(s) || seen.includes(s) || s > stage) return null;
+    seen.push(s);
+  }
+  const entries: Partial<Record<ReviewStage, ReviewSnapshot>> = {};
+  for (const key of Object.keys(raw.entries)) {
+    const s = Number(key);
+    const entry = (raw.entries as RawSave)[key];
+    if (!isReviewStage(s) || s > stage || !isRecord(entry)) return null;
+    if (typeof entry.temperament !== "string" || !TEMPERAMENT_WORDS.includes(entry.temperament)) {
+      return null;
+    }
+    for (const field of ["at", "seconds", "jobs", "villagers", "walkouts", "restDays"] as const) {
+      const value = entry[field];
+      if (!isFiniteNumber(value) || value < 0) return null;
+    }
+    entries[s] = {
+      at: entry.at as number,
+      seconds: entry.seconds as number,
+      jobs: entry.jobs as number,
+      villagers: entry.villagers as number,
+      walkouts: entry.walkouts as number,
+      restDays: entry.restDays as number,
+      temperament: entry.temperament as ReviewSnapshot["temperament"],
+    };
+  }
+  return { seen, entries };
+}
+
 /**
  * Check that an upgraded save has exactly the shape and ranges of a GameState, and copy out only
  * the known fields. Anything odd is rejected rather than repaired.
@@ -228,6 +271,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const events = validateEvents(raw.events);
   if (!events) return fail("events");
 
+  const reviews = validateReviews(raw.reviews, raw.stage);
+  if (!reviews) return fail("reviews");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -263,6 +309,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       released: raw.released as number,
       upgrades,
       events,
+      reviews,
       unlocked,
       ending,
       achievements,

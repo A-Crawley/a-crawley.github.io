@@ -253,6 +253,26 @@ offered at most once.
 - Screen: `VillageEventCard`, an inline card in the page-wide notices slot. It never blocks Gather.
 - Dev tools: "Next village event" makes the next one due now.
 
+## Stage performance reviews (GAME-36)
+
+`src/game/review.ts` (logic), `src/game/reviewCopy.ts` (wording), `PerformanceReviewDialog` and
+`StageTitle` (UI). A dismissible "Performance review" appears once on entering stage 2 and once on
+entering stage 3.
+
+- State: `reviews { seen[], entries }` on `GameState` (save version 11, migration 10 to 11).
+  `entries[stage]` is a snapshot taken by `settle` the first time the stage is seen: time the stage
+  left took, jobs, villagers, walkouts, rest days and the drift as a temperament word. The raw drift
+  is never saved in it or shown. `seen` lists the dismissed reviews.
+- Migration: a save already in stage 2 or 3 marks the stages it has passed as seen, so nobody gets
+  a review for something played before the update.
+- Showing: `pendingReview` returns the earliest entered, undismissed review. `GamePage` hides it
+  while the welcome-back dialog is open, so after an away stage change the order is welcome back,
+  then review (never stacked). Output keeps running behind the dialog. Dismissing is one button
+  (Acknowledge) or Escape; there is no wait.
+- Stage 3: the "Look Up" heading flickers now and then. Under `prefers-reduced-motion` it does not
+  animate and shows a fixed faint shadow instead.
+- No economy change. `npm run sim` is untouched.
+
 ## Retiring the Gather button
 
 `gatherRetired` unlock in `src/game/unlocks.ts`. Clicking is counted in the economy as 2 clicks a

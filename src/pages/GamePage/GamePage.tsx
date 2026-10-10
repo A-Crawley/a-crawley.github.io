@@ -58,6 +58,8 @@ import { useSettings } from "../../hooks/useSettings.ts";
 import { AchievementList } from "../../components/AchievementList";
 import { AchievementToast } from "../../components/AchievementToast";
 import { AwaySummaryDialog } from "../../components/AwaySummaryDialog";
+import { PerformanceReviewDialog } from "../../components/PerformanceReviewDialog";
+import { StageTitle } from "../../components/StageTitle";
 import { EndingScreen } from "../../components/EndingScreen";
 import { EventLog } from "../../components/EventLog";
 import { FinalChoice } from "../../components/FinalChoice";
@@ -615,6 +617,11 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
     <NotationProvider notation={settings.notation}>
       <Box component="main">
         <AwaySummaryDialog summary={game.away} onClose={game.dismissAway} />
+        {/* Queued behind the welcome-back dialog, never stacked on it. */}
+        <PerformanceReviewDialog
+          review={game.away === null ? game.review : null}
+          onClose={game.dismissReview}
+        />
         <AchievementToast title={toastTitle} onClose={news.dismiss} raised={phone && playing} />
         <GameLayout
           mode={mode}
@@ -627,9 +634,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
                 mb: 2,
               }}
             >
-              <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
-                Look Up
-              </Typography>
+              <StageTitle stage={state.stage}>Look Up</StageTitle>
               <Link
                 href="../"
                 color="text.secondary"
