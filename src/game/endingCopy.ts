@@ -42,3 +42,14 @@ export const FINAL_CHOICE = {
   body: "Every exploit is in place. The exit is open, and the rival is on the other side of it. You will only get one go.",
   action: "Break out",
 };
+
+/**
+ * A nudge about the ending the player did not get, shown on the run report. Vague on purpose: it
+ * never names a number, a threshold or a chance.
+ */
+export const OTHER_ENDING_HINT: Record<Ending, string> = {
+  conquest:
+    "There is another way this ends, and the village would not enjoy it. It takes a long run of choosing the schedule over the people.",
+  apocalypse:
+    "There is another way this ends, with the exit opening. How the village was treated along the way seemed to count. Rest days and answered questions are where to start looking.",
+};

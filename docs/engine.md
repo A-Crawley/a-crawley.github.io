@@ -291,6 +291,14 @@ found nothing.
 - Screen: `LookUpAction` shows the sighting (announced to screen readers), the pause cost, and the
   wait; `SkyNotes` lists what has been seen.
 
+## Run report on the ending screen (GAME-38)
+
+`runReport(state)` in `src/game/runReport.ts` is a pure function of saved state, so there is no save
+change. It lists the village events as answered (marking ones decided for the player), counts the
+events and achievements the run did not meet, and adds a vague hint about the other ending
+(`OTHER_ENDING_HINT` in `endingCopy.ts`). It carries no drift, odds or thresholds; a test checks the
+report and the hints contain no digits or percentages. `EndingScreen` shows it under the stats.
+
 ## Retiring the Gather button
 
 `gatherRetired` unlock in `src/game/unlocks.ts`. Clicking is counted in the economy as 2 clicks a

@@ -380,6 +380,20 @@ describe("GamePage ending", () => {
     expect(screen.queryByRole("button", { name: "Break out" })).not.toBeInTheDocument();
   });
 
+  it("shows what was decided on the end screen, without the drift or any odds", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = atTheExit(12000);
+    state.events.resolved = [{ id: "leanWeek", choice: "share", auto: false }];
+    render(
+      <GamePage options={{ storage: null, initialState: reviewed(state), random: () => 0 }} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    const report = screen.getByRole("region", { name: "What you decided" });
+    expect(report).toHaveTextContent("A lean week: Share what is left");
+    expect(report).toHaveTextContent(/Not seen this run: 7 village events/);
+    expect(report).not.toHaveTextContent(/12000|%|odds/i);
+  });
+
   it("shows the run's stats on the end screen", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const state = atTheExit(0);
