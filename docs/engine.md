@@ -273,6 +273,24 @@ entering stage 3.
   animate and shows a fixed faint shadow instead.
 - No economy change. `npm run sim` is untouched.
 
+## Look up: sightings and Sky notes (GAME-35)
+
+`src/game/sky.ts`. Thirteen sightings, each with a text and a predicate on the state (stage, foragers,
+research, exploits, walkouts, rest days, hunger, drift temperament). Pressing Look up reveals the
+first sighting, in list order, that applies and has not been seen. With none, a dry line is shown
+(chosen by game time, so it varies). Seen ids are saved in `sky.seen`; `sky.dry` says the last look
+found nothing.
+
+- Cost: output stops for 3.5 s (`lookPauseUntil`, applied in `globalMultiplier` like a rest day),
+  morale rises by 2, and there is a 30 s cooldown (`lookReadyAt`). All in `CONFIG.lookUp`.
+- Drift: only a first sighting nudges it (+40). The whole pool is at most 520 of the 16000 scale, and
+  repeated presses add nothing, so it can't be farmed.
+- Away: `catchUp` never presses it. Pause and cooldown are game time, so they are over on return.
+- Save version 12 (migration 11 to 12): `sky`, `lookPauseUntil`, `lookReadyAt`. A save that had
+  already looked up starts with the first sighting seen.
+- Screen: `LookUpAction` shows the sighting (announced to screen readers), the pause cost, and the
+  wait; `SkyNotes` lists what has been seen.
+
 ## Retiring the Gather button
 
 `gatherRetired` unlock in `src/game/unlocks.ts`. Clicking is counted in the economy as 2 clicks a

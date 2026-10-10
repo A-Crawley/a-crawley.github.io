@@ -43,7 +43,6 @@ import {
   ITEM_COPY,
   MORALE_DRIVER_LABELS,
   POLICY_LABELS,
-  sighting,
 } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
@@ -51,6 +50,8 @@ import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/endi
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
+import { lookUpText, lookUpWait, SIGHTINGS, sightingText } from "../../game/sky.ts";
+import { SkyNotes } from "../../components/SkyNotes";
 import { useGame } from "../../hooks/useGame.ts";
 import type { UseGameOptions } from "../../hooks/useGame.ts";
 import { useNewAchievements } from "../../hooks/useNewAchievements.ts";
@@ -410,7 +411,9 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
           <Panel>
             <LookUpAction
               unlocked={unlocked("lookUp")}
-              sighting={unlocked("lookedUp") ? sighting(state.stage, state.time) : null}
+              sighting={lookUpText(state)}
+              waitSeconds={lookUpWait(state)}
+              pauseSeconds={CONFIG.lookUp.pauseSeconds}
               onLookUp={game.lookUp}
             />
           </Panel>
@@ -538,6 +541,16 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
       <Panel>
         <EventLog title="Village log" lines={logLines(state)} maxHeight={phone ? undefined : 420} />
       </Panel>
+      {state.sky.seen.length > 0 && (
+        <Accordion disableGutters variant="outlined">
+          <AccordionSummary>
+            Sky notes ({state.sky.seen.length}/{SIGHTINGS.length})
+          </AccordionSummary>
+          <AccordionDetails>
+            <SkyNotes notes={state.sky.seen.map(sightingText)} />
+          </AccordionDetails>
+        </Accordion>
+      )}
       <Accordion disableGutters variant="outlined">
         <AccordionSummary>
           Achievements ({state.achievements.length}/{ACHIEVEMENTS.length})

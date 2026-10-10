@@ -20,8 +20,7 @@ import type { BuyQuantity, Policies } from "./engine.ts";
 import { isUpgradeAvailable, upgradeDef } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
 import type { GameState } from "./state.ts";
-import { settle, withSettled } from "./settle.ts";
-import { isUnlocked, unlock } from "./unlocks.ts";
+import { settle } from "./settle.ts";
 
 /**
  * Player actions. Each one returns a new state. When an action is not allowed (not enough
@@ -78,14 +77,8 @@ export function takeRestDay(state: GameState): GameState {
   return next;
 }
 
-/**
- * Press "Look up". It does nothing until the button has unlocked; the first look is remembered, so
- * the log can mention it. Later looks change nothing.
- */
-export function lookUp(state: GameState): GameState {
-  if (!isUnlocked(state, "lookUp")) return state;
-  return withSettled(unlock(state, "lookedUp"));
-}
+/** Press "Look up": reveals the next sighting. See ./sky.ts. */
+export { lookUp } from "./sky.ts";
 
 /** Whether the village can pay to retrain someone, and has someone to retrain. */
 export function canRetrain(state: GameState): boolean {

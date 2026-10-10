@@ -12,6 +12,8 @@ import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
 import { isReviewStage } from "./review.ts";
 import type { ReviewSnapshot, ReviewsState, ReviewStage } from "./review.ts";
+import { isSightingId } from "./sky.ts";
+import type { SightingId, SkyState } from "./sky.ts";
 import { isUnlockId } from "./unlocks.ts";
 import type { UnlockId } from "./unlocks.ts";
 
@@ -69,6 +71,17 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
     const seen = [2, 3].filter((s) => s <= stage);
     return { ...save, version: 11, reviews: { seen, entries: {} } };
   },
+  // 11 -> 12: looking up is a ritual. A player who had looked up has seen the first sighting.
+  11: (save) => ({
+    ...save,
+    version: 12,
+    lookPauseUntil: 0,
+    lookReadyAt: 0,
+    sky: {
+      seen: Array.isArray(save.unlocked) && save.unlocked.includes("lookedUp") ? ["number"] : [],
+      dry: false,
+    },
+  }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -131,6 +144,8 @@ const NON_NEGATIVE_FIELDS = [
   "wood",
   "infra",
   "restUntil",
+  "lookPauseUntil",
+  "lookReadyAt",
   "restReadyAt",
   "walkoutUntil",
   "walkoutReadyAt",
@@ -173,6 +188,16 @@ function validateEvents(raw: unknown): EventsState | null {
 }
 
 const TEMPERAMENT_WORDS = ["gentle", "wary", "ruthless"];
+
+function validateSky(raw: unknown): SkyState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.seen) || typeof raw.dry !== "boolean") return null;
+  const seen: SightingId[] = [];
+  for (const id of raw.seen as unknown[]) {
+    if (!isSightingId(id) || seen.includes(id)) return null;
+    seen.push(id);
+  }
+  return { seen, dry: raw.dry && seen.length > 0 };
+}
 
 function validateReviews(raw: unknown, stage: number): ReviewsState | null {
   if (!isRecord(raw) || !Array.isArray(raw.seen) || !isRecord(raw.entries)) return null;
@@ -274,6 +299,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const reviews = validateReviews(raw.reviews, raw.stage);
   if (!reviews) return fail("reviews");
 
+  const sky = validateSky(raw.sky);
+  if (!sky) return fail("sky");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -296,6 +324,8 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       drift: raw.drift,
       policies,
       restUntil: raw.restUntil as number,
+      lookPauseUntil: raw.lookPauseUntil as number,
+      lookReadyAt: raw.lookReadyAt as number,
       restReadyAt: raw.restReadyAt as number,
       walkoutUntil: raw.walkoutUntil as number,
       walkoutReadyAt: raw.walkoutReadyAt as number,
@@ -310,6 +340,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       upgrades,
       events,
       reviews,
+      sky,
       unlocked,
       ending,
       achievements,

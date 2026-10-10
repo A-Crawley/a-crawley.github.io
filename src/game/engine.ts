@@ -23,6 +23,9 @@ export interface SimState {
   drift: number;
   policies: Policies;
   restUntil: number;
+  /** Output is paused until this time by looking up, and looking up is not possible before `lookReadyAt`. */
+  lookPauseUntil: number;
+  lookReadyAt: number;
   restReadyAt: number;
   walkoutUntil: number;
   walkoutReadyAt: number;
@@ -76,6 +79,8 @@ export function createState(): SimState {
     drift: 0,
     policies: { extendedShifts: false, rationsOptimisation: false },
     restUntil: 0,
+    lookPauseUntil: 0,
+    lookReadyAt: 0,
     restReadyAt: 0,
     walkoutUntil: 0,
     walkoutReadyAt: 0,
@@ -240,7 +245,7 @@ export function moraleMultiplier(morale: number): number {
 
 /** Combined multiplier on everything the village produces. */
 export function globalMultiplier(state: SimState): number {
-  if (isResting(state)) return 0;
+  if (isResting(state) || state.time < state.lookPauseUntil) return 0;
   let multiplier = moraleMultiplier(state.morale);
   if (state.policies.extendedShifts) multiplier *= CONFIG.policies.extendedShifts.outputFactor;
   multiplier *= 1 + CONFIG.researchBonusPerLevel * state.owned.research;

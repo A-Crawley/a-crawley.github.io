@@ -217,6 +217,12 @@ export const DISPLACED = {
 } as const;
 
 export const CONFIG = {
+  /**
+   * Looking up (GAME-35). Output stops for `pauseSeconds`, morale rises a little, and it can't be
+   * repeated for `cooldownSeconds`. A first sighting nudges the drift by `discoveryDrift`.
+   */
+  lookUp: { pauseSeconds: 3.5, cooldownSeconds: 30, moraleLift: 2, discoveryDrift: 40 },
+
   /** Fully active play: clicks per second on "Gather food", and food per click. */
   clicksPerSecond: 2,
   clickValue: 1,
