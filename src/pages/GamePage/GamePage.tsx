@@ -661,7 +661,6 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
           }
           notices={
             <>
-              {eventCard}
               {(game.loadStatus === "corrupt" || game.loadStatus === "unavailable") && (
                 <Box sx={{ mb: 2 }}>
                   {game.loadStatus === "corrupt" && (
@@ -680,6 +679,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               )}
             </>
           }
+          sheet={eventCard}
           hud={hud}
           status={status}
           actions={actions}

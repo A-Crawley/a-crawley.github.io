@@ -25,8 +25,8 @@ function clock(seconds: number): string {
 }
 
 /**
- * A question from the village. It sits in the page rather than over it, so the Gather button and
- * everything else stays usable, and it answers itself if left long enough.
+ * A question from the village. The layout floats it clear of the page, so showing or answering it
+ * moves nothing and the Gather button stays usable. It answers itself if left long enough.
  */
 export function VillageEventCard({
   title,
@@ -40,7 +40,6 @@ export function VillageEventCard({
       component="section"
       aria-labelledby="village-event-title"
       sx={{
-        mb: 2,
         p: 2,
         border: "1px solid",
         borderColor: "primary.main",

@@ -9,6 +9,11 @@ export interface GameLayoutProps {
   header: ReactNode;
   /** Notices that span the page, such as a save warning. */
   notices?: ReactNode;
+  /**
+   * Something that needs an answer, such as a village event. It floats over the page (above the
+   * dock on a phone, in the bottom corner elsewhere) so showing or hiding it never moves the page.
+   */
+  sheet?: ReactNode;
   /** Resources, always in view: a sticky strip on a phone, the top of the left rail on a desktop. */
   hud?: ReactNode;
   /** Village state: morale, population, workforce. The rest of the left rail. */
@@ -39,6 +44,7 @@ export function GameLayout({
   mode,
   header,
   notices,
+  sheet,
   hud,
   status,
   actions,
@@ -50,6 +56,7 @@ export function GameLayout({
       <PhoneLayout
         header={header}
         notices={notices}
+        sheet={sheet}
         hud={hud}
         status={status}
         actions={actions}
@@ -76,6 +83,7 @@ export function GameLayout({
             {side}
           </Box>
         </Box>
+        <FloatingSheet>{sheet}</FloatingSheet>
       </Box>
     );
   }
@@ -107,6 +115,7 @@ export function GameLayout({
         </Box>
         <Box sx={{ display: "grid", gap: 3, alignContent: "start" }}>{side}</Box>
       </Box>
+      <FloatingSheet>{sheet}</FloatingSheet>
     </Box>
   );
 }
@@ -117,9 +126,31 @@ const TAB_LABELS: Record<TabId, string> = {
   more: "Log and more",
 };
 
+/** Pinned to the bottom corner on wider windows. Out of the flow, so nothing moves under it. */
+function FloatingSheet({ children }: { children: ReactNode }) {
+  if (!children) return null;
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        right: 16,
+        bottom: 16,
+        zIndex: 3,
+        width: "min(400px, calc(100vw - 32px))",
+        maxHeight: "calc(100vh - 32px)",
+        overflowY: "auto",
+        borderRadius: 2,
+        boxShadow: 8,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
 type PhoneProps = Omit<GameLayoutProps, "mode">;
 
-function PhoneLayout({ header, notices, hud, status, actions, main, side }: PhoneProps) {
+function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side }: PhoneProps) {
   const [tab, setTab] = useState<TabId>("build");
   const panels: Array<{ id: TabId; content: ReactNode }> = [
     { id: "build", content: main },
@@ -176,6 +207,10 @@ function PhoneLayout({ header, notices, hud, status, actions, main, side }: Phon
         }}
       >
         <Box sx={{ maxWidth: 560, mx: "auto" }}>
+          {/* Grows upward from the dock, so it covers the page instead of pushing it down. */}
+          {sheet && (
+            <Box sx={{ px: 2, pt: 1.5, maxHeight: "55vh", overflowY: "auto" }}>{sheet}</Box>
+          )}
           {actions && <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>{actions}</Box>}
           <Tabs
             value={current}
