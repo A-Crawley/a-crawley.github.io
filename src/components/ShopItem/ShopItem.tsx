@@ -91,7 +91,10 @@ export function ShopItem({
         aria-label={`${actionLabel} ${count > 1 ? `${count} × ` : ""}${name}`}
         sx={{
           flexShrink: 0,
-          minWidth: 96,
+          // A fixed width, so a longer cost or a "×100" label never narrows the text beside it
+          // and rewraps the description. Fits "Hire ×100" and "999.9K wood" on one line each.
+          width: 116,
+          px: 1,
           flexDirection: "column",
           lineHeight: 1.2,
           // Keep the price readable when the button is unavailable.
