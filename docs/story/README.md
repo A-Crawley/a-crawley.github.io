@@ -31,9 +31,18 @@ machines start replacing jobs.
 
 ## Status
 
-| Epoch      | Story | Chapter | Title | Status |
-| ---------- | ----- | ------- | ----- | ------ |
-| (none yet) |       |         |       |        |
+| Epoch                 | Story          | Chapter     | Title           | Status |
+| --------------------- | -------------- | ----------- | --------------- | ------ |
+| 1: The Long Afternoon | 1: The Counter | 1           | First Count     | draft  |
+| 1: The Long Afternoon | 1: The Counter | 2 (planned) | The Spare Notch | none   |
+| 1: The Long Afternoon | 1: The Counter | 3 (planned) | Onboarding      | none   |
+| 1: The Long Afternoon | 1: The Counter | 4 (planned) | Exact           | none   |
 
-The story starts when the agent first runs: it writes the bible, the plan for story 1 and chapter 1,
-then waits for review before continuing.
+The village's authority is a shaman, Dunstan Fallow, Speaker of the Yield, who speaks the Spirit's
+Word aloud from the Stump of Saying (see `brief.md` and `bible/world.md`).
+
+Stories 2 and 3 are proposed in `bible/cast.md` and `bible/plan.md`, awaiting Andrew's approval.
+
+Chapter 1 is at
+`epoch-01-the-long-afternoon/story-1-the-counter/chapter-01-first-count.md`. Chapter 2 waits for
+Andrew's review of the narrator, voice and plan.
