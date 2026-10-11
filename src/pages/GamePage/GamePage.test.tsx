@@ -703,6 +703,20 @@ describe("GamePage layouts", () => {
     expect(screen.getByRole("button", { name: "Gather food" })).toBeVisible();
   });
 
+  it("caps the village log on every layout, so a growing log never pushes the settings down", () => {
+    for (const [layout, max] of [
+      ["phone", "320px"],
+      ["tablet", "420px"],
+      ["desktop", "420px"],
+    ] as const) {
+      const { unmount } = render(<GamePage options={{ storage: null }} layout={layout} />);
+      const log = screen.getByRole("log", { name: "Village log", hidden: true });
+      expect(log, layout).toHaveStyle({ maxHeight: max, overflowY: "auto" });
+      expect(log, layout).toHaveAttribute("tabindex", "0");
+      unmount();
+    }
+  });
+
   it("keeps the shop sections on a phone behind headings that open", async () => {
     const user = setupLayout("phone");
     for (let i = 0; i < 10; i++)

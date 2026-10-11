@@ -540,7 +540,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
   const side = (
     <>
       <Panel>
-        <EventLog title="Village log" lines={logLines(state)} maxHeight={phone ? undefined : 420} />
+        <EventLog title="Village log" lines={logLines(state)} maxHeight={phone ? 320 : 420} />
       </Panel>
       {state.sky.seen.length > 0 && (
         <Accordion disableGutters variant="outlined">
