@@ -132,3 +132,21 @@ describe("ShopItem notation", () => {
     expect(screen.getByRole("listitem").querySelectorAll("p")).toHaveLength(2);
   });
 });
+
+describe("ShopItem button width", () => {
+  it("keeps the same button width whatever the cost and quantity", () => {
+    const { rerender } = render(
+      <NotationProvider notation="short">
+        <ShopItem {...base} cost={9} />
+      </NotationProvider>,
+    );
+    const before = getComputedStyle(screen.getByRole("button")).width;
+    rerender(
+      <NotationProvider notation="short">
+        <ShopItem {...base} cost={123456} count={100} />
+      </NotationProvider>,
+    );
+    expect(before).toBe("116px");
+    expect(getComputedStyle(screen.getByRole("button")).width).toBe(before);
+  });
+});
