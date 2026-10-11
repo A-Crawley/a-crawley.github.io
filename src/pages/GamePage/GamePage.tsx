@@ -416,6 +416,9 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
       offeredUpgrades.length,
       state.upgrades.length,
       policiesOffered,
+      // Gather food sits above the shop, so it retiring (or coming back when food runs out)
+      // moves the shop too.
+      gatherOnShow,
     ].join("|"),
   );
 
