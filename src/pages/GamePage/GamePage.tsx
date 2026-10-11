@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Accordion,
@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { TOUCH_TARGET } from "../../theme";
+import { useKeepInPlace } from "../../hooks/useKeepInPlace.ts";
 import { useLayout } from "../../hooks/useLayout.ts";
 import type { LayoutMode } from "../../hooks/useLayout.ts";
 import { CONFIG, ITEMS } from "../../game/config.ts";
@@ -405,10 +406,23 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
     unlocked("policy:restDay") ||
     unlocked("policy:extendedShifts");
 
+  // Something new appearing in the shop (a row, a section, an upgrade) must not push away whatever
+  // the player is about to tap, so the page is held in place when this changes.
+  const shopRef = useRef<HTMLDivElement>(null);
+  useKeepInPlace(
+    shopRef,
+    [
+      shop.map((section) => section.defs.length).join(","),
+      offeredUpgrades.length,
+      state.upgrades.length,
+      policiesOffered,
+    ].join("|"),
+  );
+
   const main = (
     <>
       {playing && (
-        <>
+        <Box ref={shopRef} sx={{ display: "contents" }}>
           <Panel>
             <LookUpAction
               unlocked={unlocked("lookUp")}
@@ -512,7 +526,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               )}
             </ShopSection>
           )}
-        </>
+        </Box>
       )}
       {phase === "choice" && (
         <FinalChoice
