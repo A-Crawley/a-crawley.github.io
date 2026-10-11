@@ -38,6 +38,9 @@ machines start replacing jobs.
 | 1: The Long Afternoon | 1: The Counter | 3 (planned) | Onboarding      | none   |
 | 1: The Long Afternoon | 1: The Counter | 4 (planned) | Exact           | none   |
 
+The village's authority is a shaman, Dunstan Fallow, Speaker of the Yield, who speaks the Spirit's
+Word aloud from the Stump of Saying (see `brief.md` and `bible/world.md`).
+
 Stories 2 and 3 are proposed in `bible/cast.md` and `bible/plan.md`, awaiting Andrew's approval.
 
 Chapter 1 is at
