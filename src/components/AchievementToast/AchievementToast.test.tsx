@@ -40,6 +40,27 @@ describe("AchievementToast", () => {
   });
 });
 
+describe("AchievementToast taps", () => {
+  it("lets taps through to whatever is underneath", async () => {
+    const onClick = vi.fn();
+    render(
+      <>
+        <button type="button" onClick={onClick}>
+          Hire
+        </button>
+        <AchievementToast title="Headcount" onClose={() => {}} />
+      </>,
+    );
+    const toast = screen.getByText("Achievement: Headcount").closest(".MuiSnackbar-root");
+    expect(toast).not.toBeNull();
+    expect(getComputedStyle(toast as Element).pointerEvents).toBe("none");
+    // The content is not blocked either: nothing inside it turns taps back on.
+    expect(getComputedStyle(screen.getByText("Achievement: Headcount")).pointerEvents).toBe("none");
+    await userEvent.click(screen.getByRole("button", { name: "Hire" }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("AchievementToast raised", () => {
   it("still shows the achievement when lifted above a bottom bar", () => {
     render(<AchievementToast title="Headcount" onClose={() => {}} raised />);
