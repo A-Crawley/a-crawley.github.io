@@ -5,22 +5,35 @@ telling. The game takes inspiration from it (images, names, lines, moments); the
 follow the player's choices or retell the stages.
 
 Maintained by the `story-writer` agent (`.claude/agents/story-writer.md`). Game design lives in
-`docs/game-design.md`.
+`docs/game-design.md`. Andrew's decisions for the story are in `brief.md`.
+
+## Shape
+
+The story is told in **epochs**. Epoch 1 is three short stories, one per game stage (gather,
+automate, escape), loosely related. The story is told in first person, present tense, and ends in
+the Apocalypse. Story 1 follows one person who watches the village grow, and ends just before the
+machines start replacing jobs.
+
+## Layout
+
+- `brief.md`: owner decisions. The agent reads it and never edits it.
+- `bible/`: canon (`world`, `cast`, `timeline`, `style`, `plan`, `clue-ledger`, `reveal-schedule`
+  and `run-log`).
+- `epoch-NN-<slug>/story-N-<slug>/chapter-NN-<slug>.md`: one file per chapter.
 
 ## Conventions
 
-- One chapter per file: `chapter-NN-short-title.md` (two-digit number, kebab-case title).
-- Each chapter has a header with `title`, `chapter`, `status` and `summary`, then the prose, then an
-  `## Echoes for the game` section of suggestions the game could borrow.
+- Each chapter has a header with `title`, `epoch`, `story`, `chapter`, `status` and `summary`, then
+  the prose, then an `## Echoes for the game` section of suggestions the game could borrow.
 - `status` is `draft` until Andrew approves it, then `approved`.
-- Canon (world, cast, timeline, style, what stays hidden until when) lives in `bible.md`.
-- The twist stays hidden until the bible says it is revealed.
+- The twist (the village is a simulation, and the rival was an accident) stays hidden until
+  `bible/reveal-schedule.md` says it may be hinted at or stated.
 
 ## Status
 
-| Chapter    | Title | Status |
-| ---------- | ----- | ------ |
-| (none yet) |       |        |
+| Epoch      | Story | Chapter | Title | Status |
+| ---------- | ----- | ------- | ----- | ------ |
+| (none yet) |       |         |       |        |
 
-The story starts when the agent first runs: it writes `bible.md` and chapter 1, then waits for
-review before continuing.
+The story starts when the agent first runs: it writes the bible, the plan for story 1 and chapter 1,
+then waits for review before continuing.
