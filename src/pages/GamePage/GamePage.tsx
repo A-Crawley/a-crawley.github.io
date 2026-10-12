@@ -46,6 +46,7 @@ import {
   POLICY_LABELS,
 } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
+import { tabSignals } from "../../game/tabMarkers.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { runReport } from "../../game/runReport.ts";
@@ -656,6 +657,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         <AchievementToast title={toastTitle} onClose={news.dismiss} raised={phone && playing} />
         <GameLayout
           mode={mode}
+          signals={playing ? tabSignals(state) : undefined}
           header={
             <Box
               sx={{

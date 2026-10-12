@@ -123,4 +123,51 @@ describe("GameLayout", () => {
       expect(screen.getByRole("tab", { name: "Build" })).toBeVisible();
     });
   });
+
+  describe("tab markers on a phone", () => {
+    const calm = { more: 3, villageUrgent: false };
+
+    it("shows no dots on first load", () => {
+      render(
+        <GameLayout {...parts({ mode: "phone", signals: { more: 9, villageUrgent: true } })} />,
+      );
+      expect(screen.getByRole("tab", { name: "Log and more" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Village" })).toBeInTheDocument();
+    });
+
+    it("marks Log and more when something new arrives, with a label, and clears it on opening", () => {
+      const { rerender } = render(<GameLayout {...parts({ mode: "phone", signals: calm })} />);
+      rerender(<GameLayout {...parts({ mode: "phone", signals: { ...calm, more: 4 } })} />);
+      const tab = screen.getByRole("tab", { name: "Log and more, new" });
+      fireEvent.click(tab);
+      expect(screen.getByRole("tab", { name: "Log and more" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+
+    it("marks Village when the village needs attention", () => {
+      const { rerender } = render(<GameLayout {...parts({ mode: "phone", signals: calm })} />);
+      rerender(
+        <GameLayout {...parts({ mode: "phone", signals: { ...calm, villageUrgent: true } })} />,
+      );
+      expect(screen.getByRole("tab", { name: "Village, new" })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Build" })).toBeInTheDocument();
+    });
+
+    it("never marks the open tab", () => {
+      const { rerender } = render(<GameLayout {...parts({ mode: "phone", signals: calm })} />);
+      fireEvent.click(screen.getByRole("tab", { name: "Log and more" }));
+      rerender(<GameLayout {...parts({ mode: "phone", signals: { ...calm, more: 7 } })} />);
+      expect(screen.getByRole("tab", { name: "Log and more" })).toBeInTheDocument();
+    });
+
+    it("shows no dots on a tablet or desktop", () => {
+      const { rerender } = render(<GameLayout {...parts({ mode: "tablet", signals: calm })} />);
+      rerender(
+        <GameLayout {...parts({ mode: "tablet", signals: { more: 9, villageUrgent: true } })} />,
+      );
+      expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    });
+  });
 });
