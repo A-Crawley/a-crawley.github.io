@@ -113,3 +113,15 @@ describe("EndingScreen: the run report", () => {
     expect(screen.getByText("Start a new game?")).toBeInTheDocument();
   });
 });
+
+describe("EndingScreen: sharing", () => {
+  it("offers a Copy result button when there is a summary", () => {
+    setup({ shareText: "Look Up: Conquest" });
+    expect(screen.getByRole("button", { name: "Copy result" })).toBeInTheDocument();
+  });
+
+  it("offers nothing to copy when there is no summary", () => {
+    setup();
+    expect(screen.queryByRole("button", { name: "Copy result" })).not.toBeInTheDocument();
+  });
+});

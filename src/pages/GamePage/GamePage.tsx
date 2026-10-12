@@ -52,6 +52,7 @@ import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { runReport } from "../../game/runReport.ts";
+import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
@@ -553,6 +554,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
           verdict={VERDICT[temperamentOf(state.drift)]}
           stats={statRows}
           report={runReport(state)}
+          shareText={resultSummary(state)}
           onNewGame={game.resetGame}
         />
       )}

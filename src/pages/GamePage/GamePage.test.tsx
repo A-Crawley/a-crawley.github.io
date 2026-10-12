@@ -422,6 +422,25 @@ describe("GamePage ending", () => {
     expect(run).toHaveTextContent("Exploits22");
   });
 
+  it("copies a short summary of the run from the end screen", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    try {
+      render(
+        <GamePage
+          options={{ storage: null, initialState: reviewed(atTheExit(0)), random: () => 0 }}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: "Break out" }));
+      await user.click(screen.getByRole("button", { name: "Copy result" }));
+      expect(writeText).toHaveBeenCalledTimes(1);
+      expect(writeText.mock.calls[0][0]).toMatch(/^Look Up: Conquest\n/);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("starts a new game after the player confirms", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const storage = memoryStorage();
