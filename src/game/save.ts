@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { isMilestoneId, reachedMilestones } from "./milestones.ts";
+import type { MilestoneId, MilestonesState } from "./milestones.ts";
 import { isReviewStage } from "./review.ts";
 import type { ReviewSnapshot, ReviewsState, ReviewStage } from "./review.ts";
 import { isSightingId } from "./sky.ts";
@@ -82,6 +84,14 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       dry: false,
     },
   }),
+  // 12 -> 13: count milestones. Anything already passed is recorded quietly, so loading an old save
+  // does not flood the log.
+  12: (save) => {
+    const passed = isRecord(save.owned)
+      ? reachedMilestones(save.owned as Record<ItemId, number>)
+      : [];
+    return { ...save, version: 13, milestones: { fired: passed, quiet: [...passed] } };
+  },
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -188,6 +198,21 @@ function validateEvents(raw: unknown): EventsState | null {
 }
 
 const TEMPERAMENT_WORDS = ["gentle", "wary", "ruthless"];
+
+function validateMilestones(raw: unknown): MilestonesState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.fired) || !Array.isArray(raw.quiet)) return null;
+  const fired: MilestoneId[] = [];
+  for (const id of raw.fired as unknown[]) {
+    if (!isMilestoneId(id) || fired.includes(id)) return null;
+    fired.push(id);
+  }
+  const quiet: MilestoneId[] = [];
+  for (const id of raw.quiet as unknown[]) {
+    if (!isMilestoneId(id) || quiet.includes(id) || !fired.includes(id)) return null;
+    quiet.push(id);
+  }
+  return { fired, quiet };
+}
 
 function validateSky(raw: unknown): SkyState | null {
   if (!isRecord(raw) || !Array.isArray(raw.seen) || typeof raw.dry !== "boolean") return null;
@@ -302,6 +327,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const sky = validateSky(raw.sky);
   if (!sky) return fail("sky");
 
+  const milestones = validateMilestones(raw.milestones);
+  if (!milestones) return fail("milestones");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -341,6 +369,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       events,
       reviews,
       sky,
+      milestones,
       unlocked,
       ending,
       achievements,

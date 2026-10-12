@@ -1,4 +1,5 @@
 import { applyAchievements, pendingAchievements } from "./achievements.ts";
+import { applyMilestones, pendingMilestones } from "./milestones.ts";
 import { pendingSnapshots, recordReviews } from "./review.ts";
 import type { GameState } from "./state.ts";
 import { applyUnlocks, pendingUnlocks } from "./unlocks.ts";
@@ -10,6 +11,7 @@ import { applyUnlocks, pendingUnlocks } from "./unlocks.ts";
 export function settle(state: GameState): void {
   applyUnlocks(state);
   applyAchievements(state);
+  applyMilestones(state);
   recordReviews(state);
 }
 
@@ -18,6 +20,7 @@ export function withSettled(state: GameState): GameState {
   if (
     pendingUnlocks(state).length === 0 &&
     pendingAchievements(state).length === 0 &&
+    pendingMilestones(state).length === 0 &&
     pendingSnapshots(state).length === 0
   ) {
     return state;

@@ -111,6 +111,18 @@ describe("GamePage shop", () => {
     expect(screen.getByRole("button", { name: /Hire Timber Operations Lead/ })).toBeInTheDocument();
   });
 
+  it("marks the 25th forager in the village log, and does not mark ones owned from the start", async () => {
+    const user = setupWith((s) => {
+      s.food = 100000;
+      s.population = 100;
+      s.owned.forager = 24;
+    });
+    const log = screen.getByRole("log", { name: "Village log" });
+    expect(log).not.toHaveTextContent("Twenty-five Food Acquisition Associates");
+    await user.click(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ }));
+    expect(log).toHaveTextContent("Twenty-five Food Acquisition Associates");
+  });
+
   it("buys ten at once with ×10 and shows the price of ten", async () => {
     const user = setupWith((s) => {
       s.food = 1000;

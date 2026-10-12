@@ -1,6 +1,13 @@
 import { useId } from "react";
 import { Box, Button, Typography } from "@mui/material";
+import { alpha, keyframes } from "@mui/material/styles";
 import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
+
+// An inset glow that fades. Only paint changes, so nothing moves.
+const glow = keyframes`
+  from { box-shadow: inset 0 0 0 2px var(--pulse-colour); background-color: var(--pulse-fill); }
+  to { box-shadow: inset 0 0 0 2px transparent; background-color: transparent; }
+`;
 
 export interface ShopItemProps {
   name: string;
@@ -23,6 +30,8 @@ export interface ShopItemProps {
    * appears or goes. Set it on rows that can be blocked.
    */
   reserveReasonSpace?: boolean;
+  /** Highlight the row briefly, for a milestone. Paint only, so the row never moves. */
+  pulse?: boolean;
   onBuy: () => void;
 }
 
@@ -39,6 +48,7 @@ export function ShopItem({
   affordable,
   blockedReason,
   reserveReasonSpace = false,
+  pulse = false,
   onBuy,
 }: ShopItemProps) {
   const format = useNumberFormat();
@@ -55,6 +65,17 @@ export function ShopItem({
         py: 1.5,
         borderBottom: 1,
         borderColor: "divider",
+        ...(pulse && {
+          "--pulse-colour": (theme) => theme.palette.primary.main,
+          "--pulse-fill": (theme) => alpha(theme.palette.primary.main, 0.16),
+          animation: `${glow} 1.4s ease-out`,
+          // No motion: hold a plain highlight for as long as the pulse lasts instead.
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+            boxShadow: "inset 0 0 0 2px var(--pulse-colour)",
+            backgroundColor: "var(--pulse-fill)",
+          },
+        }),
       }}
     >
       <Box sx={{ minWidth: 0 }}>

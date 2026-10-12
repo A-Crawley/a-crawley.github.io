@@ -292,6 +292,16 @@ found nothing.
 - Screen: `LookUpAction` shows the sighting (announced to screen readers), the pause cost, and the
   wait; `SkyNotes` lists what has been seen.
 
+## Count milestones (GAME-57)
+
+Cosmetic only: a village log line and a brief pulse on the shop row. No effect on production, cost or caps, so the simulation totals do not change.
+
+- `src/game/milestones.ts` is a data list: 25, 50 and 100 of each job and 5, 10 and 25 of each machine. Jobs start at 25 because the achievements already cover 5 and 10 foragers. Ids are `<item>-<count>` and are saved, so never rename one.
+- `settle()` records every milestone whose count is owned, so a bulk buy that passes several records each once. State is `milestones: { fired, quiet }`. A quiet milestone is recorded but kept out of the log.
+- **Away:** `catchUp` records what was reached while away, then `capAwayMilestones` keeps the biggest 3 in the log and marks the rest quiet.
+- **Save version 13** (migration 12 to 13): everything already passed is recorded as quiet, so an old save does not flood the log or replay. A quiet id that never fired makes a save invalid.
+- **Pulse:** `useMilestonePulse` highlights the row of a milestone reached while the page is open (not at load, not quiet, not while the welcome-back dialog is up) for 1.4 s. Paint only (inset glow); under `prefers-reduced-motion` it is a still highlight for the same time.
+
 ## Run report on the ending screen (GAME-38)
 
 `runReport(state)` in `src/game/runReport.ts` is a pure function of saved state, so there is no save

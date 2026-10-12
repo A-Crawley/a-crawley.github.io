@@ -150,3 +150,28 @@ describe("ShopItem button width", () => {
     expect(getComputedStyle(screen.getByRole("button")).width).toBe(before);
   });
 });
+
+describe("ShopItem pulse", () => {
+  it("highlights the row only while pulsing, and never moves it", () => {
+    const { rerender } = render(
+      <NotationProvider notation="short">
+        <ul>
+          <ShopItem {...base} />
+        </ul>
+      </NotationProvider>,
+    );
+    const row = () => screen.getByRole("listitem");
+    const plain = row().className;
+    rerender(
+      <NotationProvider notation="short">
+        <ul>
+          <ShopItem {...base} pulse />
+        </ul>
+      </NotationProvider>,
+    );
+    expect(row().className).not.toBe(plain);
+    expect(getComputedStyle(row()).animationName).not.toBe("");
+    // The same controls are still there to use.
+    expect(screen.getByRole("button", { name: "Hire Food Acquisition Associate" })).toBeEnabled();
+  });
+});
