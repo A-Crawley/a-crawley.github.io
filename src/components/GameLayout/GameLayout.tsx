@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Box, Tab, Tabs } from "@mui/material";
+import { visuallyHidden } from "../../theme";
 import type { LayoutMode } from "../../hooks/useLayout.ts";
+import { updateTabMarkers } from "../../game/tabMarkers.ts";
+import type { TabMarkerMemory, TabSignals } from "../../game/tabMarkers.ts";
 
 export interface GameLayoutProps {
   mode: LayoutMode;
@@ -24,6 +27,11 @@ export interface GameLayoutProps {
   main: ReactNode;
   /** The log, achievements, settings. */
   side: ReactNode;
+  /**
+   * What is new or needs attention, for the dots on the phone's tab bar. Leave it out for no dots.
+   * Other layouts show everything at once and ignore it.
+   */
+  signals?: TabSignals;
 }
 
 type TabId = "build" | "village" | "more";
@@ -51,6 +59,7 @@ export function GameLayout({
   actions,
   main,
   side,
+  signals,
 }: GameLayoutProps) {
   if (mode === "phone") {
     return (
@@ -63,6 +72,7 @@ export function GameLayout({
         actions={actions}
         main={main}
         side={side}
+        signals={signals}
       />
     );
   }
@@ -151,7 +161,17 @@ function FloatingSheet({ children }: { children: ReactNode }) {
 
 type PhoneProps = Omit<GameLayoutProps, "mode">;
 
-function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side }: PhoneProps) {
+function PhoneLayout({
+  header,
+  notices,
+  sheet,
+  hud,
+  status,
+  actions,
+  main,
+  side,
+  signals,
+}: PhoneProps) {
   const [tab, setTab] = useState<TabId>("build");
   const panels: Array<{ id: TabId; content: ReactNode }> = [
     {
@@ -168,6 +188,12 @@ function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side 
   ];
   // A tab can vanish (the village panel leaves at the ending); fall back to the first one.
   const current = panels.some((panel) => panel.id === tab) ? tab : "build";
+  // Dots on the tabs. Held in state and updated while rendering, so the dot and the change that
+  // caused it arrive in the same frame. Session only: it is not saved.
+  const [memory, setMemory] = useState<TabMarkerMemory | null>(null);
+  const nextMemory = signals ? updateTabMarkers(memory, signals, current) : memory;
+  if (nextMemory !== memory) setMemory(nextMemory);
+  const marked = (id: TabId): boolean => id !== "build" && Boolean(nextMemory?.marked[id]);
   return (
     <Box sx={{ maxWidth: 560, mx: "auto", px: 2, pt: 2, pb: DOCK_SPACE }}>
       {header}
@@ -230,7 +256,32 @@ function PhoneLayout({ header, notices, sheet, hud, status, actions, main, side 
               <Tab
                 key={panel.id}
                 value={panel.id}
-                label={TAB_LABELS[panel.id]}
+                label={
+                  <Box component="span" sx={{ position: "relative" }}>
+                    {TAB_LABELS[panel.id]}
+                    {marked(panel.id) && (
+                      <>
+                        <Box component="span" sx={visuallyHidden}>
+                          , new
+                        </Box>
+                        {/* Out of the flow, so the tab keeps its size and its label stays centred. */}
+                        <Box
+                          component="span"
+                          aria-hidden
+                          sx={{
+                            position: "absolute",
+                            top: "-2px",
+                            right: "-12px",
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            bgcolor: "secondary.main",
+                          }}
+                        />
+                      </>
+                    )}
+                  </Box>
+                }
                 id={`game-tab-${panel.id}`}
                 aria-controls={`game-panel-${panel.id}`}
                 sx={{ minHeight: 52 }}

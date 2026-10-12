@@ -730,7 +730,12 @@ describe("GamePage layouts", () => {
   it("keeps resources in the strip above the tabs on a phone", async () => {
     const user = setupLayout("phone");
     await user.click(screen.getByRole("button", { name: "Gather food" }));
-    await user.click(screen.getByRole("tab", { name: "Log and more" }));
+    // The first food earns a log line, so the tab now carries a "new" dot.
+    await user.click(screen.getByRole("tab", { name: "Log and more, new" }));
+    expect(screen.getByRole("tab", { name: "Log and more" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("1");
   });
 });
