@@ -112,3 +112,18 @@ export function formatDuration(seconds: number): string {
   if (minutes > 0 && days === 0) parts.push(plural(minutes, "minute"));
   return parts.join(" ");
 }
+
+/**
+ * A short wait, to the second while it is short: "45s", "2m 10s", "1h 5m". Rounds up, so it never
+ * says "0s" while there is still something to wait for.
+ */
+export function formatWait(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0s";
+  const total = Math.ceil(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}

@@ -175,3 +175,41 @@ describe("ShopItem pulse", () => {
     expect(screen.getByRole("button", { name: "Hire Food Acquisition Associate" })).toBeEnabled();
   });
 });
+
+describe("ShopItem wait note", () => {
+  const wrap = (props: Partial<ShopItemProps>) => (
+    <NotationProvider notation="short">
+      <ul>
+        <ShopItem {...base} {...props} />
+      </ul>
+    </NotationProvider>
+  );
+
+  it("shows how long until it can be bought on a row that cannot be yet", () => {
+    render(wrap({ affordable: false, waitNote: "ready in 2m 10s" }));
+    expect(screen.getByText("ready in 2m 10s")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hire Food Acquisition Associate" })).toBeDisabled();
+  });
+
+  it("shows the bigger-store and not-at-this-rate notes as given", () => {
+    const { rerender } = render(wrap({ affordable: false, waitNote: "needs more storage" }));
+    expect(screen.getByText("needs more storage")).toBeInTheDocument();
+    rerender(wrap({ affordable: false, waitNote: "not at this rate" }));
+    expect(screen.getByText("not at this rate")).toBeInTheDocument();
+  });
+
+  it("shows no wait text on a row that can be bought", () => {
+    render(wrap({ affordable: true }));
+    expect(
+      screen.queryByText(/ready in|needs more storage|not at this rate/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the button the same width with and without a note", () => {
+    const { rerender } = render(wrap({ affordable: false, waitNote: "ready in 2m 10s" }));
+    const width = getComputedStyle(screen.getByRole("button")).width;
+    rerender(wrap({ affordable: true }));
+    expect(getComputedStyle(screen.getByRole("button")).width).toBe(width);
+    expect(width).toBe("116px");
+  });
+});

@@ -51,6 +51,7 @@ import type { MilestoneItem } from "../../game/milestones.ts";
 import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
+import { secondsUntilAffordable, waitCaption } from "../../game/affordWait.ts";
 import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
@@ -476,6 +477,11 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
                         affordable={quote.affordable}
                         reserveReasonSpace={isJob(def.id)}
                         pulse={pulsing.has(def.id as MilestoneItem)}
+                        waitNote={
+                          quote.affordable
+                            ? null
+                            : waitCaption(secondsUntilAffordable(state, def, quote))
+                        }
                         blockedReason={
                           noOneFree ? "Nobody is free. Build beds for more." : undefined
                         }
