@@ -10,6 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { CopyResult } from "../CopyResult";
 
 export interface EndingStat {
   label: string;
@@ -40,6 +41,8 @@ export interface EndingScreenProps {
   stats: readonly EndingStat[];
   /** What was decided and what was missed. */
   report: EndingReport;
+  /** A short plain-text summary of the run to offer for copying. Leave out for no Copy button. */
+  shareText?: string | null;
   /** Starts a new game. Only called after the player confirms. */
   onNewGame: () => void;
 }
@@ -67,6 +70,7 @@ export function EndingScreen({
   verdict,
   stats,
   report,
+  shareText = null,
   onNewGame,
 }: EndingScreenProps) {
   const [confirming, setConfirming] = useState(false);
@@ -136,6 +140,7 @@ export function EndingScreen({
           </Typography>
         )}
       </Box>
+      {shareText && <CopyResult text={shareText} />}
       <Button variant="outlined" color="inherit" onClick={() => setConfirming(true)}>
         Start a new game
       </Button>

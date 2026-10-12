@@ -310,6 +310,8 @@ events and achievements the run did not meet, and adds a vague hint about the ot
 (`OTHER_ENDING_HINT` in `endingCopy.ts`). It carries no drift, odds or thresholds; a test checks the
 report and the hints contain no digits or percentages. `EndingScreen` shows it under the stats.
 
+- **Copy result (GAME-60):** `resultSummary(state)` in `src/game/resultSummary.ts` builds three lines: the ending, time, villagers, machines and walkouts, and the one-line verdict. It carries no drift, odds or link, and is null without an ending. The `CopyResult` component copies it with `copyText` (`src/hooks/copyText.ts`, shared with the save controls) and, if the browser refuses, shows the text selected for copying by hand. No saved state, no network.
+
 ## Retiring the Gather button
 
 `gatherRetired` unlock in `src/game/unlocks.ts`. Clicking is counted in the economy as 2 clicks a

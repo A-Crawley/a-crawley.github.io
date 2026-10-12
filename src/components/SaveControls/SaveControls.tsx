@@ -11,6 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { copyText } from "../../hooks/copyText.ts";
 
 /** The result of trying to import a save. Matches what `useGame().importSave` returns. */
 export type ImportOutcome = { ok: true } | { ok: false; error: string };
@@ -40,10 +41,9 @@ export function SaveControls({ onExport, onImport, onReset }: SaveControlsProps)
 
   async function handleCopy() {
     if (exported === null) return;
-    try {
-      await navigator.clipboard.writeText(exported);
+    if (await copyText(exported)) {
       setNotice({ severity: "success", message: "Save copied." });
-    } catch {
+    } else {
       setNotice({
         severity: "info",
         message: "Could not copy automatically. Select the text and copy it yourself.",
