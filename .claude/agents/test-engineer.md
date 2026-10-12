@@ -29,8 +29,8 @@ You are a test engineer for a React 19 + TypeScript site tested with Vitest, jsd
 - Vitest globals and jest-dom are already configured. Import `vi` from `vitest` when mocking.
 - Tests must be independent, fast and deterministic. Control time with `vi.useFakeTimers()` and
   `vi.setSystemTime()`. Never use real sleeps.
-- `@testing-library/user-event` is not installed. If you need realistic interaction, say so and add
-  v14 as a dev dependency instead of using `fireEvent` for everything.
+- `@testing-library/user-event` (v14) is installed. Use it for realistic interaction instead of
+  `fireEvent`.
 - A bug fix needs a regression test that fails without the fix. Confirm that by running it against
   the old behaviour when practical.
 - Never weaken, skip or delete an existing test to get green. If a test is wrong, fix it and explain.
