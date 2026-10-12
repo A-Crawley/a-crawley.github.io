@@ -4,6 +4,8 @@ import type { AchievementId } from "./achievements.ts";
 import type { Ending } from "./ending.ts";
 import { createEventsState } from "./events.ts";
 import type { EventsState } from "./events.ts";
+import { createMilestonesState } from "./milestones.ts";
+import type { MilestonesState } from "./milestones.ts";
 import { createSkyState } from "./sky.ts";
 import type { SkyState } from "./sky.ts";
 import type { UnlockId } from "./unlocks.ts";
@@ -11,7 +13,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -35,6 +37,8 @@ export interface GameState extends SimState {
   reviews: ReviewsState;
   /** What the player has seen by looking up. */
   sky: SkyState;
+  /** Count milestones reached (cosmetic: a log line and a pulse). */
+  milestones: MilestonesState;
 }
 
 export function createGameState(now: number): GameState {
@@ -48,5 +52,6 @@ export function createGameState(now: number): GameState {
     events: createEventsState(),
     reviews: createReviewsState(),
     sky: createSkyState(),
+    milestones: createMilestonesState(),
   };
 }

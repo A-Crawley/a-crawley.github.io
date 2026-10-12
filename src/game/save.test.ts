@@ -544,3 +544,37 @@ describe("sky notes in a save", () => {
     expect(bad({ lookReadyAt: -1 })).toBe(false);
   });
 });
+
+describe("version 12 to 13 (milestones)", () => {
+  it("records milestones already passed as quiet, so old saves do not flood the log", () => {
+    const old: Record<string, unknown> = {
+      ...JSON.parse(serializeState(createGameState(5))),
+      version: 12,
+    };
+    delete old.milestones;
+    (old.owned as Record<string, number>).forager = 30;
+    (old.owned as Record<string, number>).autoForager = 5;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.version).toBe(STATE_VERSION);
+    expect(result.value.milestones.fired).toEqual(["forager-25", "autoForager-5"]);
+    expect(result.value.milestones.quiet).toEqual(["forager-25", "autoForager-5"]);
+  });
+
+  it("starts empty for a save with nothing owned, and round-trips", () => {
+    const state = createGameState(5);
+    state.milestones = { fired: ["forager-25", "forager-50"], quiet: ["forager-25"] };
+    const result = parseSave(serializeState(state));
+    expect(result.ok && result.value.milestones).toEqual(state.milestones);
+  });
+
+  it("rejects an unknown milestone, or a quiet one that never fired", () => {
+    const base = JSON.parse(serializeState(createGameState(5)));
+    const bad = (milestones: unknown) => parseSave(JSON.stringify({ ...base, milestones })).ok;
+    expect(bad({ fired: ["nope-1"], quiet: [] })).toBe(false);
+    expect(bad({ fired: [], quiet: ["forager-25"] })).toBe(false);
+    expect(bad({ fired: ["forager-25", "forager-25"], quiet: [] })).toBe(false);
+    expect(bad({ fired: [] })).toBe(false);
+  });
+});

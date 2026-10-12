@@ -2,6 +2,7 @@ import { VILLAGE } from "./config.ts";
 import { isHungry, itemDef } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
+import { milestoneDef } from "./milestones.ts";
 import { UNLOCKS } from "./unlocks.ts";
 
 export interface LogLine {
@@ -108,6 +109,11 @@ export function logLines(state: GameState): LogLine[] {
   for (const id of state.unlocked) {
     const log = UNLOCKS.find((unlock) => unlock.id === id)?.log;
     if (log) lines.push({ id: `unlock:${id}`, text: log });
+  }
+  // Milestones follow, in the order they were reached. Quiet ones are recorded but not mentioned.
+  for (const id of state.milestones.fired) {
+    if (state.milestones.quiet.includes(id)) continue;
+    lines.push({ id: `milestone:${id}`, text: milestoneDef(id).log });
   }
   return lines;
 }

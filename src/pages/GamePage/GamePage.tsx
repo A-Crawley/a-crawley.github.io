@@ -47,6 +47,8 @@ import {
 } from "../../game/itemCopy.ts";
 import { logLines } from "../../game/log.ts";
 import { tabSignals } from "../../game/tabMarkers.ts";
+import type { MilestoneItem } from "../../game/milestones.ts";
+import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { runReport } from "../../game/runReport.ts";
@@ -155,6 +157,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
   }));
   const policies = CONFIG.policies;
   const news = useNewAchievements(state.achievements, game.away !== null);
+  const pulsing = useMilestonePulse(state.milestones, game.away !== null);
   const toastTitle = ACHIEVEMENTS.find((a) => a.id === news.current)?.title ?? null;
   const achievementItems = ACHIEVEMENTS.map((a) => ({
     id: a.id,
@@ -471,6 +474,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
                         output={copy.output}
                         affordable={quote.affordable}
                         reserveReasonSpace={isJob(def.id)}
+                        pulse={pulsing.has(def.id as MilestoneItem)}
                         blockedReason={
                           noOneFree ? "Nobody is free. Build beds for more." : undefined
                         }
