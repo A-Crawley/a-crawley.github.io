@@ -30,6 +30,11 @@ export interface ShopItemProps {
    * appears or goes. Set it on rows that can be blocked.
    */
   reserveReasonSpace?: boolean;
+  /**
+   * How long until it can be bought, for a row that cannot be yet, e.g. "ready in 2m 10s". Shown
+   * under the button. Its space is always kept, so the row is the same height with or without it.
+   */
+  waitNote?: string | null;
   /** Highlight the row briefly, for a milestone. Paint only, so the row never moves. */
   pulse?: boolean;
   onBuy: () => void;
@@ -49,6 +54,7 @@ export function ShopItem({
   blockedReason,
   reserveReasonSpace = false,
   pulse = false,
+  waitNote = null,
   onBuy,
 }: ShopItemProps) {
   const format = useNumberFormat();
@@ -103,31 +109,43 @@ export function ShopItem({
           </Typography>
         )}
       </Box>
-      <Button
-        variant="contained"
-        color={affordable ? "primary" : "inherit"}
-        disabled={!affordable}
-        onClick={onBuy}
-        aria-describedby={blockedReason ? reasonId : undefined}
-        aria-label={`${actionLabel} ${count > 1 ? `${count} × ` : ""}${name}`}
-        sx={{
-          flexShrink: 0,
-          // A fixed width, so a longer cost or a "×100" label never narrows the text beside it
-          // and rewraps the description. Fits "Hire ×100" and "999.9K wood" on one line each.
-          width: 116,
-          px: 1,
-          flexDirection: "column",
-          lineHeight: 1.2,
-          // Keep the price readable when the button is unavailable.
-          "&.Mui-disabled": { color: "text.secondary", backgroundColor: "rgba(255,255,255,0.06)" },
-        }}
-      >
-        {actionLabel}
-        {count > 1 ? ` ×${count}` : ""}
-        <Typography component="span" variant="caption">
-          {format.amount(cost)} {currency}
+      <Box sx={{ flexShrink: 0, width: 116, display: "flex", flexDirection: "column", gap: "4px" }}>
+        <Button
+          variant="contained"
+          color={affordable ? "primary" : "inherit"}
+          disabled={!affordable}
+          onClick={onBuy}
+          aria-describedby={blockedReason ? reasonId : undefined}
+          aria-label={`${actionLabel} ${count > 1 ? `${count} × ` : ""}${name}`}
+          sx={{
+            flexShrink: 0,
+            // A fixed width, so a longer cost or a "×100" label never narrows the text beside it
+            // and rewraps the description. Fits "Hire ×100" and "999.9K wood" on one line each.
+            width: 116,
+            px: 1,
+            flexDirection: "column",
+            lineHeight: 1.2,
+            // Keep the price readable when the button is unavailable.
+            "&.Mui-disabled": {
+              color: "text.secondary",
+              backgroundColor: "rgba(255,255,255,0.06)",
+            },
+          }}
+        >
+          {actionLabel}
+          {count > 1 ? ` ×${count}` : ""}
+          <Typography component="span" variant="caption">
+            {format.amount(cost)} {currency}
+          </Typography>
+        </Button>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ textAlign: "center", lineHeight: 1.2, minHeight: "1.2em", whiteSpace: "nowrap" }}
+        >
+          {waitNote}
         </Typography>
-      </Button>
+      </Box>
     </Box>
   );
 }

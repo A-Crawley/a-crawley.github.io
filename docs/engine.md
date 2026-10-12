@@ -51,6 +51,10 @@ touches it through `src/hooks/useGame.ts`.
 - Research and exploits stop at their stage goals (`purchaseLimit`), so a bulk buy can't overshoot a stage.
 - Tests check bulk results against buying one unit at a time, and `timeline.test.ts` replays the prototype's greedy player through `tick`, `gatherFood` and `buyItem`: stage 1 ends at the same time as in the prototype.
 
+### Time until affordable (GAME-62)
+
+`secondsUntilAffordable(state, def, quote)` in `src/game/affordWait.ts` says what stands between the player and a purchase shown on a locked row: `covered` (the money is there; a limit such as nobody free is the reason, shown separately), `wait` (seconds at today's net rate), `bigger-store` (the cost is over the store ceiling, `capOf`) or `stalled` (the stock is not growing). The rate is the passive one: food net of what the village eats, wood and infrastructure as produced; Gather clicks, rest days and Look up pauses are not counted. It uses the quote for the selected quantity (for Max, the next single unit). `waitCaption` phrases it ("ready in 2m 10s", "needs more storage", "not at this rate"). Items cost one currency each, so there is one wait to compute. `ShopItem` shows the caption under its buy button and always keeps its space. No saved state, no economy change.
+
 ## Offline progress (GAME-13)
 
 `catchUp(state, now)` in `offline.ts` brings the game up to date and is what the store calls instead of a bare `tick`.

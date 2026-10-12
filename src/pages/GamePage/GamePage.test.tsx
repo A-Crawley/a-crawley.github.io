@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { EVENTS } from "../../game/events.ts";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
@@ -121,6 +121,33 @@ describe("GamePage shop", () => {
     expect(log).not.toHaveTextContent("Twenty-five Food Acquisition Associates");
     await user.click(screen.getByRole("button", { name: /Hire Food Acquisition Associate/ }));
     expect(log).toHaveTextContent("Twenty-five Food Acquisition Associates");
+  });
+
+  it("says how long until a locked row can be bought, and updates it for ×10", async () => {
+    const user = setupWith((s) => {
+      s.food = 5;
+      s.owned.forager = 10;
+      s.population = 40;
+      s.unlocked.push("bulkBuying");
+    });
+    const row = () =>
+      screen.getByRole("heading", { name: /Food Acquisition Associate/ }).closest("li");
+    const note = (pattern: RegExp) => within(row() as HTMLElement).getByText(pattern);
+    const one = note(/^ready in /).textContent;
+    await user.click(screen.getByRole("button", { name: "×10" }));
+    // Ten cost more, so the wait changes (or the store is too small for ten).
+    expect(note(/^(ready in |needs more storage|not at this rate)/).textContent).not.toBe(one);
+  });
+
+  it("shows no wait text on a row the player can afford", () => {
+    setupWith((s) => {
+      s.food = 100000;
+      s.population = 100;
+    });
+    const row = screen.getByRole("heading", { name: /Food Acquisition Associate/ }).closest("li");
+    expect(
+      within(row as HTMLElement).queryByText(/ready in|needs more storage|not at this rate/),
+    ).toBeNull();
   });
 
   it("buys ten at once with ×10 and shows the price of ten", async () => {
