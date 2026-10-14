@@ -4,7 +4,7 @@ date: 2026-10-15
 summary: In stage 2 the village's manager now sets optional research targets.
 ---
 
-Three times in stage 2, a card titled **A quarterly target** will ask for a few more research levels within a time limit. You can **aim high**, **aim reasonably**, or **decline politely**.
+Three times in stage 2, a card from the village manager will ask for a few more research levels within a time limit. You can **aim high**, **aim reasonably**, or **decline politely**.
 
 Aiming high is a tighter deadline and costs the village a little morale to start. If you make it, there is a food bonus and the village feels a bit more driven. Aiming reasonably gives a roomier deadline and a smaller bonus, and it is the kinder choice. Declining is fine too. Missing a target costs nothing more than accepting did, and while you are away the clock stands still.
 
