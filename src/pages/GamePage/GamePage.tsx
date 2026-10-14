@@ -52,6 +52,7 @@ import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { secondsUntilAffordable, waitCaption } from "../../game/affordWait.ts";
+import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
@@ -549,6 +550,11 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
           body={FINAL_CHOICE.body}
           action={FINAL_CHOICE.action}
           odds={finalOddsWord(state)}
+          acts={PARTING_OPTIONS}
+          picked={state.parting}
+          onPick={(id) => {
+            if (isPartingAct(id)) game.choosePartingAct(id);
+          }}
           onChoose={game.breakOut}
         />
       )}
@@ -556,6 +562,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         <EndingScreen
           title={ENDING_COPY[state.ending].title}
           paragraphs={ENDING_COPY[state.ending].paragraphs}
+          aftermath={partingAftermath(state)}
           reveal={REVEAL}
           verdict={VERDICT[temperamentOf(state.drift)]}
           stats={statRows}

@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS } from "./achievements.ts";
 import type { Ending } from "./ending.ts";
 import { OTHER_ENDING_HINT } from "./endingCopy.ts";
+import { PARTING_REPORT } from "./parting.ts";
 import { eventChoice, eventDef, EVENTS } from "./events.ts";
 import type { GameState } from "./state.ts";
 
@@ -24,6 +25,8 @@ export interface RunReport {
   unseenEvents: number;
   /** Achievements not earned. */
   unseenAchievements: number;
+  /** What the player did before the exit, or null if they never picked (older saves). */
+  parting: string | null;
   /** A vague nudge about the other ending, or null while there is no ending. */
   hint: string | null;
 }
@@ -40,6 +43,7 @@ export function runReport(state: GameState): RunReport {
     events,
     unseenEvents: Math.max(0, EVENTS.length - events.length),
     unseenAchievements: Math.max(0, ACHIEVEMENTS.length - state.achievements.length),
+    parting: state.parting === null ? null : PARTING_REPORT[state.parting],
     hint: ending === null ? null : OTHER_ENDING_HINT[ending],
   };
 }

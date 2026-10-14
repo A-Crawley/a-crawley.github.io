@@ -362,3 +362,12 @@ slots; it knows nothing about the game.
 
 In tests (no media queries) the layout is desktop; pass `layout` to `GamePage` to force another.
 The `game-ui-designer` agent (`.claude/agents/`) holds the design principles used for this pass.
+
+## A last look before the exit (GAME-65)
+
+`src/game/parting.ts` adds one narrative beat to the final choice. While `phaseOf` is `choice`, the player picks one of three parting acts (`village`, `rival`, `silence`) before "Break out" unlocks. `choosePartingAct(state, act)` saves it in `state.parting`, does nothing outside the choice phase or once an act is picked (so it cannot be changed), and `useGame.choosePartingAct` saves the game straight away. A reload mid-beat shows the beat again until one is picked.
+
+- **No effect on the roll:** `breakOut` ignores `parting`; a test runs every act against several drifts and rolls and checks the odds word and the ending are identical. The button is gated in the UI (`FinalChoice` disabled until `picked`), not in the engine, so dev tools and tests that call `breakOut` directly still work. The sim never reaches the choice, so the timing guards are untouched.
+- **Offline:** the choice phase stops time (`isFinished`), so `catchUp` neither skips nor picks the beat.
+- **Ending copy:** `partingAftermath(state)` gives one line per act and ending, shown after the ending paragraphs; `runReport` gets a `parting` line ("At the exit: ..."). Both are null for a save with no act (migrated or already ended).
+- **Save version 14:** adds `parting` (null or an act). The 13 to 14 migration sets null. A non-null act in a run that has not reached the exit is rejected.

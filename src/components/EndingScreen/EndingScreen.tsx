@@ -27,6 +27,8 @@ export interface EndingReport {
   events: readonly EndingReportEvent[];
   unseenEvents: number;
   unseenAchievements: number;
+  /** What the player did before the exit, or null if they never picked. */
+  parting?: string | null;
   hint: string | null;
 }
 
@@ -34,6 +36,8 @@ export interface EndingScreenProps {
   title: string;
   /** What happened at the exit. */
   paragraphs: readonly string[];
+  /** One line on what the player did before the exit, or null (older saves). */
+  aftermath?: string | null;
   /** The reveal both endings share. */
   reveal: readonly string[];
   /** One line on how the run read. */
@@ -66,6 +70,7 @@ function missed(report: EndingReport): string {
 export function EndingScreen({
   title,
   paragraphs,
+  aftermath = null,
   reveal,
   verdict,
   stats,
@@ -84,6 +89,7 @@ export function EndingScreen({
         {paragraphs.map((text) => (
           <Typography key={text}>{text}</Typography>
         ))}
+        {aftermath && <Typography>{aftermath}</Typography>}
       </Stack>
       <Stack spacing={1.5}>
         {reveal.map((text) => (
@@ -117,6 +123,11 @@ export function EndingScreen({
         <Typography id="run-report-title" component="h3" variant="h6">
           What you decided
         </Typography>
+        {report.parting && (
+          <Typography sx={{ pb: 0.5 }}>
+            <strong>At the exit:</strong> {report.parting}
+          </Typography>
+        )}
         {report.events.length === 0 ? (
           <Typography color="text.secondary">No village events came up in this run.</Typography>
         ) : (

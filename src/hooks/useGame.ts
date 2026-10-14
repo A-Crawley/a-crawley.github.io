@@ -12,6 +12,8 @@ import {
   setPolicy,
   takeRestDay,
 } from "../game/actions.ts";
+import { choosePartingAct } from "../game/parting.ts";
+import type { PartingAct } from "../game/parting.ts";
 import { withSettled } from "../game/settle.ts";
 import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
@@ -71,6 +73,8 @@ export interface UseGame {
   lookUp(): void;
   /** Make the final choice. Rolled once and saved straight away, so a reload cannot change it. */
   breakOut(): void;
+  /** Pick the act before the final choice. Saved straight away and cannot be changed. */
+  choosePartingAct(act: PartingAct): void;
   /** The current game as a copy-and-paste save string. */
   exportSave(): string;
   /** Replace the game with a pasted save. A bad save is reported and the current game is kept. */
@@ -185,6 +189,13 @@ export function useGame(options?: UseGameOptions): UseGame {
     retrain: useCallback(() => store.dispatch(retrain), [store]),
     release: useCallback(() => store.dispatch(release), [store]),
     lookUp: useCallback(() => store.dispatch(lookUp), [store]),
+    choosePartingAct: useCallback(
+      (act: PartingAct) => {
+        store.dispatch((s) => choosePartingAct(s, act));
+        saveGame(store.getState(), storage);
+      },
+      [store, storage],
+    ),
     breakOut: useCallback(() => {
       store.dispatch((s) => withSettled(breakOut(s, random())));
       saveGame(store.getState(), storage);

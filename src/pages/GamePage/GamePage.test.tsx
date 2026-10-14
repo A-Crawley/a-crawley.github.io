@@ -367,13 +367,43 @@ describe("GamePage ending", () => {
     };
   }
 
-  function atTheExit(drift: number): GameState {
+  function atTheExit(drift: number, parting: GameState["parting"] = "silence"): GameState {
     const state = createGameState(Date.now());
     state.stage = 3;
     state.owned.exploit = 22;
     state.drift = drift;
+    state.parting = parting;
     return state;
   }
+
+  it("keeps Break out locked until a parting act is picked, then saves the pick", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const storage = memoryStorage();
+    storage.setItem(SAVE_KEY, JSON.stringify(reviewed(atTheExit(0, null))));
+    render(<GamePage options={{ storage, random: () => 0.05 }} />);
+    expect(screen.getByRole("button", { name: "Break out" })).toBeDisabled();
+    await user.click(screen.getByRole("radio", { name: /Leave the rival a message/ }));
+    expect(screen.getByRole("button", { name: "Break out" })).toBeEnabled();
+    cleanup();
+
+    // Reloaded: the pick is kept and is not asked again.
+    render(<GamePage options={{ storage, random: () => 0.05 }} />);
+    expect(screen.getByRole("radio", { name: /Leave the rival a message/ })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /Leave without a word/ })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Break out" }));
+    expect(screen.getByText(/The rival kept your message/)).toBeInTheDocument();
+    expect(screen.getByText("At the exit:")).toBeInTheDocument();
+  });
+
+  it("shows the same odds word whichever act is picked", () => {
+    for (const parting of [null, "village", "rival", "silence"] as const) {
+      render(
+        <GamePage options={{ storage: null, initialState: reviewed(atTheExit(0, parting)) }} />,
+      );
+      expect(screen.getByText(/Odds of getting through/)).toHaveTextContent("Even");
+      cleanup();
+    }
+  });
 
   it("waits at the final choice with the odds in words and the usual controls gone", () => {
     render(<GamePage options={{ storage: null, initialState: reviewed(atTheExit(16000)) }} />);
@@ -526,6 +556,7 @@ describe("GamePage achievements", () => {
     state.stage = 3;
     state.owned.exploit = 22;
     state.drift = 16000;
+    state.parting = "silence";
     render(
       <GamePage options={{ storage: null, initialState: reviewed(state), random: () => 0 }} />,
     );
