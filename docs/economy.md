@@ -274,3 +274,12 @@ A lossy swap between food and wood, in `src/game/market.ts` and `CONFIG.market`.
 - **Opens** (an unlock, so it stays open) once wood is in play and either store is 80% full, which is when a ceiling is actually in the way.
 - **Sim:** the bots do not trade, so `npm run sim` is unchanged (114.1 / 115.2 / 116.4 min). The numbers are reasoned and tested, not tuned against a trading player.
 - **Saved:** `marketStrain` (save version 20, migrated to 0). Offline it eases like online; nothing is traded while away.
+
+## Machine power (GAME-32)
+
+Machines (Automated forager, Sawmill bot, Builder drone) now burn wood: `CONFIG.power.perMachine` (0.75) a second each, while the village is working (nothing on a rest day or a look-up pause). Nothing is added to the save: it is all derived.
+
+- **Net wood:** `ratesFor` returns wood made minus wood burned, so every reader (the counter, the shop wait notes, the sim's payback rule) sees the real figure. It can be negative for a village that builds machines faster than it can fuel them.
+- **Shortage:** `powerFactor` is 1 whenever the wood in store plus what is made this second covers the burn, so spending the stock down to nothing does not stall anything while production is healthy. When it cannot, every machine slows until what they burn is what exists. The factor never drops below `minFactor` (0.5): a machine without fuel is a slow machine, not a dead one, so a wood bill cannot starve the village by taking away its machines.
+- **Rebalance:** a flat burn made the first Automated forager's payback worse than the stage 2 limit (400 s), so the bots stopped buying it and the "no dead tier" guard failed. Its output rose from 6 to 7 food a second to keep the tier worth buying. Bigger burns (1 or more) push the bots' timings outside the 5% guard between play styles.
+- **Size:** the burn is light (about 10 to 20 wood a second against 250 to 350 made at the bots' pace), so the bots never brown out. It bites a player who builds many machines without sawmills. Sim totals are 108.7 / 112.5 / 117.1 min (efficient / balanced / compassionate). A "power plant" item was left out; the numbers above say whether it is needed.

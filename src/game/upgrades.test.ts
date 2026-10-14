@@ -99,6 +99,9 @@ describe("what each upgrade does", () => {
   it("Sharper axes: woodcutters make more", () => {
     const state = rich();
     state.owned.sawmillBot = 0;
+    // Other machines burn wood, which would blur a clean comparison of wood made.
+    state.owned.autoForager = 0;
+    state.owned.builderDrone = 0;
     const before = ratesFor(state, state.owned, false).wood;
     const after = ratesFor(withUpgrade(state, "sharperAxes"), state.owned, false).wood;
     expect(after / before).toBeCloseTo(UPGRADE_EFFECTS.sharperAxes, 5);

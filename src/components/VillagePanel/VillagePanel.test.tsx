@@ -74,3 +74,21 @@ describe("VillagePanel", () => {
     expect(screen.getByRole("progressbar", { name: "Beds filled" })).toBeInTheDocument();
   });
 });
+
+describe("VillagePanel power", () => {
+  it("shows no power row until there are machines", () => {
+    render(<VillagePanel {...base} />);
+    expect(screen.queryByText("Power", { selector: "dt" })).not.toBeInTheDocument();
+  });
+
+  it("says the machines are fuelled, and what they burn", () => {
+    render(<VillagePanel {...base} power={{ use: 12, factor: 1 }} />);
+    expect(within(row("Power")).getByText("Fuelled")).toBeInTheDocument();
+    expect(within(row("Power")).getByText(/12.*wood burned per second/)).toBeInTheDocument();
+  });
+
+  it("says how slow the machines are when power is short", () => {
+    render(<VillagePanel {...base} power={{ use: 12, factor: 0.62 }} />);
+    expect(within(row("Power")).getByText("Short: machines at 62%")).toBeInTheDocument();
+  });
+});
