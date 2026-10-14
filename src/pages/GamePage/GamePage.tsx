@@ -71,6 +71,8 @@ import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
+import { nextSeason, seasonOf, secondsToNextSeason } from "../../game/seasons.ts";
+import type { Season } from "../../game/seasons.ts";
 import { exchangeNote, quoteTrade, tradeReason, TRADES } from "../../game/market.ts";
 import type { Trade } from "../../game/market.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
@@ -403,6 +405,15 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
             foodMade={rates.food}
             foodEaten={upkeepPerSecond(state)}
             hungry={isHungry(state)}
+            season={
+              seasonOf(state.time) === null
+                ? undefined
+                : {
+                    current: seasonOf(state.time) as Season,
+                    next: nextSeason(state.time),
+                    secondsToNext: secondsToNextSeason(state.time),
+                  }
+            }
             power={
               machineCount(state.owned) > 0
                 ? {

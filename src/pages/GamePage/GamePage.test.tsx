@@ -2,7 +2,9 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import { EVENTS } from "../../game/events.ts";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
+import { formatAmount } from "../../game/format.ts";
 import { createGameState } from "../../game/state.ts";
+import { madeOver } from "../../testUtils/seasonal.ts";
 import type { GameState } from "../../game/state.ts";
 import { GamePage } from "./GamePage";
 
@@ -239,9 +241,15 @@ describe("GamePage while away", () => {
     await user.click(screen.getByRole("button", { name: "Back to work" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     // 10 foragers at 0.4/s, doubled by the 10-owned milestone, less the 1/s that ten villagers eat,
-    // for 3 hours at a quarter speed: (8 − 1) × 10,800 × 0.25.
+    // for 3 hours at a quarter speed, second by second so each feels its season.
+    const village = createGameState(0);
+    village.owned.forager = 10;
+    village.population = 10;
+    village.owned.granary = 100;
     expect(dialog).toHaveTextContent("25% speed");
-    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent("18.9K");
+    expect(screen.getByRole("region", { name: "Food" })).toHaveTextContent(
+      formatAmount(madeOver(village, 3 * 3600 * 0.25).food, "short"),
+    );
   });
 
   it("shows no summary for a game saved a moment ago", () => {

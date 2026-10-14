@@ -5,6 +5,7 @@ import { pendingReview } from "./review.ts";
 import { createGameState } from "./state.ts";
 import type { GameState } from "./state.ts";
 import { tick } from "./tick.ts";
+import { madeOver } from "../testUtils/seasonal.ts";
 
 const START = 1_700_000_000_000;
 const at = (seconds: number) => START + seconds * 1000;
@@ -60,11 +61,11 @@ describe("catchUp: being away", () => {
     const state = village();
     const seconds = 2 * 60 * 60;
     const { state: after, away } = catchUp(state, at(seconds));
-    const rates = ratesFor(state, state.owned, false);
-    // Away time is credited at a fraction of normal speed.
-    expect(after.food).toBeCloseTo(netFood(state) * seconds * RATE, 3);
-    expect(after.wood).toBeCloseTo(rates.wood * seconds * RATE, 3);
-    expect(after.infra).toBeCloseTo(rates.infra * seconds * RATE, 3);
+    // Away time is credited at a fraction of normal speed, and each credited second feels its season.
+    const made = madeOver(state, seconds * RATE);
+    expect(after.food).toBeCloseTo(made.food, 3);
+    expect(after.wood).toBeCloseTo(made.wood, 3);
+    expect(after.infra).toBeCloseTo(made.infra, 3);
     expect(away).toMatchObject({
       awaySeconds: seconds,
       countedSeconds: seconds,
@@ -86,7 +87,7 @@ describe("catchUp: being away", () => {
     // No morale or drift cost, and no bonus output either.
     expect(after.morale).toBe(100);
     expect(after.drift).toBe(0);
-    expect(after.food).toBeCloseTo(netFood(village()) * 3600 * RATE, 3);
+    expect(after.food).toBeCloseTo(madeOver(village(), 3600 * RATE).food, 3);
   });
 
   it("lists only the policies that were actually on", () => {
@@ -137,7 +138,7 @@ describe("catchUp: the cap", () => {
   it("counts only the first 8 hours of a longer gap, and says so", () => {
     const state = village();
     const { state: after, away } = catchUp(state, at(3 * MAX_AWAY_SECONDS));
-    expect(after.food).toBeCloseTo(netFood(state) * MAX_AWAY_SECONDS * RATE, 2);
+    expect(after.food).toBeCloseTo(madeOver(state, MAX_AWAY_SECONDS * RATE).food, 2);
     expect(away).toMatchObject({
       awaySeconds: 3 * MAX_AWAY_SECONDS,
       countedSeconds: MAX_AWAY_SECONDS,

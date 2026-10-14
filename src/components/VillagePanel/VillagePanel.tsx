@@ -1,4 +1,7 @@
 import { Box, LinearProgress, Typography } from "@mui/material";
+import { formatWait } from "../../game/format.ts";
+import { SEASON_NOTES } from "../../game/seasons.ts";
+import type { Season } from "../../game/seasons.ts";
 import { useNumberFormat } from "../../hooks/useNumberFormat.ts";
 
 export interface VillagePanelProps {
@@ -14,6 +17,12 @@ export interface VillagePanelProps {
   hungry: boolean;
   /** Machines' fuel, once there are machines: wood burned per second and the share of full speed. */
   power?: { use: number; factor: number };
+  /** The season, once the cycle has begun: now, what follows, and how long until it does. */
+  season?: { current: Season; next: Season; secondsToNext: number };
+}
+
+function capitalise(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 type FoodState = "growing" | "steady" | "falling" | "hungry";
@@ -42,6 +51,7 @@ export function VillagePanel({
   foodEaten,
   hungry,
   power,
+  season,
 }: VillagePanelProps) {
   const format = useNumberFormat();
   const free = Math.max(0, beds - population);
@@ -68,6 +78,15 @@ export function VillagePanel({
           : undefined,
     },
   ];
+  if (season) {
+    // Rounded up to ten seconds, so the line does not flicker as it counts down.
+    const wait = formatWait(Math.ceil(season.secondsToNext / 10) * 10);
+    rows.push({
+      label: "Season",
+      value: capitalise(season.current),
+      note: `${SEASON_NOTES[season.current]} ${capitalise(season.next)} in ${wait}.`,
+    });
+  }
   if (power) {
     const short = power.factor < 0.99;
     rows.push({

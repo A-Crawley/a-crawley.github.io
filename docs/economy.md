@@ -283,3 +283,19 @@ Machines (Automated forager, Sawmill bot, Builder drone) now burn wood: `CONFIG.
 - **Shortage:** `powerFactor` is 1 whenever the wood in store plus what is made this second covers the burn, so spending the stock down to nothing does not stall anything while production is healthy. When it cannot, every machine slows until what they burn is what exists. The factor never drops below `minFactor` (0.5): a machine without fuel is a slow machine, not a dead one, so a wood bill cannot starve the village by taking away its machines.
 - **Rebalance:** a flat burn made the first Automated forager's payback worse than the stage 2 limit (400 s), so the bots stopped buying it and the "no dead tier" guard failed. Its output rose from 6 to 7 food a second to keep the tier worth buying. Bigger burns (1 or more) push the bots' timings outside the 5% guard between play styles.
 - **Size:** the burn is light (about 10 to 20 wood a second against 250 to 350 made at the bots' pace), so the bots never brown out. It bites a player who builds many machines without sawmills. Sim totals are 108.7 / 112.5 / 117.1 min (efficient / balanced / compassionate). A "power plant" item was left out; the numbers above say whether it is needed.
+
+## Seasons (GAME-33)
+
+A four-season cycle in `src/game/seasons.ts` and `CONFIG.seasons`: it begins at 240 s of game time, and each season lasts 180 s (a year is 12 minutes, about nine in a run). The season is worked out from `state.time`, so there is no saved state and no save version change.
+
+| Season | Effect                                               |
+| ------ | ---------------------------------------------------- |
+| Spring | New villagers arrive faster (interval x0.67)         |
+| Summer | Food made x1.2                                       |
+| Autumn | Wood made x1.2                                       |
+| Winter | Villagers eat x1.3 and arrive slower (interval x1.5) |
+
+- **Near neutral:** over a year food and wood each gain 5%, and winter costs more upkeep than the rest of the year saves, so the cycle is mostly about timing, not about more. Storage (a granary) is the answer to winter, and the Village panel forecasts the next season ("Winter in 1m 30s", rounded up to ten seconds so it does not flicker).
+- **Away:** the credited game time (25% of the away time) moves the clock, so seasons turn while the player is gone with no special handling. Away time has no hunger cost, so winter cannot hurt an absent player.
+- **Tuning:** the sim's totals depend on where the cycle starts and how long a season is, because the bots buy by current payback. The first two numbers were picked from a grid so all three play styles stay inside the guards (110.2 / 109.7 / 112.3 min).
+- **Offline tests** now count production second by second (`src/testUtils/seasonal.ts`), since a constant rate times the time is no longer exact.
