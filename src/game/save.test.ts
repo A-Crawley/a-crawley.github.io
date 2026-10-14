@@ -578,3 +578,35 @@ describe("version 12 to 13 (milestones)", () => {
     expect(bad({ fired: [] })).toBe(false);
   });
 });
+
+describe("the parting act in a save", () => {
+  function atTheExit(): GameState {
+    const state = playedState();
+    state.stage = 3;
+    state.owned.exploit = CONFIG.exploitsGoal;
+    return state;
+  }
+
+  it("round-trips each act", () => {
+    for (const parting of ["village", "rival", "silence"] as const) {
+      const state = atTheExit();
+      state.parting = parting;
+      expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+    }
+  });
+
+  it("upgrades a version 13 save with no act picked", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 13 };
+    delete old.parting;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.parting).toBeNull();
+  });
+
+  it("rejects an unknown act, or one from a run that has not reached the exit", () => {
+    expect(validateState({ ...JSON.parse(serializeState(atTheExit())), parting: "shout" }).ok).toBe(
+      false,
+    );
+    expect(validateState({ ...raw(), parting: "village" }).ok).toBe(false);
+  });
+});

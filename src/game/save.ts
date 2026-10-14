@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { isPartingAct } from "./parting.ts";
+import type { PartingAct } from "./parting.ts";
 import { isMilestoneId, reachedMilestones } from "./milestones.ts";
 import type { MilestoneId, MilestonesState } from "./milestones.ts";
 import { isReviewStage } from "./review.ts";
@@ -92,6 +94,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       : [];
     return { ...save, version: 13, milestones: { fired: passed, quiet: [...passed] } };
   },
+  // 13 -> 14: the parting act before the final choice. Nobody has picked one yet.
+  13: (save) => ({ ...save, version: 14, parting: null }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -337,6 +341,13 @@ export function validateState(raw: unknown): SaveResult<GameState> {
     if (!endingIsPossible({ stage: raw.stage, owned })) return fail("ending");
   }
 
+  let parting: PartingAct | null = null;
+  if (raw.parting !== null) {
+    if (!isPartingAct(raw.parting)) return fail("parting");
+    if (!endingIsPossible({ stage: raw.stage, owned })) return fail("parting");
+    parting = raw.parting;
+  }
+
   return {
     ok: true,
     value: {
@@ -370,6 +381,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       reviews,
       sky,
       milestones,
+      parting,
       unlocked,
       ending,
       achievements,

@@ -68,7 +68,7 @@ describe("runReport", () => {
       expect(JSON.stringify(report)).not.toMatch(/12345|drift|odds|%/i);
       expect(report.hint).not.toMatch(/\d|%/);
       expect(Object.keys(report).sort()).toEqual(
-        ["events", "hint", "unseenAchievements", "unseenEvents"].sort(),
+        ["events", "hint", "parting", "unseenAchievements", "unseenEvents"].sort(),
       );
     }
     for (const hint of Object.values(OTHER_ENDING_HINT)) expect(hint).not.toMatch(/\d|%/);
@@ -80,5 +80,14 @@ describe("runReport", () => {
     const before = structuredClone(state);
     runReport(state);
     expect(state).toEqual(before);
+  });
+});
+
+describe("runReport parting act", () => {
+  it("names the act, and is null for a run that never picked one", () => {
+    const state = finished("conquest");
+    expect(runReport(state).parting).toBeNull();
+    state.parting = "village";
+    expect(runReport(state).parting).toBe("Left the village a message");
   });
 });

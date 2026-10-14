@@ -4,6 +4,7 @@ import type { AchievementId } from "./achievements.ts";
 import type { Ending } from "./ending.ts";
 import { createEventsState } from "./events.ts";
 import type { EventsState } from "./events.ts";
+import type { PartingAct } from "./parting.ts";
 import { createMilestonesState } from "./milestones.ts";
 import type { MilestonesState } from "./milestones.ts";
 import { createSkyState } from "./sky.ts";
@@ -13,7 +14,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -39,6 +40,8 @@ export interface GameState extends SimState {
   sky: SkyState;
   /** Count milestones reached (cosmetic: a log line and a pulse). */
   milestones: MilestonesState;
+  /** The act picked before the final choice, or null (not yet, or a save from before it existed). */
+  parting: PartingAct | null;
 }
 
 export function createGameState(now: number): GameState {
@@ -53,5 +56,6 @@ export function createGameState(now: number): GameState {
     reviews: createReviewsState(),
     sky: createSkyState(),
     milestones: createMilestonesState(),
+    parting: null,
   };
 }
