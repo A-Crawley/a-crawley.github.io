@@ -11,6 +11,7 @@ import {
   retrain,
   setPolicy,
   setRoute,
+  trade,
   takeRestDay,
 } from "../game/actions.ts";
 import { chooseBrief } from "../game/briefs.ts";
@@ -22,6 +23,7 @@ import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { UpgradeId } from "../game/upgrades.ts";
 import type { AwaySummary } from "../game/offline.ts";
+import type { Trade } from "../game/market.ts";
 import { recordOf } from "../game/echoes.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
@@ -66,6 +68,8 @@ export interface UseGame {
   setPolicy(policy: keyof Policies, on: boolean): void;
   /** Choose how exploits are bought in stage 3: quiet (the default) or loud. */
   setRoute(route: Route): void;
+  /** Swap one lot of food and wood at the Exchange. */
+  trade(which: Trade): void;
   takeRestDay(): void;
   /** Buy a one-off upgrade. */
   buyUpgrade(id: UpgradeId): void;
@@ -183,6 +187,7 @@ export function useGame(options?: UseGameOptions): UseGame {
       (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),
       [store],
     ),
+    trade: useCallback((which: Trade) => store.dispatch((s) => trade(s, which)), [store]),
     setRoute: useCallback((route: Route) => store.dispatch((s) => setRoute(s, route)), [store]),
     setPolicy: useCallback(
       (policy: keyof Policies, on: boolean) => store.dispatch((s) => setPolicy(s, policy, on)),

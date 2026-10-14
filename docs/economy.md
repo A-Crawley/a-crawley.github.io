@@ -263,3 +263,14 @@ everything between 105 and 140). Cheapness is a real but small gain: a loud bala
 roughly a minute and a half in stage 3 and give up about 11 points of Conquest odds at most. The
 efficient bot is already at the 15% odds floor, so it pays nothing for the nudge, which is the point
 of the joke. Not played by a person, so whether the trade feels right is open.
+
+## The Exchange (GAME-34)
+
+A lossy swap between food and wood, in `src/game/market.ts` and `CONFIG.market`. It is a way to buy through a bottleneck, not a source of income.
+
+- **Only food and wood.** Infrastructure is not for sale in either direction, so no amount of trading shortens Project Horizon or the stage gates.
+- **The rate:** you keep `1 - fee` (70%) of what you sell, divided by `1 + strain`. Each trade is one lot (10% of the seller's store) and adds 0.25 strain for a full lot, less for a part lot. Strain eases by 1/240 a second, so a full lot is forgotten in four minutes. Going round once (wood to food and back) keeps under half the value, and trading as often as allowed for an hour converts at most a few store-fulls at a poor rate (a test holds both).
+- **Guards:** food is never sold below 25% of the food store, and a trade never sells more than the other store has room for.
+- **Opens** (an unlock, so it stays open) once wood is in play and either store is 80% full, which is when a ceiling is actually in the way.
+- **Sim:** the bots do not trade, so `npm run sim` is unchanged (114.1 / 115.2 / 116.4 min). The numbers are reasoned and tested, not tuned against a trading player.
+- **Saved:** `marketStrain` (save version 20, migrated to 0). Offline it eases like online; nothing is traded while away.

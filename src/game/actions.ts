@@ -84,6 +84,9 @@ export function setRoute(state: GameState, route: Route): GameState {
   return next;
 }
 
+/** Swap food and wood at the Exchange. See ./market.ts. */
+export { trade } from "./market.ts";
+
 /** Take a rest day, if one is available. */
 export function takeRestDay(state: GameState): GameState {
   if (isFinished(state) || !canRest(state)) return state;

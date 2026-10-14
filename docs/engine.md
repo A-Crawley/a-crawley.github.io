@@ -427,3 +427,7 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 - **The touches:** one opening log line (`echo-opening`, second in the log); three Sky sightings for the earlier ending (`ECHO_SIGHTINGS`, ids `echo:<1-3>:<ending>`, offered at 12 foragers, stage 2 and stage 3, after the first-run pool, and they do not nudge the drift); and one rival line (`memory:<tone>` unlock, stage 2 at research level 12, by the earlier tone).
 - **Save version 19:** `echo` (null or a whole record). The 18 to 19 migration sets null, so a run already under way is a first run. A malformed record rejects the save.
 - **Storage blocked:** no record can be read or written, so there are no echoes and no errors.
+
+## The Exchange (GAME-34)
+
+`src/game/market.ts`. `quoteTrade(state, trade)` gives one lot (whole units, `possible` flag), `trade` applies it and settles, `tradeReason` and `exchangeNote` are the words the panel shows. `marketOffered` drives the `market` unlock. `engine.step` eases `marketStrain` toward zero, so the same step serves play and `catchUp`. `useGame.trade` dispatches it. Save version 20 adds `marketStrain` (19 to 20 sets 0). Numbers and reasoning are in `docs/economy.md`.
