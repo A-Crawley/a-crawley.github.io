@@ -92,3 +92,20 @@ describe("VillagePanel power", () => {
     expect(within(row("Power")).getByText("Short: machines at 62%")).toBeInTheDocument();
   });
 });
+
+describe("VillagePanel season", () => {
+  it("shows no season row before the cycle begins", () => {
+    render(<VillagePanel {...base} />);
+    expect(screen.queryByText("Season", { selector: "dt" })).not.toBeInTheDocument();
+  });
+
+  it("names the season, what it does, and forecasts the next", () => {
+    render(
+      <VillagePanel {...base} season={{ current: "autumn", next: "winter", secondsToNext: 83 }} />,
+    );
+    expect(within(row("Season")).getByText("Autumn")).toBeInTheDocument();
+    expect(within(row("Season")).getByText(/Wood comes in faster\./)).toBeInTheDocument();
+    // 83 seconds rounds up to 90, so the line does not flicker.
+    expect(within(row("Season")).getByText(/Winter in 1m 30s\./)).toBeInTheDocument();
+  });
+});

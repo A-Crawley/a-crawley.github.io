@@ -15,6 +15,7 @@ import {
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import { ECHO_RIVAL, ECHO_RIVAL_LEVEL } from "./echoes.ts";
+import { seasonOf } from "./seasons.ts";
 import { marketOffered } from "./market.ts";
 import type { GameState } from "./state.ts";
 
@@ -83,7 +84,9 @@ export type UnlockId =
   | `echo:${number}:${Temperament}`
   | `memory:${Temperament}`
   | "market"
-  | "power";
+  | "power"
+  | "seasons"
+  | "firstWinter";
 
 export interface UnlockDef {
   id: UnlockId;
@@ -354,6 +357,16 @@ export const UNLOCKS: readonly UnlockDef[] = [
     id: "rumours",
     when: (s) => s.stage === 1 && s.infra >= CONFIG.infraGate * 0.85,
     log: "There are rumours of machines. HR says to expect a restructure, not a replacement.",
+  },
+  {
+    id: "seasons",
+    when: (s) => seasonOf(s.time) !== null,
+    log: "Seasons begin. The village is told this is a coincidence of the calendar, and that planning for it is a growth area.",
+  },
+  {
+    id: "firstWinter",
+    when: (s) => seasonOf(s.time) === "winter",
+    log: "The first winter arrives. People eat more and new arrivals slow down. The granary is suddenly a topic.",
   },
   {
     id: "power",

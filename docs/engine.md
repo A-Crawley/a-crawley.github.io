@@ -435,3 +435,7 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 ## Machine power (GAME-32)
 
 `powerDemand`, `powerFactor` and `machineCount` in `engine.ts`. `ratesFor` is now `grossRates` (machine terms scaled by a power factor) with the burn subtracted from wood. No new state and no save change. `engine.step` floors wood at zero after applying the net rate. The log gains the `power` unlock line and a `power-short` line while the factor is under `SHORT_POWER_BELOW`; the Village panel gets a Power row once any machine exists. Events that add "what the village makes in N seconds" ignore a negative wood rate.
+
+## Seasons (GAME-33)
+
+`seasonOf(time)` and `seasonEffects(time)` in `seasons.ts`, read by `grossRates` (food, wood), `upkeepPerSecond` and the arrival timer in `step`. The arrival timer is capped at the slowest season's interval so it can always reach it. Derived from the clock only: no state, no migration. The Village panel's Season row shows the current season, its effect and the forecast; the log has `seasons` and `firstWinter` unlock lines.

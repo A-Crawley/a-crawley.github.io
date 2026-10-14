@@ -271,6 +271,22 @@ export const CONFIG = {
   routes: { loud: { priceFactor: 0.85, driftPerExploit: -120, loudPerExtraIncident: 2 } },
 
   /**
+   * Seasons (GAME-33): a four-season cycle from `startAt`, `seconds` each. Each season multiplies a
+   * few figures a little. Spring and winter move how fast villagers arrive and how much they eat,
+   * summer and autumn the food and the wood, and the cycle is close to neutral overall.
+   */
+  seasons: {
+    startAt: 240,
+    seconds: 180,
+    effects: {
+      spring: { food: 1, wood: 1, upkeep: 1, arrival: 0.67 },
+      summer: { food: 1.2, wood: 1, upkeep: 1, arrival: 1 },
+      autumn: { food: 1, wood: 1.2, upkeep: 1, arrival: 1 },
+      winter: { food: 1, wood: 1, upkeep: 1.3, arrival: 1.5 },
+    },
+  },
+
+  /**
    * Machines run on wood (GAME-32): each burns this much wood a second while the village is
    * working. If the wood cannot cover it, every machine slows in proportion, but never below
    * `minFactor` of full speed: a machine short of fuel is a slow machine, not a dead one, so a

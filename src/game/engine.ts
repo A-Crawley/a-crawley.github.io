@@ -1,4 +1,5 @@
 import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./economy.ts";
+import { seasonEffects, SLOWEST_ARRIVAL } from "./seasons.ts";
 import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import { hasUpgrade, UPGRADE_EFFECTS } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
@@ -226,7 +227,7 @@ export function upkeepPerSecond(state: SimState): number {
   const policy = state.policies.rationsOptimisation
     ? CONFIG.policies.rationsOptimisation.upkeepFactor
     : 1;
-  return state.population * VILLAGE.upkeepPerVillager * policy;
+  return state.population * VILLAGE.upkeepPerVillager * policy * seasonEffects(state.time).upkeep;
 }
 
 /** How the village is fed: food coming in minus food eaten, per second (clicks excluded). */
@@ -280,6 +281,7 @@ function grossRates(state: SimState, owned: Counts, includeClicks: boolean, powe
   const { output, milestones, milestoneFactor } = CONFIG;
   const ms = (id: ItemId) => milestoneMultiplier(owned[id], milestones, milestoneFactor);
   const global = globalMultiplier({ ...state, owned });
+  const season = seasonEffects(state.time);
 
   const foragers = Math.max(0, owned.forager - owned.autoForager);
   const woodcutters = Math.max(0, owned.woodcutter - owned.sawmillBot);
@@ -297,11 +299,13 @@ function grossRates(state: SimState, owned: Counts, includeClicks: boolean, powe
       owned.autoForager * output.autoForager * ms("autoForager") * operated * power +
       odd +
       clicks) *
-    global;
+    global *
+    season.food;
   const wood =
     (woodcutters * output.woodcutter * ms("woodcutter") * axe +
       owned.sawmillBot * output.sawmillBot * ms("sawmillBot") * operated * power) *
-    global;
+    global *
+    season.wood;
   const infra =
     (builders * output.builder * ms("builder") +
       owned.builderDrone * output.builderDrone * ms("builderDrone") * operated * power) *
@@ -681,13 +685,15 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
   }
 
   // Villagers arrive to fill free beds, one every few seconds.
-  state.arrivalTimer = Math.min(state.arrivalTimer + dt, VILLAGE.arrivalSeconds);
+  // The season sets how long an arrival takes. The timer can always reach the slowest of them.
+  const arrivalSeconds = VILLAGE.arrivalSeconds * seasonEffects(state.time).arrival;
+  state.arrivalTimer = Math.min(state.arrivalTimer + dt, VILLAGE.arrivalSeconds * SLOWEST_ARRIVAL);
   const fed = state.shortfallSeconds < HUNGRY_NOTICE_SECONDS;
   if (
     fed &&
     // Nobody new moves in while people displaced by machines are still waiting for work.
     idleHands(state) === 0 &&
-    state.arrivalTimer >= VILLAGE.arrivalSeconds &&
+    state.arrivalTimer >= arrivalSeconds &&
     state.population < bedsOf(state.owned, state.upgrades)
   ) {
     state.population += 1;
