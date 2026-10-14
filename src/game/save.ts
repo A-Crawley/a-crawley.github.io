@@ -14,6 +14,7 @@ import { isBriefId } from "./briefs.ts";
 import type { BriefId } from "./config.ts";
 import { CAST, createCastState } from "./cast.ts";
 import type { CastState } from "./cast.ts";
+import { parseRunRecord } from "./echoes.ts";
 import { isChatterId, MAX_CHATTER_LINES, MIN_CHATTER_GAP } from "./chatter.ts";
 import type { ChatterState } from "./chatter.ts";
 import { isPartingAct } from "./parting.ts";
@@ -128,6 +129,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   16: (save) => ({ ...save, version: 17, brief: null }),
   // 17 -> 18: the exploit route. Everyone starts on the quiet route with nothing bought loudly.
   17: (save) => ({ ...save, version: 18, route: "quiet", loudExploits: 0 }),
+  // 18 -> 19: echoes of a previous run. A run already under way is a first run as far as it knows.
+  18: (save) => ({ ...save, version: 19, echo: null }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -399,6 +402,10 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
+  // A record is either absent (null) or whole; anything else is a damaged save.
+  const echo = raw.echo === null ? null : parseRunRecord(raw.echo);
+  if (raw.echo !== null && echo === null) return fail("echo");
+
   if (raw.route !== "quiet" && raw.route !== "loud") return fail("route");
   const loudExploits = raw.loudExploits;
   if (typeof loudExploits !== "number" || !Number.isInteger(loudExploits) || loudExploits < 0) {
@@ -465,6 +472,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       parting,
       chatter,
       cast,
+      echo,
       brief,
       route: raw.route,
       loudExploits,

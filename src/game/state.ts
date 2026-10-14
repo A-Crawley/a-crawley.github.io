@@ -9,6 +9,7 @@ import { createCastState } from "./cast.ts";
 import type { CastState } from "./cast.ts";
 import { createChatterState } from "./chatter.ts";
 import type { ChatterState } from "./chatter.ts";
+import type { RunRecord } from "./echoes.ts";
 import { createMilestonesState } from "./milestones.ts";
 import type { MilestonesState } from "./milestones.ts";
 import { createSkyState } from "./sky.ts";
@@ -18,7 +19,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 18;
+export const STATE_VERSION = 19;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -50,9 +51,14 @@ export interface GameState extends SimState {
   chatter: ChatterState;
   /** The small named cast: who has arrived and who has left. Flavour only. */
   cast: CastState;
+  /**
+   * What the last finished run left behind, copied in when this run began, or null on a first run.
+   * It only colours the wording (see `echoes.ts`); no number depends on it.
+   */
+  echo: RunRecord | null;
 }
 
-export function createGameState(now: number): GameState {
+export function createGameState(now: number, echo: RunRecord | null = null): GameState {
   const base = createState();
   return {
     ...base,
@@ -68,5 +74,6 @@ export function createGameState(now: number): GameState {
     parting: null,
     chatter: createChatterState(),
     cast: createCastState(base.population),
+    echo,
   };
 }

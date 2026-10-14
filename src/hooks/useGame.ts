@@ -22,8 +22,10 @@ import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { UpgradeId } from "../game/upgrades.ts";
 import type { AwaySummary } from "../game/offline.ts";
+import { recordOf } from "../game/echoes.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
+import { loadSettings, saveSettings } from "../game/settings.ts";
 import { createGameState } from "../game/state.ts";
 import { dismissReview, pendingReview } from "../game/review.ts";
 import type { Review } from "../game/review.ts";
@@ -107,6 +109,9 @@ function start(options: UseGameOptions = {}) {
       loadStatus = loaded.status;
     }
   }
+
+  // A first-ever run has no record, so it is exactly the game as it always was.
+  if (!initialState) initialState = createGameState(now(), loadSettings(storage).lastRun);
 
   const random = options.random ?? Math.random;
   return { store: createGameStore({ now, initialState }), storage, now, random, loadStatus };
@@ -212,8 +217,14 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store, storage],
     ),
     breakOut: useCallback(() => {
+      const before = store.getState();
       store.dispatch((s) => withSettled(breakOut(s, random())));
-      saveGame(store.getState(), storage);
+      const after = store.getState();
+      saveGame(after, storage);
+      // Remember the run once, at the moment its ending is reached. A reload of an ended save
+      // never comes through here.
+      const record = before.ending === null ? recordOf(after) : null;
+      if (record) saveSettings({ ...loadSettings(storage), lastRun: record }, storage);
     }, [store, storage, random]),
     exportSave: useCallback(() => {
       store.tick();
@@ -231,7 +242,7 @@ export function useGame(options?: UseGameOptions): UseGame {
       [store, storage],
     ),
     resetGame: useCallback(() => {
-      const fresh = createGameState(now());
+      const fresh = createGameState(now(), loadSettings(storage).lastRun);
       store.replace(fresh);
       clearSave(storage);
       saveGame(fresh, storage);

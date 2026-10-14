@@ -1,5 +1,7 @@
 import { DEFAULT_NOTATION, NOTATIONS } from "./format.ts";
 import type { Notation } from "./format.ts";
+import { parseRunRecord } from "./echoes.ts";
+import type { RunRecord } from "./echoes.ts";
 import { getDefaultStorage } from "./storage.ts";
 import type { StorageLike } from "./storage.ts";
 
@@ -9,11 +11,13 @@ import type { StorageLike } from "./storage.ts";
  */
 export interface Settings {
   notation: Notation;
+  /** The last finished run, for echoes on the next one. Null until a run has ended. */
+  lastRun: RunRecord | null;
 }
 
 export const SETTINGS_KEY = "look-up:settings";
 
-export const DEFAULT_SETTINGS: Settings = { notation: DEFAULT_NOTATION };
+export const DEFAULT_SETTINGS: Settings = { notation: DEFAULT_NOTATION, lastRun: null };
 
 /**
  * Read settings from JSON text. Anything missing or unrecognised falls back to its default, field
@@ -28,9 +32,10 @@ export function parseSettings(text: string | null): Settings {
     return { ...DEFAULT_SETTINGS };
   }
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return { ...DEFAULT_SETTINGS };
-  const { notation } = raw as Record<string, unknown>;
+  const { notation, lastRun } = raw as Record<string, unknown>;
   return {
     notation: NOTATIONS.find((candidate) => candidate === notation) ?? DEFAULT_SETTINGS.notation,
+    lastRun: parseRunRecord(lastRun),
   };
 }
 

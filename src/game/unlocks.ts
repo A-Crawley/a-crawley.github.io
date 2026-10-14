@@ -14,6 +14,7 @@ import {
 } from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
+import { ECHO_RIVAL, ECHO_RIVAL_LEVEL } from "./echoes.ts";
 import type { GameState } from "./state.ts";
 
 /**
@@ -78,7 +79,8 @@ export type UnlockId =
   | "stage2"
   | "stage3"
   | `rival:${number}:${Temperament}`
-  | `echo:${number}:${Temperament}`;
+  | `echo:${number}:${Temperament}`
+  | `memory:${Temperament}`;
 
 export interface UnlockDef {
   id: UnlockId;
@@ -212,6 +214,20 @@ const ECHO_UNLOCKS: readonly UnlockDef[] = RIVAL_ECHOES.flatMap(({ level, lines 
     log: lines[tone],
   })),
 );
+
+/**
+ * The rival remembers an earlier run: one line per tone, only on a second run, once the research
+ * is well under way. The tone comes from the record, so it is fixed for the whole run.
+ */
+const MEMORY_UNLOCKS: readonly UnlockDef[] = TEMPERAMENTS.map((tone) => ({
+  id: `memory:${tone}` as const,
+  when: (s: GameState) =>
+    s.echo !== null &&
+    s.echo.tone === tone &&
+    s.stage === 2 &&
+    s.owned.research >= ECHO_RIVAL_LEVEL,
+  log: ECHO_RIVAL[tone],
+}));
 
 function totalJobs(state: GameState): number {
   return state.owned.forager + state.owned.woodcutter + state.owned.builder;
@@ -368,6 +384,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
   },
   ...RIVAL_UNLOCKS,
   ...ECHO_UNLOCKS,
+  ...MEMORY_UNLOCKS,
 ];
 
 const UNLOCK_IDS: ReadonlySet<string> = new Set(UNLOCKS.map((unlock) => unlock.id));

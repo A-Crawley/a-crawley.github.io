@@ -3,6 +3,7 @@ import { isHungry, itemDef } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
 import { briefLog } from "./briefs.ts";
+import { ECHO_OPENING } from "./echoes.ts";
 import { castDepartures } from "./cast.ts";
 import { chatterText } from "./chatter.ts";
 import { milestoneDef } from "./milestones.ts";
@@ -29,6 +30,9 @@ export function logLines(state: GameState): LogLine[] {
   const lines: LogLine[] = [
     { id: "day-one", text: "Day 1. The village has no food and a plan to have more." },
   ];
+  // A second run starts with a line that is a little too familiar. It is part of the state's run,
+  // so it appears once and a reload does not repeat it.
+  if (state.echo) lines.push({ id: "echo-opening", text: ECHO_OPENING });
   const add = (when: boolean, id: string, text: string) => {
     if (when) lines.push({ id, text });
   };
