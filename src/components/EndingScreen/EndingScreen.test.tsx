@@ -139,3 +139,10 @@ describe("EndingScreen road not taken", () => {
     expect(screen.queryByRole("region", { name: "The road not taken" })).not.toBeInTheDocument();
   });
 });
+
+describe("EndingScreen cast", () => {
+  it("says who stayed when the report has it", () => {
+    setup({ report: { ...noReport, cast: "Still here at the end: Dee. Gone: Priya." } });
+    expect(screen.getByText("Still here at the end: Dee. Gone: Priya.")).toBeInTheDocument();
+  });
+});

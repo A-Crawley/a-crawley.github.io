@@ -28,6 +28,8 @@ export interface EndingReport {
   events: readonly EndingReportEvent[];
   unseenEvents: number;
   unseenAchievements: number;
+  /** Who from the named cast stayed. Leave out to hide the line. */
+  cast?: string | null;
   /** The ending not reached, shown behind a button. Leave out to hide the block. */
   otherEnding?: { title: string; opening: string } | null;
   /** What the player did before the exit, or null if they never picked. */
@@ -126,6 +128,7 @@ export function EndingScreen({
         <Typography id="run-report-title" component="h3" variant="h6">
           What you decided
         </Typography>
+        {report.cast && <Typography sx={{ pb: 0.5 }}>{report.cast}</Typography>}
         {report.parting && (
           <Typography sx={{ pb: 0.5 }}>
             <strong>At the exit:</strong> {report.parting}

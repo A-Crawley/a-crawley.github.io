@@ -68,7 +68,15 @@ describe("runReport", () => {
       expect(JSON.stringify(report)).not.toMatch(/12345|drift|odds|%/i);
       expect(report.hint).not.toMatch(/\d|%/);
       expect(Object.keys(report).sort()).toEqual(
-        ["events", "hint", "otherEnding", "parting", "unseenAchievements", "unseenEvents"].sort(),
+        [
+          "cast",
+          "events",
+          "hint",
+          "otherEnding",
+          "parting",
+          "unseenAchievements",
+          "unseenEvents",
+        ].sort(),
       );
     }
     for (const hint of Object.values(OTHER_ENDING_HINT)) expect(hint).not.toMatch(/\d|%/);

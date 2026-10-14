@@ -389,3 +389,12 @@ The `game-ui-designer` agent (`.claude/agents/`) holds the design principles use
 - **Which line:** `pickChatter` is a fixed function of the count and the state: it takes the lines that fit (right stage, and for a few, a condition such as hungry, idle hands, a full store or machines), skips the one just heard, and picks by hash. Because it is saved the moment it happens, a reload never reshuffles it.
 - **Away time:** `tick` settles once per second, so a long absence would produce many lines. `capAwayChatter` (called from `catchUp`) keeps only the latest new one. The 8 hour cap and 25% rate are unchanged.
 - **Log:** the lines come last in `logLines`, keyed by their number since the first, so keys stay put as the oldest drop off.
+
+## The named cast (GAME-37)
+
+`src/game/cast.ts` gives the first eight villagers names and roles (Priya in Food Acquisition, Marcus in Timber Operations, and so on). There is no per-villager simulation: villagers are still a count, and the cast is a rule applied to that count.
+
+- **Saved state (version 16):** `cast = { arrived, departed, lastPopulation }`. Member `i` arrives when the population first reaches `i + 1`. When the population falls (hunger, a walkout departure, or releasing an idle villager) each lost villager takes the earliest named villager still here, so the named ones leave first, in order, and never come back. A new hire is anonymous. The 15 to 16 migration counts everyone who would be present as arrived and nobody as gone, so an old save is not blamed for departures from before the cast existed.
+- **When it runs:** `applyCast` is part of `settle`, so it sees every change, including departures while away (`catchUp` settles through `tick`). It reads `population` only and changes nothing but `cast`.
+- **Where it shows:** the village log (one line per departure, in the order they left), a line in the performance review facts (`castReviewNote`, passed to the dialog from the page), and the run report on the ending screen (`castEnding`: everyone stayed, everyone left, or who stayed and who went).
+- **Not done:** village events do not name the cast yet (the ticket asked for at least one).

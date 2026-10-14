@@ -638,3 +638,35 @@ describe("chatter in a save", () => {
     for (const chatter of bad) expect(validateState({ ...raw(), chatter }).ok).toBe(false);
   });
 });
+
+describe("the cast in a save", () => {
+  it("round-trips who arrived and who left", () => {
+    const state = playedState();
+    state.cast = { arrived: 8, departed: [0, 3], lastPopulation: state.population };
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 15 save with everyone present counted as arrived", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 15, population: 12 };
+    delete old.cast;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.cast).toEqual({
+      arrived: 8,
+      departed: [],
+      lastPopulation: 12,
+    });
+  });
+
+  it("rejects a cast that is missing or inconsistent", () => {
+    const bad: unknown[] = [
+      undefined,
+      { arrived: 9, departed: [], lastPopulation: 5 },
+      { arrived: 3, departed: [3], lastPopulation: 5 },
+      { arrived: 3, departed: [1, 1], lastPopulation: 5 },
+      { arrived: 3, departed: [], lastPopulation: -1 },
+      { arrived: 2.5, departed: [], lastPopulation: 5 },
+    ];
+    for (const cast of bad) expect(validateState({ ...raw(), cast }).ok).toBe(false);
+  });
+});
