@@ -15,6 +15,7 @@ import {
   isUnlocked,
   LOOK_UP_AFTER_FORAGERS,
   pendingUnlocks,
+  RIVAL_ECHOES,
   POLICIES_AFTER_JOBS,
   showGatherButton,
   unlock,
@@ -301,6 +302,56 @@ describe("rival incidents", () => {
     state.owned.exploit = 6;
     applyUnlocks(state);
     expect(rival(state)).toEqual(["rival:1:gentle", "rival:6:ruthless"]);
+  });
+});
+
+describe("rival echoes in stage 2", () => {
+  const echoes = (state: GameState) => state.unlocked.filter((id) => id.startsWith("echo:"));
+
+  it("stay quiet before their research level and outside stage 2", () => {
+    expect(echoes(withUnlocks(stateWith({ research: 7 }, 2)))).toEqual([]);
+    expect(echoes(withUnlocks(stateWith({ research: 30 }, 1)))).toEqual([]);
+    expect(echoes(withUnlocks(stateWith({ research: 30 }, 3)))).toEqual([]);
+  });
+
+  it("each fire once, at their level", () => {
+    const state = stateWith({ research: 8 }, 2);
+    applyUnlocks(state);
+    expect(echoes(state)).toEqual(["echo:8:wary"]);
+    expect(applyUnlocks(state)).toEqual([]);
+    state.owned.research = 18;
+    applyUnlocks(state);
+    expect(echoes(state)).toEqual(["echo:8:wary", "echo:18:wary"]);
+    state.owned.research = 27;
+    applyUnlocks(state);
+    expect(echoes(state)).toEqual(["echo:8:wary", "echo:18:wary", "echo:27:wary"]);
+  });
+
+  it("all fire together when several levels are crossed at once, in order", () => {
+    expect(echoes(withUnlocks(stateWith({ research: 30 }, 2)))).toEqual([
+      "echo:8:wary",
+      "echo:18:wary",
+      "echo:27:wary",
+    ]);
+  });
+
+  it("take their tone from the drift, and keep it", () => {
+    const state = stateWith({ research: 8 }, 2, CONFIG.driftScale);
+    applyUnlocks(state);
+    state.drift = -CONFIG.driftScale;
+    state.owned.research = 18;
+    applyUnlocks(state);
+    expect(echoes(state)).toEqual(["echo:8:gentle", "echo:18:ruthless"]);
+  });
+
+  it("show in the village log with different wording for each tone, and no numbers", () => {
+    for (const { level, lines } of RIVAL_ECHOES) {
+      expect(new Set(Object.values(lines)).size).toBe(3);
+      for (const text of Object.values(lines)) expect(text).not.toMatch(/\d|%/);
+      const state = stateWith({ research: level }, 2, CONFIG.driftScale);
+      applyUnlocks(state);
+      expect(logLines(state).map((l) => l.text)).toContain(lines.gentle);
+    }
   });
 });
 

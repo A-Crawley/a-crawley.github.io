@@ -292,3 +292,22 @@ describe("catchUp: a stage review while away", () => {
     expect(pendingReview(result.state)).toBeNull();
   });
 });
+
+describe("catchUp: rival echoes", () => {
+  it("does not repeat an echo that already fired", () => {
+    const state = village();
+    state.stage = 2;
+    state.owned.research = 8;
+    state.unlocked.push("echo:8:wary");
+    const { state: after } = catchUp(state, at(3600));
+    expect(after.unlocked.filter((id) => id.startsWith("echo:"))).toEqual(["echo:8:wary"]);
+  });
+
+  it("notes an echo that was waiting when the player left, once", () => {
+    const state = village();
+    state.stage = 2;
+    state.owned.research = 8;
+    const { state: after } = catchUp(state, at(3600));
+    expect(after.unlocked.filter((id) => id.startsWith("echo:"))).toEqual(["echo:8:wary"]);
+  });
+});
