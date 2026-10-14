@@ -764,3 +764,26 @@ describe("the echo record in a save", () => {
     expect(validateState({ ...good, echo: undefined }).ok).toBe(false);
   });
 });
+
+describe("the Exchange strain in a save", () => {
+  it("round-trips the strain", () => {
+    const state = playedState();
+    state.marketStrain = 0.75;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 19 save with a fresh rate", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 19 };
+    delete old.marketStrain;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.marketStrain).toBe(0);
+  });
+
+  it("rejects a missing or negative strain", () => {
+    const good = JSON.parse(serializeState(playedState())) as Record<string, unknown>;
+    expect(validateState({ ...good, marketStrain: -1 }).ok).toBe(false);
+    expect(validateState({ ...good, marketStrain: undefined }).ok).toBe(false);
+    expect(validateState({ ...good, marketStrain: "high" }).ok).toBe(false);
+  });
+});

@@ -50,6 +50,8 @@ export interface SimState {
   route: Route;
   /** Exploits bought by the loud route over the run. */
   loudExploits: number;
+  /** How worn the Exchange rate is from recent trades. Eases back to zero over time. */
+  marketStrain: number;
 }
 
 export interface Rates {
@@ -102,6 +104,7 @@ export function createState(): SimState {
     brief: null,
     route: "quiet",
     loudExploits: 0,
+    marketStrain: 0,
   };
 }
 
@@ -596,6 +599,11 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
   state.infra += rates.infra * dt;
 
   clampStocks(state);
+
+  // The Exchange rate recovers while nobody trades.
+  if (state.marketStrain > 0) {
+    state.marketStrain = Math.max(0, state.marketStrain - CONFIG.market.recoverPerSecond * dt);
+  }
 
   // Food never goes below nothing. Running out for long enough costs morale, then villagers.
   const { hunger: h } = VILLAGE;

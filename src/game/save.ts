@@ -131,6 +131,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   17: (save) => ({ ...save, version: 18, route: "quiet", loudExploits: 0 }),
   // 18 -> 19: echoes of a previous run. A run already under way is a first run as far as it knows.
   18: (save) => ({ ...save, version: 19, echo: null }),
+  // 19 -> 20: the Exchange. Nobody has traded yet, so the rate is fresh.
+  19: (save) => ({ ...save, version: 20, marketStrain: 0 }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -206,6 +208,7 @@ const NON_NEGATIVE_FIELDS = [
   "operators",
   "redeployed",
   "released",
+  "marketStrain",
 ] as const;
 
 const POLICY_FIELDS = ["extendedShifts", "rationsOptimisation"] as const;
@@ -476,6 +479,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       brief,
       route: raw.route,
       loudExploits,
+      marketStrain: raw.marketStrain as number,
       unlocked,
       ending,
       achievements,

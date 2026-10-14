@@ -61,12 +61,15 @@ import {
   isBriefId,
 } from "../../game/briefs.ts";
 import { BriefChoice } from "../../components/BriefChoice";
+import { Exchange } from "../../components/Exchange";
 import { castReviewNote } from "../../game/cast.ts";
 import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
 import { formatAmount, formatDuration } from "../../game/format.ts";
+import { exchangeNote, quoteTrade, tradeReason, TRADES } from "../../game/market.ts";
+import type { Trade } from "../../game/market.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
 import { lookUpText, lookUpWait, SIGHTINGS, sightingText } from "../../game/sky.ts";
 import { SkyNotes } from "../../components/SkyNotes";
@@ -447,6 +450,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
       offeredUpgrades.length,
       state.upgrades.length,
       policiesOffered,
+      unlocked("market"),
       // Gather food sits above the shop, so it retiring (or coming back when food runs out)
       // moves the shop too.
       gatherOnShow,
@@ -518,6 +522,26 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               </ShopSection>
             );
           })}
+          {unlocked("market") && (
+            <ShopSection title="Exchange" collapsible={phone}>
+              <Exchange
+                rateNote={exchangeNote(state)}
+                offers={TRADES.map((which) => {
+                  const quote = quoteTrade(state, which);
+                  const amount = (n: number) => formatAmount(n, settings.notation);
+                  return {
+                    id: which,
+                    label: quote.possible
+                      ? `Sell ${amount(quote.giveAmount)} ${quote.give} for ${amount(quote.getAmount)} ${quote.get}`
+                      : `Sell ${quote.give} for ${quote.get}`,
+                    possible: quote.possible,
+                    reason: tradeReason(state, which) ?? undefined,
+                  };
+                })}
+                onTrade={(id) => game.trade(id as Trade)}
+              />
+            </ShopSection>
+          )}
           {state.stage === 3 && (
             <ShopSection title="Approach" collapsible={phone} defaultExpanded>
               <PolicyToggle

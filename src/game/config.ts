@@ -270,6 +270,22 @@ export const CONFIG = {
    */
   routes: { loud: { priceFactor: 0.85, driftPerExploit: -120, loudPerExtraIncident: 2 } },
 
+  /**
+   * The Exchange (GAME-34): swap food and wood, never infrastructure, so the stage gates keep their
+   * length. A trade moves one lot: `lotFraction` of what the seller can store, down to `foodFloor`
+   * of the food store (so nobody is starved to fund it). The rate starts at `1 - fee` and worsens as
+   * `1 / (1 + strain)`; each lot adds `strainPerLot` of strain, and it eases by `recoverPerSecond`.
+   */
+  market: {
+    fee: 0.3,
+    lotFraction: 0.1,
+    foodFloor: 0.25,
+    strainPerLot: 0.25,
+    recoverPerSecond: 1 / 240,
+    /** One of the stores has to be this full of its ceiling for the Exchange to open. */
+    revealAt: 0.8,
+  },
+
   /** How the player values each currency when comparing purchases, per stage. */
   value: {
     1: { food: 1, wood: 2, infra: 10 },

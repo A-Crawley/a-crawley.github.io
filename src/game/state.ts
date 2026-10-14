@@ -19,7 +19,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 19;
+export const STATE_VERSION = 20;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives

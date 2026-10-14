@@ -15,6 +15,7 @@ import {
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import { ECHO_RIVAL, ECHO_RIVAL_LEVEL } from "./echoes.ts";
+import { marketOffered } from "./market.ts";
 import type { GameState } from "./state.ts";
 
 /**
@@ -80,7 +81,8 @@ export type UnlockId =
   | "stage3"
   | `rival:${number}:${Temperament}`
   | `echo:${number}:${Temperament}`
-  | `memory:${Temperament}`;
+  | `memory:${Temperament}`
+  | "market";
 
 export interface UnlockDef {
   id: UnlockId;
@@ -351,6 +353,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
     id: "rumours",
     when: (s) => s.stage === 1 && s.infra >= CONFIG.infraGate * 0.85,
     log: "There are rumours of machines. HR says to expect a restructure, not a replacement.",
+  },
+  {
+    id: "market",
+    when: marketOffered,
+    log: "An Exchange opens. It swaps food for wood and wood for food, and charges a handling fee for the handling.",
   },
   {
     id: "stage2",

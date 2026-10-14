@@ -1049,3 +1049,40 @@ describe("GamePage exploit route", () => {
     expect(price()).not.toBe(quiet);
   });
 });
+
+describe("GamePage exchange", () => {
+  function stocked(): GameState {
+    const state = createGameState(Date.now());
+    state.owned.woodcutter = 2;
+    state.owned.forager = 3;
+    state.population = 5;
+    state.wood = 200;
+    state.food = 100;
+    state.unlocked.push("market", "wood");
+    return state;
+  }
+
+  it("is not there for a first-day village", () => {
+    render(<GamePage options={{ storage: null }} />);
+    expect(screen.queryByRole("heading", { name: "Exchange" })).not.toBeInTheDocument();
+  });
+
+  it("shows the Exchange and trades wood for food", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null, initialState: stocked() }} />);
+    expect(screen.getByRole("heading", { name: "Exchange" })).toBeInTheDocument();
+    const sell = screen.getByRole("button", { name: /Sell 20 wood for 14 food/ });
+    await user.click(sell);
+    expect(screen.getByText(/Recent trades have worn the rate/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sell 20 wood for 11 food/ })).toBeInTheDocument();
+  });
+
+  it("says why a trade is blocked", () => {
+    const state = stocked();
+    state.food = 10;
+    state.wood = 100;
+    render(<GamePage options={{ storage: null, initialState: state }} />);
+    expect(screen.getByRole("button", { name: "Sell food for wood" })).toBeDisabled();
+    expect(screen.getByText("Keep some food for the village.")).toBeInTheDocument();
+  });
+});
