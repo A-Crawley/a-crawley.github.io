@@ -52,6 +52,15 @@ import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { secondsUntilAffordable, waitCaption } from "../../game/affordWait.ts";
+import {
+  BRIEF_BODY,
+  BRIEF_OPTIONS,
+  BRIEF_TITLE,
+  briefOffered,
+  briefReviewNote,
+  isBriefId,
+} from "../../game/briefs.ts";
+import { BriefChoice } from "../../components/BriefChoice";
 import { castReviewNote } from "../../game/cast.ts";
 import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
@@ -335,6 +344,20 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
   const gatherOnShow = playing && showGatherButton(state);
   const statusPanels: ReactNode[] = [];
   if (playing) {
+    if (briefOffered(state)) {
+      statusPanels.push(
+        <Panel key="brief">
+          <BriefChoice
+            title={BRIEF_TITLE}
+            body={BRIEF_BODY}
+            options={BRIEF_OPTIONS}
+            onChoose={(id) => {
+              if (isBriefId(id)) game.chooseBrief(id);
+            }}
+          />
+        </Panel>,
+      );
+    }
     if (showMorale) {
       statusPanels.push(
         <Panel key="morale">
@@ -672,7 +695,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         {/* Queued behind the welcome-back dialog, never stacked on it. */}
         <PerformanceReviewDialog
           review={game.away === null ? game.review : null}
-          castNote={castReviewNote(state.cast)}
+          notes={[castReviewNote(state.cast), briefReviewNote(state)]}
           onClose={game.dismissReview}
         />
         <AchievementToast title={toastTitle} onClose={news.dismiss} raised={phone && playing} />

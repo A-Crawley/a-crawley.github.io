@@ -110,4 +110,5 @@ export const MORALE_DRIVER_LABELS: Record<MoraleDriverId, string> = {
   restless: "Overdue a day off",
   fed: "Well fed",
   room: "Room to spare",
+  brief: "Research brief",
 };

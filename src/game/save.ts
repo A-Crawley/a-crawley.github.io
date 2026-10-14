@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { isBriefId } from "./briefs.ts";
+import type { BriefId } from "./config.ts";
 import { CAST, createCastState } from "./cast.ts";
 import type { CastState } from "./cast.ts";
 import { isChatterId, MAX_CHATTER_LINES, MIN_CHATTER_GAP } from "./chatter.ts";
@@ -121,6 +123,9 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
         : 0;
     return { ...save, version: 16, cast: createCastState(population) };
   },
+  // 16 -> 17: the research brief. A run already past the start of stage 2 has no brief and keeps
+  // the numbers it had; one still in stage 1 will be asked when stage 2 begins.
+  16: (save) => ({ ...save, version: 17, brief: null }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -392,6 +397,12 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
+  let brief: BriefId | null = null;
+  if (raw.brief !== null) {
+    if (!isBriefId(raw.brief) || raw.stage < 2) return fail("brief");
+    brief = raw.brief;
+  }
+
   const cast = validateCast(raw.cast);
   if (!cast) return fail("cast");
 
@@ -445,6 +456,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       parting,
       chatter,
       cast,
+      brief,
       unlocked,
       ending,
       achievements,

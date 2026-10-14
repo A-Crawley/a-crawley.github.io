@@ -228,3 +228,24 @@ The simulation bots never look up, so the three run totals are unchanged. Bounds
   is a loss, not a trick.
 - Drift: 40 per first sighting, 13 sightings, so under 3.5% of the scale in total.
 - Not yet measured with a person playing.
+
+## Stage 2 research brief (GAME-58)
+
+At the start of stage 2 the player picks a brief for the research, once, and it is locked
+(`CONFIG.briefs`, `src/game/briefs.ts`). With no brief chosen (old saves, or before the player
+picks) nothing changes.
+
+| Brief          | Research bonus per level | Morale (stage 2 only) | Drift (once) |
+| -------------- | ------------------------ | --------------------- | ------------ |
+| Ship it        | 0.02 x 1.05              | -0.03 a second        | -400         |
+| Do it properly | 0.02 x 0.95              | +0.03 a second        | +400         |
+
+Tuning: the first try (x1.25 and x0.8) was too big. It took balanced play from 115.7 to 105.5
+minutes and left compassionate 12% slower, failing the 5% guard. The bots now pick a brief the way
+the strategy suggests (efficient and balanced "Ship it", compassionate "Do it properly"). With
+x1.05 and x0.95 the three run totals are 117.5 (efficient), 115.2 (balanced) and 116.4
+(compassionate) minutes, against 118.1, 115.7 and 115.8 before; Conquest odds order is unchanged
+(15%, 42%, 75%). The effect is small on purpose: 30 levels give 0.63 or 0.57 instead of 0.6, about
+3% of output at the end. The morale push is small next to a rest day or the "well fed" lift.
+A real player has no reason to pick one by habit, so the choice should read as a style, not a fix.
+Not measured with a person playing.

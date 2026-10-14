@@ -2,7 +2,7 @@ import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./econom
 import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import { hasUpgrade, UPGRADE_EFFECTS } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
-import type { Currency, ItemDef, ItemId, Stage } from "./config.ts";
+import type { BriefId, Currency, ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
 
@@ -44,6 +44,8 @@ export interface SimState {
   released: number;
   /** One-off purchases made, in order. */
   upgrades: UpgradeId[];
+  /** The stage 2 research brief the player chose, or null (not chosen, or a save from before). */
+  brief: BriefId | null;
 }
 
 export interface Rates {
@@ -93,6 +95,7 @@ export function createState(): SimState {
     redeployed: 0,
     released: 0,
     upgrades: [],
+    brief: null,
   };
 }
 
@@ -243,12 +246,18 @@ export function moraleMultiplier(morale: number): number {
   return floor + (1 - floor) * (morale / 100);
 }
 
+/** Output bonus from each research level, after the research brief (if one was chosen). */
+export function researchBonusPerLevel(state: SimState): number {
+  const factor = state.brief === null ? 1 : CONFIG.briefs[state.brief].researchFactor;
+  return CONFIG.researchBonusPerLevel * factor;
+}
+
 /** Combined multiplier on everything the village produces. */
 export function globalMultiplier(state: SimState): number {
   if (isResting(state) || state.time < state.lookPauseUntil) return 0;
   let multiplier = moraleMultiplier(state.morale);
   if (state.policies.extendedShifts) multiplier *= CONFIG.policies.extendedShifts.outputFactor;
-  multiplier *= 1 + CONFIG.researchBonusPerLevel * state.owned.research;
+  multiplier *= 1 + researchBonusPerLevel(state) * state.owned.research;
   if (isWalkingOut(state)) multiplier *= CONFIG.morale.walkoutOutputFactor;
   return multiplier;
 }
@@ -493,7 +502,15 @@ function loseVillager(state: SimState): void {
 }
 
 export type MoraleDriverId =
-  "extendedShifts" | "rations" | "hungry" | "idle" | "crowded" | "restless" | "fed" | "room";
+  | "extendedShifts"
+  | "rations"
+  | "hungry"
+  | "idle"
+  | "crowded"
+  | "restless"
+  | "fed"
+  | "room"
+  | "brief";
 
 /** One thing moving morale right now. Positive `perSecond` lifts it, negative drains it. */
 export interface MoraleDriver {
@@ -524,6 +541,9 @@ export function moraleDrivers(state: SimState, strain = true): MoraleDriver[] {
     const odd = Math.min(DISPLACED.oddJobDrain * oddJobbers(state), DISPLACED.oddJobDrainCap);
     add("idle", -Math.min(idle + odd, m.unemployedDrainCap));
   }
+  // The research brief leans on morale for as long as stage 2 lasts.
+  if (state.stage === 2 && state.brief !== null)
+    add("brief", CONFIG.briefs[state.brief].moralePerSecond);
   const freeBeds = bedsOf(state.owned, state.upgrades) - state.population;
   if (strain && jobsHeld(state.owned) > 0) {
     if (freeBeds <= 0) add("crowded", -d.crowdedDrain);

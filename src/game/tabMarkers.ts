@@ -1,3 +1,4 @@
+import { briefOffered } from "./briefs.ts";
 import { idleHands, isHungry } from "./engine.ts";
 import { logLines } from "./log.ts";
 import type { GameState } from "./state.ts";
@@ -24,7 +25,7 @@ export interface TabMarkerMemory {
 export function tabSignals(state: GameState): TabSignals {
   return {
     more: logLines(state).length + state.sky.seen.length + state.achievements.length,
-    villageUrgent: isHungry(state) || idleHands(state) > 0,
+    villageUrgent: isHungry(state) || idleHands(state) > 0 || briefOffered(state),
   };
 }
 

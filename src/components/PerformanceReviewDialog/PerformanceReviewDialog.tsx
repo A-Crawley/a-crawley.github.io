@@ -15,22 +15,22 @@ import type { Review } from "../../game/review.ts";
 export interface PerformanceReviewDialogProps {
   /** The review waiting to be shown. The dialog is open while this is set. */
   review: Review | null;
-  /** One more line for the facts, such as who has left. Leave out for none. */
-  castNote?: string | null;
+  /** More lines for the findings, such as who has left. Empty or null entries are skipped. */
+  notes?: ReadonlyArray<string | null>;
   onClose: () => void;
 }
 
 /** The "Performance review" shown once on entering stage 2 and once on entering stage 3. */
 export function PerformanceReviewDialog({
   review,
-  castNote = null,
+  notes = [],
   onClose,
 }: PerformanceReviewDialogProps) {
   // Keep showing the last review while the dialog fades out, so it doesn't go blank.
   const [shown, setShown] = useState(review);
   if (review && review.stage !== shown?.stage) setShown(review);
   if (!shown) return null;
-  const copy = reviewCopy(shown, castNote);
+  const copy = reviewCopy(shown, notes);
 
   return (
     <Dialog

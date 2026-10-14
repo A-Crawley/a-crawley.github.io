@@ -20,6 +20,14 @@ describe("tabSignals", () => {
     state.shortfallSeconds = 10;
     expect(tabSignals(state).villageUrgent).toBe(true);
   });
+
+  it("calls the village urgent while a research brief is waiting to be chosen", () => {
+    const state = createGameState(0);
+    state.stage = 2;
+    expect(tabSignals(state).villageUrgent).toBe(true);
+    state.brief = "fast";
+    expect(tabSignals(state).villageUrgent).toBe(false);
+  });
 });
 
 describe("updateTabMarkers", () => {

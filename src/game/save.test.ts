@@ -670,3 +670,34 @@ describe("the cast in a save", () => {
     for (const cast of bad) expect(validateState({ ...raw(), cast }).ok).toBe(false);
   });
 });
+
+describe("the research brief in a save", () => {
+  function inStage2(): GameState {
+    const state = playedState();
+    state.stage = 2;
+    return state;
+  }
+
+  it("round-trips each brief", () => {
+    for (const brief of ["fast", "steady"] as const) {
+      const state = inStage2();
+      state.brief = brief;
+      expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+    }
+  });
+
+  it("upgrades a version 16 save with no brief", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 16 };
+    delete old.brief;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.brief).toBeNull();
+  });
+
+  it("rejects an unknown brief, or one from a run that has not reached stage 2", () => {
+    expect(validateState({ ...JSON.parse(serializeState(inStage2())), brief: "slow" }).ok).toBe(
+      false,
+    );
+    expect(validateState({ ...raw(), stage: 1, brief: "fast" }).ok).toBe(false);
+  });
+});

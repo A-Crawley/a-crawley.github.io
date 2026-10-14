@@ -3,6 +3,9 @@
  * Every number the simulation uses lives here so tuning is a one-file change.
  */
 
+/** The research briefs on offer in stage 2. */
+export type BriefId = "fast" | "steady";
+
 export type Stage = 1 | 2 | 3;
 export type Currency = "food" | "wood" | "infra";
 
@@ -245,6 +248,16 @@ export const CONFIG = {
   infraGate: 13500,
   researchLevels: 30,
   researchBonusPerLevel: 0.02,
+  /**
+   * Research briefs (GAME-58): one choice at the start of stage 2, locked once made. `researchFactor`
+   * scales the output bonus of each research level, `moralePerSecond` is a steady push on morale
+   * during stage 2 (negative drains it) and `drift` is a one-off nudge (raw points, negative is
+   * efficiency). With no brief chosen nothing changes.
+   */
+  briefs: {
+    fast: { researchFactor: 1.05, moralePerSecond: -0.03, drift: -400 },
+    steady: { researchFactor: 0.95, moralePerSecond: 0.03, drift: 400 },
+  },
   exploitsGoal: 22,
 
   /** How the player values each currency when comparing purchases, per stage. */

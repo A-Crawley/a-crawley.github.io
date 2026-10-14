@@ -12,6 +12,8 @@ import {
   setPolicy,
   takeRestDay,
 } from "../game/actions.ts";
+import { chooseBrief } from "../game/briefs.ts";
+import type { BriefId } from "../game/config.ts";
 import { choosePartingAct } from "../game/parting.ts";
 import type { PartingAct } from "../game/parting.ts";
 import { withSettled } from "../game/settle.ts";
@@ -73,6 +75,8 @@ export interface UseGame {
   lookUp(): void;
   /** Make the final choice. Rolled once and saved straight away, so a reload cannot change it. */
   breakOut(): void;
+  /** Choose the stage 2 research brief. Saved straight away and cannot be changed. */
+  chooseBrief(id: BriefId): void;
   /** Pick the act before the final choice. Saved straight away and cannot be changed. */
   choosePartingAct(act: PartingAct): void;
   /** The current game as a copy-and-paste save string. */
@@ -189,6 +193,13 @@ export function useGame(options?: UseGameOptions): UseGame {
     retrain: useCallback(() => store.dispatch(retrain), [store]),
     release: useCallback(() => store.dispatch(release), [store]),
     lookUp: useCallback(() => store.dispatch(lookUp), [store]),
+    chooseBrief: useCallback(
+      (id: BriefId) => {
+        store.dispatch((s) => chooseBrief(s, id));
+        saveGame(store.getState(), storage);
+      },
+      [store, storage],
+    ),
     choosePartingAct: useCallback(
       (act: PartingAct) => {
         store.dispatch((s) => choosePartingAct(s, act));

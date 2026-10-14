@@ -62,7 +62,7 @@ describe("PerformanceReviewDialog", () => {
   });
 });
 
-describe("PerformanceReviewDialog cast note", () => {
+describe("PerformanceReviewDialog notes", () => {
   it("adds the note to the findings when given one, and nothing when not", () => {
     const { rerender } = render(<PerformanceReviewDialog review={review} onClose={() => {}} />);
     expect(screen.getByRole("list", { name: "Review findings" })).not.toHaveTextContent(
@@ -71,12 +71,19 @@ describe("PerformanceReviewDialog cast note", () => {
     rerender(
       <PerformanceReviewDialog
         review={review}
-        castNote="Attrition: Priya has left. Leadership describes this as a natural process."
+        notes={[
+          "Attrition: Priya has left. Leadership describes this as a natural process.",
+          null,
+          "Research brief: x",
+        ]}
         onClose={() => {}}
       />,
     );
     expect(screen.getByRole("list", { name: "Review findings" })).toHaveTextContent(
       "Attrition: Priya has left",
+    );
+    expect(screen.getByRole("list", { name: "Review findings" })).toHaveTextContent(
+      "Research brief: x",
     );
   });
 });

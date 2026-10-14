@@ -971,3 +971,48 @@ describe("GamePage Look up ritual", () => {
     expect(screen.queryByRole("button", { name: /Sky notes/ })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage research brief", () => {
+  const SAVE_KEY = "look-up:save";
+
+  function memoryStorage() {
+    const data = new Map<string, string>();
+    return {
+      data,
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => void data.set(key, value),
+      removeItem: (key: string) => void data.delete(key),
+    };
+  }
+
+  function stage2(): GameState {
+    const state = createGameState(Date.now());
+    state.stage = 2;
+    return state;
+  }
+
+  it("offers the brief at the start of stage 2, and only once", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const storage = memoryStorage();
+    storage.setItem(SAVE_KEY, JSON.stringify(reviewed(stage2())));
+    render(<GamePage options={{ storage }} />);
+    expect(screen.getByRole("heading", { name: "Research brief" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Do it properly/ }));
+    expect(screen.queryByRole("heading", { name: "Research brief" })).not.toBeInTheDocument();
+    cleanup();
+
+    // Reloaded: the choice is kept and the question does not come back.
+    render(<GamePage options={{ storage }} />);
+    expect(screen.queryByRole("heading", { name: "Research brief" })).not.toBeInTheDocument();
+  });
+
+  it("does not ask in stage 1 or once stage 2 is over", () => {
+    render(<GamePage options={{ storage: null }} />);
+    expect(screen.queryByRole("heading", { name: "Research brief" })).not.toBeInTheDocument();
+    cleanup();
+    const late = stage2();
+    late.stage = 3;
+    render(<GamePage options={{ storage: null, initialState: reviewed(late) }} />);
+    expect(screen.queryByRole("heading", { name: "Research brief" })).not.toBeInTheDocument();
+  });
+});
