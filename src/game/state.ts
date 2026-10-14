@@ -10,6 +10,8 @@ import type { CastState } from "./cast.ts";
 import { createChatterState } from "./chatter.ts";
 import type { ChatterState } from "./chatter.ts";
 import type { RunRecord } from "./echoes.ts";
+import { createTargetsState } from "./targets.ts";
+import type { TargetsState } from "./targets.ts";
 import { createMilestonesState } from "./milestones.ts";
 import type { MilestonesState } from "./milestones.ts";
 import { createSkyState } from "./sky.ts";
@@ -19,7 +21,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 20;
+export const STATE_VERSION = 21;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -56,6 +58,8 @@ export interface GameState extends SimState {
    * It only colours the wording (see `echoes.ts`); no number depends on it.
    */
   echo: RunRecord | null;
+  /** Quarterly targets: the offer, the accepted target and how each went. */
+  targets: TargetsState;
 }
 
 export function createGameState(now: number, echo: RunRecord | null = null): GameState {
@@ -75,5 +79,6 @@ export function createGameState(now: number, echo: RunRecord | null = null): Gam
     chatter: createChatterState(),
     cast: createCastState(base.population),
     echo,
+    targets: createTargetsState(),
   };
 }

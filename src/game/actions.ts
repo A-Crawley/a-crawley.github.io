@@ -84,6 +84,9 @@ export function setRoute(state: GameState, route: Route): GameState {
   return next;
 }
 
+/** Answer a quarterly target offer. See ./targets.ts. */
+export { acceptTarget, declineTarget } from "./targets.ts";
+
 /** Swap food and wood at the Exchange. See ./market.ts. */
 export { trade } from "./market.ts";
 

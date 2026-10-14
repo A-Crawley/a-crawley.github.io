@@ -12,6 +12,8 @@ import {
   setPolicy,
   setRoute,
   trade,
+  acceptTarget,
+  declineTarget,
   takeRestDay,
 } from "../game/actions.ts";
 import { chooseBrief } from "../game/briefs.ts";
@@ -23,6 +25,7 @@ import type { ItemId } from "../game/config.ts";
 import type { BuyQuantity, Policies } from "../game/engine.ts";
 import type { UpgradeId } from "../game/upgrades.ts";
 import type { AwaySummary } from "../game/offline.ts";
+import type { TargetKind } from "../game/targets.ts";
 import type { Trade } from "../game/market.ts";
 import { recordOf } from "../game/echoes.ts";
 import { exportSave, importSave } from "../game/save.ts";
@@ -68,6 +71,10 @@ export interface UseGame {
   setPolicy(policy: keyof Policies, on: boolean): void;
   /** Choose how exploits are bought in stage 3: quiet (the default) or loud. */
   setRoute(route: Route): void;
+  /** Accept a quarterly target offer: the stretch or the gentler one. */
+  acceptTarget(kind: TargetKind): void;
+  /** Decline the quarterly target offer. */
+  declineTarget(): void;
   /** Swap one lot of food and wood at the Exchange. */
   trade(which: Trade): void;
   takeRestDay(): void;
@@ -187,6 +194,17 @@ export function useGame(options?: UseGameOptions): UseGame {
       (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),
       [store],
     ),
+    acceptTarget: useCallback(
+      (kind: TargetKind) => {
+        store.dispatch((s) => acceptTarget(s, kind));
+        saveGame(store.getState(), storage);
+      },
+      [store, storage],
+    ),
+    declineTarget: useCallback(() => {
+      store.dispatch(declineTarget);
+      saveGame(store.getState(), storage);
+    }, [store, storage]),
     trade: useCallback((which: Trade) => store.dispatch((s) => trade(s, which)), [store]),
     setRoute: useCallback((route: Route) => store.dispatch((s) => setRoute(s, route)), [store]),
     setPolicy: useCallback(

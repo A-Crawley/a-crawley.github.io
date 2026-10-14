@@ -64,13 +64,15 @@ import {
   isBriefId,
 } from "../../game/briefs.ts";
 import { BriefChoice } from "../../components/BriefChoice";
+import { TargetStatus } from "../../components/TargetStatus";
 import { Exchange } from "../../components/Exchange";
 import { castReviewNote } from "../../game/cast.ts";
 import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
 import { ENDING_COPY, FINAL_CHOICE, REVEAL, VERDICT } from "../../game/endingCopy.ts";
-import { formatAmount, formatDuration } from "../../game/format.ts";
+import { formatAmount, formatDuration, formatWait } from "../../game/format.ts";
+import { offerTerms, targetSecondsLeft } from "../../game/targets.ts";
 import { nextSeason, seasonOf, secondsToNextSeason } from "../../game/seasons.ts";
 import type { Season } from "../../game/seasons.ts";
 import { exchangeNote, quoteTrade, tradeReason, TRADES } from "../../game/market.ts";
@@ -349,6 +351,49 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
     );
   }
 
+  // A quarterly target offer is one more question from the village. An event waiting for an
+  // answer goes first, and the offer keeps until it is gone. The offer has no clock.
+  let targetCard: ReactNode = null;
+  if (playing && state.targets.offer && !state.events.pending) {
+    const stretch = offerTerms(state, "stretch");
+    const gentle = offerTerms(state, "gentle");
+    const terms = ({ goal, seconds }: { goal: number; seconds: number }) =>
+      `Reach research level ${goal} in ${formatWait(seconds)}.`;
+    targetCard = (
+      <VillageEventCard
+        title="A quarterly target"
+        body="Leadership would like a number to be bigger by a date, and has brought two numbers and the option of neither."
+        choices={[
+          {
+            id: "stretch",
+            label: "Aim high",
+            detail: `${terms(stretch)} Morale dips a little now. If you make it, a food bonus.`,
+            cost: null,
+            disabled: false,
+          },
+          {
+            id: "gentle",
+            label: "Aim reasonably",
+            detail: `${terms(gentle)} Costs nothing. If you make it, a small food bonus.`,
+            cost: null,
+            disabled: false,
+          },
+          {
+            id: "decline",
+            label: "Decline politely",
+            detail: "Costs nothing. The village will understand, or say it does.",
+            cost: null,
+            disabled: false,
+          },
+        ]}
+        onChoose={(id) => {
+          if (id === "stretch" || id === "gentle") game.acceptTarget(id);
+          else game.declineTarget();
+        }}
+      />
+    );
+  }
+
   const gatherOnShow = playing && showGatherButton(state);
   const statusPanels: ReactNode[] = [];
   if (playing) {
@@ -362,6 +407,17 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
             onChoose={(id) => {
               if (isBriefId(id)) game.chooseBrief(id);
             }}
+          />
+        </Panel>,
+      );
+    }
+    if (state.targets.active) {
+      statusPanels.push(
+        <Panel key="target">
+          <TargetStatus
+            goal={state.targets.active.goal}
+            current={state.owned.research}
+            secondsLeft={targetSecondsLeft(state)}
           />
         </Panel>,
       );
@@ -798,7 +854,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               )}
             </>
           }
-          sheet={eventCard}
+          sheet={eventCard ?? targetCard}
           hud={hud}
           status={status}
           actions={actions}

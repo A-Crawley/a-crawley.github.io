@@ -2,6 +2,7 @@ import { advanceEvents } from "./events.ts";
 import { advanceStage, isFinished, step } from "./engine.ts";
 import type { GameState } from "./state.ts";
 import { settle } from "./settle.ts";
+import { holdTarget } from "./targets.ts";
 
 /** Longest single step. Morale, rest days and walkouts are not linear, so long gaps are replayed in steps. */
 export const MAX_STEP_SECONDS = 1;
@@ -35,6 +36,8 @@ export function tick(
     step(next, dt, false, options.hunger ?? true);
     advanceStage(next);
     advanceEvents(next, { expire: options.expireEvents ?? true });
+    // Away time stands still for an open target, just as it does for a waiting event.
+    if (options.expireEvents === false) holdTarget(next, dt);
     settle(next);
     remaining -= dt;
   }

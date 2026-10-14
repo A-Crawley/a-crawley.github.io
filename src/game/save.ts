@@ -1,4 +1,4 @@
-import { ITEMS, VILLAGE } from "./config.ts";
+import { CONFIG, ITEMS, VILLAGE } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { STATE_VERSION } from "./state.ts";
 import { isUpgradeId } from "./upgrades.ts";
@@ -14,6 +14,8 @@ import { isBriefId } from "./briefs.ts";
 import type { BriefId } from "./config.ts";
 import { CAST, createCastState } from "./cast.ts";
 import type { CastState } from "./cast.ts";
+import { createTargetsState, MAX_OFFERS } from "./targets.ts";
+import type { TargetResult, TargetsState } from "./targets.ts";
 import { parseRunRecord } from "./echoes.ts";
 import { isChatterId, MAX_CHATTER_LINES, MIN_CHATTER_GAP } from "./chatter.ts";
 import type { ChatterState } from "./chatter.ts";
@@ -133,6 +135,9 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   18: (save) => ({ ...save, version: 19, echo: null }),
   // 19 -> 20: the Exchange. Nobody has traded yet, so the rate is fresh.
   19: (save) => ({ ...save, version: 20, marketStrain: 0 }),
+  // 20 -> 21: quarterly targets. Nothing has been offered yet; the first offer comes at research
+  // level 6, so a run already past that simply never gets one.
+  20: (save) => ({ ...save, version: 21, targets: createTargetsState() }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -296,6 +301,34 @@ function validateSky(raw: unknown): SkyState | null {
   return { seen, dry: raw.dry && seen.length > 0 };
 }
 
+function validateTargets(raw: unknown): TargetsState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.results) || typeof raw.offer !== "boolean") return null;
+  const { offered, offer, active } = raw;
+  if (typeof offered !== "number" || !Number.isInteger(offered)) return null;
+  if (offered < 0 || offered > MAX_OFFERS) return null;
+  const results: TargetResult[] = [];
+  for (const item of raw.results as unknown[]) {
+    if (!isRecord(item) || typeof item.met !== "boolean") return null;
+    const { kind, met } = item;
+    if (kind !== "stretch" && kind !== "gentle" && kind !== "declined") return null;
+    if (kind === "declined" && met) return null;
+    results.push({ kind, met });
+  }
+  let checked: TargetsState["active"] = null;
+  if (active !== null) {
+    if (!isRecord(active) || !isFiniteNumber(active.endsAt)) return null;
+    const { kind, goal, endsAt } = active;
+    if (kind !== "stretch" && kind !== "gentle") return null;
+    if (typeof goal !== "number" || !Number.isInteger(goal) || goal < 1) return null;
+    if (goal > CONFIG.researchLevels) return null;
+    checked = { kind, goal, endsAt };
+  }
+  // Every offer is waiting, accepted or finished: one place each, never two at once.
+  if (offer && checked) return null;
+  if (offered !== results.length + (offer ? 1 : 0) + (checked ? 1 : 0)) return null;
+  return { offered, offer, active: checked, results };
+}
+
 function validateReviews(raw: unknown, stage: number): ReviewsState | null {
   if (!isRecord(raw) || !Array.isArray(raw.seen) || !isRecord(raw.entries)) return null;
   const seen: ReviewStage[] = [];
@@ -402,6 +435,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const milestones = validateMilestones(raw.milestones);
   if (!milestones) return fail("milestones");
 
+  const targets = validateTargets(raw.targets);
+  if (!targets) return fail("targets");
+
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
@@ -476,6 +512,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       chatter,
       cast,
       echo,
+      targets,
       brief,
       route: raw.route,
       loudExploits,

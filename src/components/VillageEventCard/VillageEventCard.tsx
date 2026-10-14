@@ -14,8 +14,8 @@ export interface VillageEventCardProps {
   title: string;
   body: string;
   choices: readonly VillageEventChoice[];
-  /** Whole seconds until it is decided for the player. */
-  secondsLeft: number;
+  /** Whole seconds until it is decided for the player. Leave out for a question that never expires. */
+  secondsLeft?: number;
   onChoose: (id: string) => void;
 }
 
@@ -78,9 +78,11 @@ export function VillageEventCard({
           </Button>
         ))}
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        If nobody decides, it will be decided for you in {clock(secondsLeft)}.
-      </Typography>
+      {secondsLeft !== undefined && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          If nobody decides, it will be decided for you in {clock(secondsLeft)}.
+        </Typography>
+      )}
     </Box>
   );
 }

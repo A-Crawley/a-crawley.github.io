@@ -271,6 +271,29 @@ export const CONFIG = {
   routes: { loud: { priceFactor: 0.85, driftPerExploit: -120, loudPerExtraIncident: 2 } },
 
   /**
+   * Quarterly targets (GAME-52): in stage 2, at these research levels, the village offers a target
+   * in research levels. The time allowed is worked out when it is accepted, from what the next levels
+   * cost and what the village earns (`ETA x timeFactor + timeBase`, between `minSeconds` and
+   * `maxSeconds`), so it is neither trivial early nor impossible late. Missing one costs nothing
+   * more. Rewards are windfalls of food: that many seconds of the village's net food.
+   */
+  targets: {
+    offerAtLevels: [6, 14, 22],
+    minSeconds: 120,
+    maxSeconds: 600,
+    stretch: {
+      levels: 4,
+      timeFactor: 1,
+      timeBase: 15,
+      moraleOnAccept: -6,
+      driftWhenMet: -300,
+      rewardSeconds: 90,
+    },
+    gentle: { levels: 2, timeFactor: 2, timeBase: 60, driftOnAccept: 150, rewardSeconds: 30 },
+    declineDrift: 100,
+  },
+
+  /**
    * Seasons (GAME-33): a four-season cycle from `startAt`, `seconds` each. Each season multiplies a
    * few figures a little. Spring and winter move how fast villagers arrive and how much they eat,
    * summer and autumn the food and the wood, and the cycle is close to neutral overall.

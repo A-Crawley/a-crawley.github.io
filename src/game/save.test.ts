@@ -787,3 +787,65 @@ describe("the Exchange strain in a save", () => {
     expect(validateState({ ...good, marketStrain: "high" }).ok).toBe(false);
   });
 });
+
+describe("quarterly targets in a save", () => {
+  function stage2(): GameState {
+    const state = playedState();
+    state.stage = 2;
+    state.owned.research = 8;
+    return state;
+  }
+
+  it("round-trips an offer, an accepted target and results", () => {
+    const offered = stage2();
+    offered.targets = { offered: 1, offer: true, active: null, results: [] };
+    expect(parseSave(serializeState(offered))).toEqual({ ok: true, value: offered });
+    const active = stage2();
+    active.targets = {
+      offered: 2,
+      offer: false,
+      active: { kind: "stretch", goal: 18, endsAt: 4000 },
+      results: [{ kind: "declined", met: false }],
+    };
+    expect(parseSave(serializeState(active))).toEqual({ ok: true, value: active });
+  });
+
+  it("upgrades a version 20 save with nothing offered", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 20 };
+    delete old.targets;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.targets).toEqual({
+      offered: 0,
+      offer: false,
+      active: null,
+      results: [],
+    });
+  });
+
+  it("rejects damaged targets rather than repairing them", () => {
+    const good = JSON.parse(serializeState(stage2())) as Record<string, unknown>;
+    const bad = (targets: unknown) => validateState({ ...good, targets }).ok;
+    const base = { offered: 0, offer: false, active: null, results: [] };
+    expect(bad(base)).toBe(true);
+    expect(bad(undefined)).toBe(false);
+    expect(bad({ ...base, offered: 4 })).toBe(false);
+    expect(bad({ ...base, offered: -1 })).toBe(false);
+    expect(bad({ ...base, offered: 1.5 })).toBe(false);
+    // Offers and results must add up, and an offer cannot be waiting and accepted at once.
+    expect(bad({ ...base, offered: 1 })).toBe(false);
+    expect(bad({ ...base, offered: 1, offer: true })).toBe(true);
+    expect(
+      bad({ ...base, offered: 1, offer: true, active: { kind: "gentle", goal: 5, endsAt: 1 } }),
+    ).toBe(false);
+    expect(bad({ ...base, offered: 1, active: { kind: "other", goal: 5, endsAt: 1 } })).toBe(false);
+    expect(bad({ ...base, offered: 1, active: { kind: "gentle", goal: 99, endsAt: 1 } })).toBe(
+      false,
+    );
+    expect(bad({ ...base, offered: 1, active: { kind: "gentle", goal: 5, endsAt: NaN } })).toBe(
+      false,
+    );
+    expect(bad({ ...base, offered: 1, results: [{ kind: "declined", met: true }] })).toBe(false);
+    expect(bad({ ...base, offered: 1, results: [{ kind: "stretch", met: "yes" }] })).toBe(false);
+  });
+});
