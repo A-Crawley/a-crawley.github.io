@@ -31,6 +31,9 @@ import { settle } from "./settle.ts";
 /** Answer the village event that is waiting. See ./events.ts. */
 export { chooseEvent } from "./events.ts";
 
+/** Choose the stage 2 research brief. See ./briefs.ts. */
+export { chooseBrief } from "./briefs.ts";
+
 /** The final choice, once every exploit is in place. See `breakOut` in ending.ts. */
 export { breakOut } from "./ending.ts";
 

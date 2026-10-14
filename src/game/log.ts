@@ -2,6 +2,7 @@ import { VILLAGE } from "./config.ts";
 import { isHungry, itemDef } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
+import { briefLog } from "./briefs.ts";
 import { castDepartures } from "./cast.ts";
 import { chatterText } from "./chatter.ts";
 import { milestoneDef } from "./milestones.ts";
@@ -117,6 +118,8 @@ export function logLines(state: GameState): LogLine[] {
     if (state.milestones.quiet.includes(id)) continue;
     lines.push({ id: `milestone:${id}`, text: milestoneDef(id).log });
   }
+  const brief = briefLog(state);
+  if (brief) lines.push({ id: "brief", text: brief });
   // Named villagers who have left, in the order they went.
   castDepartures(state.cast).forEach((text, index) => {
     lines.push({ id: `cast:${index}`, text });

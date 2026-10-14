@@ -398,3 +398,12 @@ The `game-ui-designer` agent (`.claude/agents/`) holds the design principles use
 - **When it runs:** `applyCast` is part of `settle`, so it sees every change, including departures while away (`catchUp` settles through `tick`). It reads `population` only and changes nothing but `cast`.
 - **Where it shows:** the village log (one line per departure, in the order they left), a line in the performance review facts (`castReviewNote`, passed to the dialog from the page), and the run report on the ending screen (`castEnding`: everyone stayed, everyone left, or who stayed and who went).
 - **Not done:** village events do not name the cast yet (the ticket asked for at least one).
+
+## Stage 2 research brief (GAME-58)
+
+`src/game/briefs.ts` and `CONFIG.briefs`. When stage 2 begins, `briefOffered(state)` is true until the player picks "Ship it" (`fast`) or "Do it properly" (`steady`). `chooseBrief` does nothing outside stage 2 or once a brief is set, so it is locked; `takeBrief` is the in-place version the simulation bots use. The page shows `BriefChoice` as a status panel, `useGame.chooseBrief` saves at once, and a reload does not ask again.
+
+- **Effects:** `researchBonusPerLevel(state)` scales the output bonus per research level; `moraleDrivers` gets a `brief` driver (shown as "Research brief" beside the meter) during stage 2 only; the drift is nudged once on choosing. All numbers are in `CONFIG.briefs` and discussed in `docs/economy.md`.
+- **Save version 17:** `brief` (null, `fast` or `steady`). The 16 to 17 migration sets null: a save already in stage 2 or later has no brief and keeps its numbers, and one still in stage 1 will be asked. A brief in a stage 1 save is rejected.
+- **Offline:** `catchUp` runs through `tick` and the engine, so the brief's effects apply while away exactly as online.
+- **Wording:** a log line for the choice and a "Research brief" line in the stage 2 review (`reviewCopy` now takes a list of extra notes). The drift appears only as words.

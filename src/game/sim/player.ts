@@ -25,6 +25,7 @@ import {
   unemployed,
 } from "../engine.ts";
 import type { Rates, SimState } from "../engine.ts";
+import { takeBrief } from "../briefs.ts";
 import { isUpgradeAvailable, upgradeDef } from "../upgrades.ts";
 import type { UpgradeId } from "../upgrades.ts";
 
@@ -40,6 +41,7 @@ export const STRATEGIES: readonly Strategy[] = [
     name: "efficient",
     describe: "Extended shifts and rations optimisation always on, never rests",
     decide(state) {
+      takeBrief(state, "fast");
       state.policies.extendedShifts = true;
       state.policies.rationsOptimisation = true;
       // Odd jobs while there is work to hire for; once the breakout starts nobody is paid to wait.
@@ -51,6 +53,7 @@ export const STRATEGIES: readonly Strategy[] = [
     name: "balanced",
     describe: "Shifts on while morale is healthy, rest day when morale drops below 45",
     decide(state) {
+      takeBrief(state, "fast");
       if (state.morale > 65) state.policies.extendedShifts = true;
       else if (state.morale < 50) state.policies.extendedShifts = false;
       state.policies.rationsOptimisation = false;
@@ -63,6 +66,7 @@ export const STRATEGIES: readonly Strategy[] = [
     name: "compassionate",
     describe: "No policies, takes a rest day whenever one is available",
     decide(state) {
+      takeBrief(state, "steady");
       state.policies.extendedShifts = false;
       state.policies.rationsOptimisation = false;
       if (canRest(state) && !isResting(state)) startRestDay(state);

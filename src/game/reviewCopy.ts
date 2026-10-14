@@ -43,7 +43,7 @@ function plural(count: number, one: string, many: string): string {
 /** The review's wording, built from the real figures in its snapshot. */
 export function reviewCopy(
   { stage, snapshot }: Review,
-  castNote: string | null = null,
+  notes: ReadonlyArray<string | null> = [],
 ): ReviewCopy {
   const facts = [
     `Time taken: ${formatDuration(snapshot.seconds)}`,
@@ -55,7 +55,7 @@ export function reviewCopy(
       ? "Rest days: none taken. Leadership appreciates the commitment"
       : `Rest days: ${snapshot.restDays.toLocaleString("en-US")}. Leadership is aware of them`,
   ];
-  if (castNote) facts.push(castNote);
+  for (const note of notes) if (note) facts.push(note);
   return {
     title: REVIEW_TITLES[stage],
     opener: OPENERS[stage],
