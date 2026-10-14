@@ -736,3 +736,31 @@ describe("the exploit route in a save", () => {
     expect(validateState({ ...good, loudExploits: 1.5 }).ok).toBe(false);
   });
 });
+
+describe("the echo record in a save", () => {
+  it("round-trips a record and a null", () => {
+    const withRecord = playedState();
+    withRecord.echo = { ending: "conquest", tone: "gentle", walkouts: 2 };
+    expect(parseSave(serializeState(withRecord))).toEqual({ ok: true, value: withRecord });
+    const without = playedState();
+    expect(without.echo).toBeNull();
+    expect(parseSave(serializeState(without))).toEqual({ ok: true, value: without });
+  });
+
+  it("upgrades a version 18 save to a first run", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 18 };
+    delete old.echo;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.echo).toBeNull();
+  });
+
+  it("rejects a damaged record rather than repairing it", () => {
+    const good = JSON.parse(serializeState(playedState())) as Record<string, unknown>;
+    expect(
+      validateState({ ...good, echo: { ending: "peace", tone: "wary", walkouts: 0 } }).ok,
+    ).toBe(false);
+    expect(validateState({ ...good, echo: "apocalypse" }).ok).toBe(false);
+    expect(validateState({ ...good, echo: undefined }).ok).toBe(false);
+  });
+});

@@ -417,3 +417,13 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 - **Incidents:** `rivalProgress(state)` is exploits bought plus one more for every two bought loudly. The rival incident unlocks (`rival:<n>:<tone>`) fire when it reaches 1, 6, 12 and 18, so a loud run meets each one sooner. Their tone is still fixed when they happen.
 - **Save version 18:** `route` and `loudExploits`. The 17 to 18 migration sets quiet and 0. A save with more loud exploits than exploits is rejected.
 - **Offline:** time stops at the final choice and nothing is bought while away, so `catchUp` neither picks a route nor buys loudly. The sim's efficient player uses loud; the other two use quiet.
+
+## Echoes of a previous run (GAME-61)
+
+`src/game/echoes.ts`. After a run ends, a second run carries a few dry touches that hint at it. They are words only: nothing in the economy reads them, and `npm run sim` is unchanged (the sim never has a record).
+
+- **The record:** `RunRecord = { ending, tone, walkouts }`, kept in the settings entry `look-up:settings` as `lastRun`, parsed field by field so a bad record is dropped and notation is kept. `useGame.breakOut` writes it once, the moment the ending is first reached (never when an ended save is loaded). `useSettings` re-reads the stored `lastRun` when notation changes, so neither overwrites the other.
+- **Per run:** a new game (first load with no save, or "Start a new game") copies `lastRun` into `GameState.echo`. Everything else derives from that, so the lines are once per run and a reload cannot repeat them. Import and export carry the copy with the run, not the settings.
+- **The touches:** one opening log line (`echo-opening`, second in the log); three Sky sightings for the earlier ending (`ECHO_SIGHTINGS`, ids `echo:<1-3>:<ending>`, offered at 12 foragers, stage 2 and stage 3, after the first-run pool, and they do not nudge the drift); and one rival line (`memory:<tone>` unlock, stage 2 at research level 12, by the earlier tone).
+- **Save version 19:** `echo` (null or a whole record). The 18 to 19 migration sets null, so a run already under way is a first run. A malformed record rejects the save.
+- **Storage blocked:** no record can be read or written, so there are no echoes and no errors.

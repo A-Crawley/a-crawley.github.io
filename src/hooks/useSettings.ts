@@ -21,7 +21,8 @@ export function useSettings(storage?: StorageLike | null): UseSettings {
 
   const setNotation = useCallback(
     (notation: Notation) => {
-      const next: Settings = { ...settings, notation };
+      // Merge into what is stored now, so a record written by the game in the meantime is kept.
+      const next: Settings = { ...settings, notation, lastRun: loadSettings(store).lastRun };
       setSettings(next);
       saveSettings(next, store);
     },

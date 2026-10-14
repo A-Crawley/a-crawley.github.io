@@ -1,6 +1,9 @@
 import { CONFIG } from "./config.ts";
 import { isFinished, isHungry } from "./engine.ts";
 import { temperamentOf } from "./ending.ts";
+import type { Ending } from "./ending.ts";
+import { ECHO_NOTES, ECHO_SKY } from "./echoes.ts";
+import type { EchoNote } from "./echoes.ts";
 import { withSettled } from "./settle.ts";
 import type { GameState } from "./state.ts";
 import { isUnlocked, unlock } from "./unlocks.ts";
@@ -25,7 +28,8 @@ export type SightingId =
   | "clean"
   | "countdown"
   | "line"
-  | "twin";
+  | "twin"
+  | `echo:${EchoNote}:${Ending}`;
 
 export interface SightingDef {
   id: SightingId;
@@ -114,6 +118,24 @@ export const SIGHTINGS: readonly SightingDef[] = [
   },
 ];
 
+/**
+ * Sightings that only a second run has: echoes of the earlier ending. They are kept apart from the
+ * pool above and come after it, so they never push a first-run sighting back.
+ */
+export const ECHO_SIGHTINGS: readonly SightingDef[] = (["apocalypse", "conquest"] as const).flatMap(
+  (ending) =>
+    ECHO_NOTES.map((note) => ({
+      id: `echo:${note}:${ending}` as const,
+      text: ECHO_SKY[ending][note],
+      when: (s: GameState) =>
+        s.echo?.ending === ending &&
+        (note === 1 ? s.owned.forager >= 12 : note === 2 ? s.stage >= 2 : s.stage >= 3),
+    })),
+);
+
+/** Every sighting, in the order they are offered. */
+const ALL_SIGHTINGS: readonly SightingDef[] = [...SIGHTINGS, ...ECHO_SIGHTINGS];
+
 /** Said when there is nothing new to see. Which one depends on the time, so it is not always the same. */
 export const DRY_LINES: readonly string[] = [
   "You look up. Nothing new. The number is still there, which is its own kind of news.",
@@ -122,16 +144,16 @@ export const DRY_LINES: readonly string[] = [
 ];
 
 export function isSightingId(value: unknown): value is SightingId {
-  return SIGHTINGS.some((s) => s.id === value);
+  return ALL_SIGHTINGS.some((s) => s.id === value);
 }
 
 export function sightingText(id: SightingId): string {
-  return SIGHTINGS.find((s) => s.id === id)?.text ?? "";
+  return ALL_SIGHTINGS.find((s) => s.id === id)?.text ?? "";
 }
 
 /** The next sighting this village has not seen and is in a position to, or null. */
 export function nextSighting(state: GameState): SightingDef | null {
-  return SIGHTINGS.find((s) => !state.sky.seen.includes(s.id) && s.when(state)) ?? null;
+  return ALL_SIGHTINGS.find((s) => !state.sky.seen.includes(s.id) && s.when(state)) ?? null;
 }
 
 /** Whole seconds until the player can look up again, or 0. */
@@ -166,7 +188,8 @@ export function lookUp(state: GameState): GameState {
   if (found) {
     next.sky.seen.push(found.id);
     next.sky.dry = false;
-    next.drift += look.discoveryDrift;
+    // A remembered sky is only words: it does not move the drift.
+    if (!found.id.startsWith("echo:")) next.drift += look.discoveryDrift;
   } else {
     next.sky.dry = true;
   }

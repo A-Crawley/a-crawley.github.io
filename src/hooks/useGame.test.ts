@@ -380,3 +380,67 @@ describe("useGame while away", () => {
     expect(result.current.away).toBeNull();
   });
 });
+
+describe("useGame: echoes of a previous run", () => {
+  const SETTINGS = "look-up:settings";
+
+  function atTheChoice() {
+    const state = createGameState(Date.now());
+    state.stage = 3;
+    state.owned.exploit = CONFIG.exploitsGoal;
+    state.walkouts = 2;
+    state.parting = "silence";
+    return state;
+  }
+
+  it("writes the record once, when the ending is reached, and keeps notation", () => {
+    const storage = memoryStorage({ [SETTINGS]: '{"notation":"scientific"}' });
+    const { result } = renderHook(() =>
+      useGame({ storage, initialState: atTheChoice(), random: () => 0.99 }),
+    );
+    expect(storage.data.get(SETTINGS)).toBe('{"notation":"scientific"}');
+    act(() => result.current.breakOut());
+    const saved = JSON.parse(storage.data.get(SETTINGS) ?? "{}");
+    expect(saved.notation).toBe("scientific");
+    expect(saved.lastRun).toMatchObject({ ending: "apocalypse", walkouts: 2 });
+    // A second press does not write again.
+    storage.data.set(SETTINGS, '{"notation":"short"}');
+    act(() => result.current.breakOut());
+    expect(storage.data.get(SETTINGS)).toBe('{"notation":"short"}');
+  });
+
+  it("does not write when an ended save is loaded", () => {
+    const first = memoryStorage();
+    const { result } = renderHook(() =>
+      useGame({ storage: first, initialState: atTheChoice(), random: () => 0.01 }),
+    );
+    act(() => result.current.breakOut());
+    const storage = memoryStorage({ [SAVE_KEY]: first.data.get(SAVE_KEY) ?? "" });
+    renderHook(() => useGame({ storage }));
+    expect(storage.data.has(SETTINGS)).toBe(false);
+  });
+
+  it("gives a new game the record, and 'Start a new game' keeps it", () => {
+    const record = { ending: "conquest", tone: "gentle", walkouts: 1 };
+    const storage = memoryStorage({
+      [SETTINGS]: JSON.stringify({ notation: "short", lastRun: record }),
+    });
+    const { result } = renderHook(() => useGame({ storage }));
+    expect(result.current.state.echo).toEqual(record);
+    act(() => result.current.resetGame());
+    expect(result.current.state.echo).toEqual(record);
+    expect(JSON.parse(storage.data.get(SETTINGS) ?? "{}").lastRun).toEqual(record);
+  });
+
+  it("leaves a first run without an echo", () => {
+    const { result } = renderHook(() => useGame({ storage: memoryStorage() }));
+    expect(result.current.state.echo).toBeNull();
+  });
+
+  it("works with storage blocked: no echo and no error", () => {
+    const { result } = renderHook(() => useGame({ storage: null }));
+    expect(result.current.state.echo).toBeNull();
+    act(() => result.current.resetGame());
+    expect(result.current.state.echo).toBeNull();
+  });
+});
