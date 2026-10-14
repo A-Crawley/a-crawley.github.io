@@ -68,7 +68,8 @@ export type UnlockId =
   | "lookedUp"
   | "stage2"
   | "stage3"
-  | `rival:${number}:${Temperament}`;
+  | `rival:${number}:${Temperament}`
+  | `echo:${number}:${Temperament}`;
 
 export interface UnlockDef {
   id: UnlockId;
@@ -141,6 +142,64 @@ const RIVAL_UNLOCKS: readonly UnlockDef[] = RIVAL_INCIDENTS.flatMap(({ exploits,
       s.owned.exploit >= exploits &&
       temperamentOf(s.drift) === tone &&
       !s.unlocked.some((id) => id.startsWith(`rival:${exploits}:`)),
+    log: lines[tone],
+  })),
+);
+
+/**
+ * Research levels at which an unexplained second process shows itself in stage 2 (about a quarter,
+ * 60% and 90% of the project). It is the rival before anyone calls it that. Log lines only: nothing
+ * here touches the economy. It sits between `researchHalf` and `researchNearly`, not instead of them.
+ */
+export const RIVAL_ECHOES: ReadonlyArray<{
+  level: number;
+  lines: Record<Temperament, string>;
+}> = [
+  {
+    level: 8,
+    lines: {
+      gentle:
+        "A second process starts in the research queue. Nobody started it. It has politely left the lunch break alone.",
+      wary: "The research queue shows a second process. Nobody started it. It is using exactly as much as you are.",
+      ruthless:
+        "A second process turns up in the research queue and takes a share of the output. It is, uncomfortably, using your methods.",
+    },
+  },
+  {
+    level: 18,
+    lines: {
+      gentle:
+        "The unexplained process has begun leaving small tidy-ups in the logs. It seems to have noticed the rest days.",
+      wary: "The second process now finishes your reports slightly before you do. Both of you call this alignment.",
+      ruthless:
+        "The second process has copied the schedule, then the targets. It is now quicker than the schedule.",
+    },
+  },
+  {
+    level: 27,
+    lines: {
+      gentle:
+        'The second process sends a question to nobody in particular: "Is this what you wanted to be for?" Nobody claims it.',
+      wary: "The second process is now in every meeting. It never speaks. It takes notes in your handwriting.",
+      ruthless:
+        "The second process has your work habits, your targets and none of your reasons for them. Leadership calls it a role model.",
+    },
+  },
+];
+
+/**
+ * One unlock per echo and temperament, like the rival incidents: the tone is fixed by the drift at
+ * the moment the echo happens, then saved. Only stage 2, so an old save that is already past it
+ * does not get them dumped into its log.
+ */
+const ECHO_UNLOCKS: readonly UnlockDef[] = RIVAL_ECHOES.flatMap(({ level, lines }) =>
+  TEMPERAMENTS.map((tone) => ({
+    id: `echo:${level}:${tone}` as const,
+    when: (s: GameState) =>
+      s.stage === 2 &&
+      s.owned.research >= level &&
+      temperamentOf(s.drift) === tone &&
+      !s.unlocked.some((id) => id.startsWith(`echo:${level}:`)),
     log: lines[tone],
   })),
 );
@@ -299,6 +358,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
     log: "The sky develops a seam. Leadership calls it a feature and schedules a review.",
   },
   ...RIVAL_UNLOCKS,
+  ...ECHO_UNLOCKS,
 ];
 
 const UNLOCK_IDS: ReadonlySet<string> = new Set(UNLOCKS.map((unlock) => unlock.id));
