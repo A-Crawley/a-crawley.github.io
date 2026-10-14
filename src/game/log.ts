@@ -2,6 +2,7 @@ import { VILLAGE } from "./config.ts";
 import { isHungry, itemDef } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
+import { chatterText } from "./chatter.ts";
 import { milestoneDef } from "./milestones.ts";
 import { UNLOCKS } from "./unlocks.ts";
 
@@ -115,5 +116,11 @@ export function logLines(state: GameState): LogLine[] {
     if (state.milestones.quiet.includes(id)) continue;
     lines.push({ id: `milestone:${id}`, text: milestoneDef(id).log });
   }
+  // Overheard chatter comes last. The key counts from the first line ever heard, so it stays put
+  // when the oldest lines drop off.
+  const { seen, count } = state.chatter;
+  seen.forEach((id, index) => {
+    lines.push({ id: `chatter:${count - seen.length + index}`, text: chatterText(id) });
+  });
   return lines;
 }

@@ -2,6 +2,7 @@ import type { AchievementId } from "./achievements.ts";
 import { CONFIG } from "./config.ts";
 import type { Stage } from "./config.ts";
 import type { Policies } from "./engine.ts";
+import { capAwayChatter } from "./chatter.ts";
 import { capAwayMilestones } from "./milestones.ts";
 import { isFinished, isFull } from "./engine.ts";
 import type { GameState } from "./state.ts";
@@ -83,6 +84,8 @@ export function catchUp(state: GameState, now: number): CatchUp {
   returned.lastTickAt = Math.max(now, returned.lastTickAt);
   // Several milestones may have passed while away. Mention only the biggest few in the log.
   capAwayMilestones(state, returned);
+  // Chatter too: at most one overheard line for the whole absence.
+  capAwayChatter(state, returned);
   // An event that came up while away waits for the player: its clock starts on return.
   if (returned.events.pending) returned.events.pending.since = returned.time;
 

@@ -202,7 +202,12 @@ describe("catchUp: things that happen while away", () => {
     const reference = tick(off, at(5000 * RATE));
     reference.lastTickAt = at(5000);
     const { state: after } = catchUp(state, at(5000));
-    expect(after).toEqual(reference);
+    // The one deliberate difference: away time keeps only the latest overheard line.
+    expect(after.chatter.seen).toEqual(reference.chatter.seen.slice(-1));
+    expect({ ...after, chatter: { ...after.chatter, seen: [] } }).toEqual({
+      ...reference,
+      chatter: { ...reference.chatter, seen: [] },
+    });
   });
 });
 
