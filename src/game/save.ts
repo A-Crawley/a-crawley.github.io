@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { CAST, createCastState } from "./cast.ts";
+import type { CastState } from "./cast.ts";
 import { isChatterId, MAX_CHATTER_LINES, MIN_CHATTER_GAP } from "./chatter.ts";
 import type { ChatterState } from "./chatter.ts";
 import { isPartingAct } from "./parting.ts";
@@ -108,6 +110,17 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
       nextAt: (typeof save.time === "number" ? save.time : 0) + MIN_CHATTER_GAP,
     },
   }),
+  // 15 -> 16: the named cast. Whoever has already arrived is counted as present: nobody is blamed
+  // retroactively for a departure that happened before the cast existed.
+  15: (save) => {
+    const population =
+      typeof save.population === "number" &&
+      Number.isInteger(save.population) &&
+      save.population > 0
+        ? save.population
+        : 0;
+    return { ...save, version: 16, cast: createCastState(population) };
+  },
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -244,6 +257,22 @@ function validateChatter(raw: unknown): ChatterState | null {
   return { seen, count, nextAt };
 }
 
+function validateCast(raw: unknown): CastState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.departed)) return null;
+  const { arrived, lastPopulation } = raw;
+  if (typeof arrived !== "number" || !Number.isInteger(arrived)) return null;
+  if (arrived < 0 || arrived > CAST.length) return null;
+  if (typeof lastPopulation !== "number" || !Number.isInteger(lastPopulation)) return null;
+  if (lastPopulation < 0) return null;
+  const departed: number[] = [];
+  for (const index of raw.departed as unknown[]) {
+    if (typeof index !== "number" || !Number.isInteger(index)) return null;
+    if (index < 0 || index >= arrived || departed.includes(index)) return null;
+    departed.push(index);
+  }
+  return { arrived, departed, lastPopulation };
+}
+
 function validateSky(raw: unknown): SkyState | null {
   if (!isRecord(raw) || !Array.isArray(raw.seen) || typeof raw.dry !== "boolean") return null;
   const seen: SightingId[] = [];
@@ -363,6 +392,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
+  const cast = validateCast(raw.cast);
+  if (!cast) return fail("cast");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -412,6 +444,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       milestones,
       parting,
       chatter,
+      cast,
       unlocked,
       ending,
       achievements,

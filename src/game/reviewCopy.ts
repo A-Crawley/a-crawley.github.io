@@ -41,7 +41,10 @@ function plural(count: number, one: string, many: string): string {
 }
 
 /** The review's wording, built from the real figures in its snapshot. */
-export function reviewCopy({ stage, snapshot }: Review): ReviewCopy {
+export function reviewCopy(
+  { stage, snapshot }: Review,
+  castNote: string | null = null,
+): ReviewCopy {
   const facts = [
     `Time taken: ${formatDuration(snapshot.seconds)}`,
     `Villagers: ${snapshot.villagers.toLocaleString("en-US")}, of whom ${plural(snapshot.jobs, "holds a job", "hold jobs")}`,
@@ -52,6 +55,7 @@ export function reviewCopy({ stage, snapshot }: Review): ReviewCopy {
       ? "Rest days: none taken. Leadership appreciates the commitment"
       : `Rest days: ${snapshot.restDays.toLocaleString("en-US")}. Leadership is aware of them`,
   ];
+  if (castNote) facts.push(castNote);
   return {
     title: REVIEW_TITLES[stage],
     opener: OPENERS[stage],

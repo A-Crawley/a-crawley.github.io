@@ -52,6 +52,7 @@ import { useMilestonePulse } from "../../hooks/useMilestonePulse.ts";
 import { ACHIEVEMENTS } from "../../game/achievements.ts";
 import { endStats, finalOddsWord, phaseOf, temperamentOf } from "../../game/ending.ts";
 import { secondsUntilAffordable, waitCaption } from "../../game/affordWait.ts";
+import { castReviewNote } from "../../game/cast.ts";
 import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
 import { resultSummary } from "../../game/resultSummary.ts";
@@ -671,6 +672,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
         {/* Queued behind the welcome-back dialog, never stacked on it. */}
         <PerformanceReviewDialog
           review={game.away === null ? game.review : null}
+          castNote={castReviewNote(state.cast)}
           onClose={game.dismissReview}
         />
         <AchievementToast title={toastTitle} onClose={news.dismiss} raised={phone && playing} />

@@ -61,3 +61,22 @@ describe("PerformanceReviewDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("PerformanceReviewDialog cast note", () => {
+  it("adds the note to the findings when given one, and nothing when not", () => {
+    const { rerender } = render(<PerformanceReviewDialog review={review} onClose={() => {}} />);
+    expect(screen.getByRole("list", { name: "Review findings" })).not.toHaveTextContent(
+      "Attrition",
+    );
+    rerender(
+      <PerformanceReviewDialog
+        review={review}
+        castNote="Attrition: Priya has left. Leadership describes this as a natural process."
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByRole("list", { name: "Review findings" })).toHaveTextContent(
+      "Attrition: Priya has left",
+    );
+  });
+});

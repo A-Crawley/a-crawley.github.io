@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS } from "./achievements.ts";
 import type { Ending } from "./ending.ts";
 import { ENDING_COPY, OTHER_ENDING_HINT } from "./endingCopy.ts";
+import { castEnding } from "./cast.ts";
 import { PARTING_REPORT } from "./parting.ts";
 import { eventChoice, eventDef, EVENTS } from "./events.ts";
 import type { GameState } from "./state.ts";
@@ -27,6 +28,8 @@ export interface RunReport {
   unseenAchievements: number;
   /** What the player did before the exit, or null if they never picked (older saves). */
   parting: string | null;
+  /** Who from the named cast stayed, or null if nobody had arrived. */
+  cast: string | null;
   /** The ending the player did not get: its name and opening line. Null while there is no ending. */
   otherEnding: { title: string; opening: string } | null;
   /** A vague nudge about the other ending, or null while there is no ending. */
@@ -53,6 +56,7 @@ export function runReport(state: GameState): RunReport {
     unseenEvents: Math.max(0, EVENTS.length - events.length),
     unseenAchievements: Math.max(0, ACHIEVEMENTS.length - state.achievements.length),
     parting: state.parting === null ? null : PARTING_REPORT[state.parting],
+    cast: castEnding(state.cast),
     otherEnding: ending === null ? null : otherEndingOf(ending),
     hint: ending === null ? null : OTHER_ENDING_HINT[ending],
   };

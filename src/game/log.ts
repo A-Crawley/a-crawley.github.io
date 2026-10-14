@@ -2,6 +2,7 @@ import { VILLAGE } from "./config.ts";
 import { isHungry, itemDef } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
+import { castDepartures } from "./cast.ts";
 import { chatterText } from "./chatter.ts";
 import { milestoneDef } from "./milestones.ts";
 import { UNLOCKS } from "./unlocks.ts";
@@ -116,6 +117,10 @@ export function logLines(state: GameState): LogLine[] {
     if (state.milestones.quiet.includes(id)) continue;
     lines.push({ id: `milestone:${id}`, text: milestoneDef(id).log });
   }
+  // Named villagers who have left, in the order they went.
+  castDepartures(state.cast).forEach((text, index) => {
+    lines.push({ id: `cast:${index}`, text });
+  });
   // Overheard chatter comes last. The key counts from the first line ever heard, so it stays put
   // when the oldest lines drop off.
   const { seen, count } = state.chatter;
