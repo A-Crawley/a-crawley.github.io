@@ -68,7 +68,7 @@ describe("runReport", () => {
       expect(JSON.stringify(report)).not.toMatch(/12345|drift|odds|%/i);
       expect(report.hint).not.toMatch(/\d|%/);
       expect(Object.keys(report).sort()).toEqual(
-        ["events", "hint", "parting", "unseenAchievements", "unseenEvents"].sort(),
+        ["events", "hint", "otherEnding", "parting", "unseenAchievements", "unseenEvents"].sort(),
       );
     }
     for (const hint of Object.values(OTHER_ENDING_HINT)) expect(hint).not.toMatch(/\d|%/);
@@ -89,5 +89,23 @@ describe("runReport parting act", () => {
     expect(runReport(state).parting).toBeNull();
     state.parting = "village";
     expect(runReport(state).parting).toBe("Left the village a message");
+  });
+});
+
+describe("runReport other ending", () => {
+  it("is the opening line of the ending not reached, and null before an ending", () => {
+    expect(runReport(finished(null)).otherEnding).toBeNull();
+    const fromConquest = runReport(finished("conquest")).otherEnding;
+    expect(fromConquest?.title).toBe(ENDING_COPY.apocalypse.title);
+    expect(fromConquest?.opening).toBe(ENDING_COPY.apocalypse.paragraphs[0]);
+    const fromApocalypse = runReport(finished("apocalypse")).otherEnding;
+    expect(fromApocalypse?.title).toBe(ENDING_COPY.conquest.title);
+  });
+
+  it("never carries a number or a percentage", () => {
+    for (const ending of ENDINGS) {
+      const other = runReport(finished(ending)).otherEnding;
+      expect(JSON.stringify(other)).not.toMatch(/\d|%/);
+    }
   });
 });
