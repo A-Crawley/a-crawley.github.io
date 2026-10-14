@@ -1094,3 +1094,61 @@ describe("GamePage exchange", () => {
     expect(screen.getByText("Keep some food for the village.")).toBeInTheDocument();
   });
 });
+
+describe("GamePage quarterly targets", () => {
+  function atLevel(level: number): GameState {
+    const state = createGameState(Date.now());
+    state.stage = 2;
+    state.owned.forager = 40;
+    state.owned.autoForager = 5;
+    state.owned.granary = 400;
+    state.owned.house = 4;
+    state.population = 60;
+    state.owned.research = level;
+    state.food = 20_000;
+    state.events.nextAt = Infinity;
+    state.unlocked.push("village", "stage2");
+    return state;
+  }
+
+  it("makes no offer before research is under way", () => {
+    render(<GamePage options={{ storage: null, initialState: reviewed(atLevel(2)) }} />);
+    expect(screen.queryByText("A quarterly target")).not.toBeInTheDocument();
+  });
+
+  it("offers a target at the first level, with a way to say no", () => {
+    render(<GamePage options={{ storage: null, initialState: reviewed(atLevel(6)) }} />);
+    expect(screen.getByText("A quarterly target")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Aim high/ })).toHaveTextContent(
+      "Reach research level 10",
+    );
+    expect(screen.getByRole("button", { name: /Aim reasonably/ })).toHaveTextContent(
+      "Reach research level 8",
+    );
+    expect(screen.getByRole("button", { name: /Decline politely/ })).toBeEnabled();
+  });
+
+  it("closes the offer when declined, and does not offer again at once", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null, initialState: reviewed(atLevel(6)) }} />);
+    await user.click(screen.getByRole("button", { name: /Decline politely/ }));
+    expect(screen.queryByText("A quarterly target")).not.toBeInTheDocument();
+  });
+
+  it("shows the accepted target in the village, with what it asks", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null, initialState: reviewed(atLevel(6)) }} />);
+    await user.click(screen.getByRole("button", { name: /Aim reasonably/ }));
+    expect(screen.getByRole("heading", { name: "Quarterly target" })).toBeInTheDocument();
+    expect(screen.getByText(/Reach research level 8 in/)).toBeInTheDocument();
+    expect(screen.queryByText("A quarterly target")).not.toBeInTheDocument();
+  });
+
+  it("lets a village event go first, and keeps the offer for later", () => {
+    const state = atLevel(6);
+    state.events.pending = { id: "stranger", since: Date.now() / 1000 };
+    state.events.nextAt = Infinity;
+    render(<GamePage options={{ storage: null, initialState: reviewed(state) }} />);
+    expect(screen.queryByText("A quarterly target")).not.toBeInTheDocument();
+  });
+});

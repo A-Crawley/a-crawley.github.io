@@ -299,3 +299,14 @@ A four-season cycle in `src/game/seasons.ts` and `CONFIG.seasons`: it begins at 
 - **Away:** the credited game time (25% of the away time) moves the clock, so seasons turn while the player is gone with no special handling. Away time has no hunger cost, so winter cannot hurt an absent player.
 - **Tuning:** the sim's totals depend on where the cycle starts and how long a season is, because the bots buy by current payback. The first two numbers were picked from a grid so all three play styles stay inside the guards (110.2 / 109.7 / 112.3 min).
 - **Offline tests** now count production second by second (`src/testUtils/seasonal.ts`), since a constant rate times the time is no longer exact.
+
+## Quarterly targets (GAME-52)
+
+In stage 2 the player is offered up to three optional targets (`CONFIG.targets`, `src/game/targets.ts`): reach research level N within a time window. The offers come at research levels 6, 14 and 22, one at a time, and never while a village event is waiting.
+
+- **Two terms:** "Aim high" asks for 4 more levels in a window about equal to the bots' natural pace, costs 6 morale on accepting, and pays a 300 drift nudge toward efficient if met. "Aim reasonably" asks for 2 levels in a window two to three times roomier, nudges drift 150 toward compassionate on accepting, and pays less. Declining nudges 100 toward compassionate.
+- **Window:** worked out from the research cost and the current income (ETA x factor + base), clamped to 120-600 s and rounded to 10 s, so it scales with how fast the village is going.
+- **Reward:** the net food rate times 90 s (30 s for the gentle target), clamped. That is the same magnitude as the `auditor` event.
+- **Bound:** at most 3 offers a run, so rewards total at most 270 s of food, and drift moves by 300 or less per target. Missing costs nothing beyond what accepting already cost.
+- **Sim:** the bots never accept, so `npm run sim` is unchanged (110.2 / 109.7 / 112.3 min). The windows were set against the bots' research pace, not against a player who plays for targets.
+- **Saved:** `targets` (save version 21, migrated to a fresh state). An accepted window stands still while the player is away.

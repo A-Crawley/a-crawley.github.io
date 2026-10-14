@@ -439,3 +439,7 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 ## Seasons (GAME-33)
 
 `seasonOf(time)` and `seasonEffects(time)` in `seasons.ts`, read by `grossRates` (food, wood), `upkeepPerSecond` and the arrival timer in `step`. The arrival timer is capped at the slowest season's interval so it can always reach it. Derived from the clock only: no state, no migration. The Village panel's Season row shows the current season, its effect and the forecast; the log has `seasons` and `firstWinter` unlock lines.
+
+## Quarterly targets (GAME-52)
+
+`applyTargets` in `targets.ts` runs in `settle()`: it raises an offer when one is due, and resolves an active target as met or missed. `acceptTarget`, `declineTarget` and `holdTarget` (called from `tick` when events are held, so the window stops while away) are the other moves. `state.targets` is `{ offered, offer, active, results }`, and `validateTargets` in `save.ts` enforces `offered === results.length + offer + active`. Save version 21 (20 to 21 sets a fresh state). Results become log lines (`target:<index>`).

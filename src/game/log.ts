@@ -7,6 +7,7 @@ import { ECHO_OPENING } from "./echoes.ts";
 import { castDepartures } from "./cast.ts";
 import { chatterText } from "./chatter.ts";
 import { milestoneDef } from "./milestones.ts";
+import { targetLog } from "./targets.ts";
 import { UNLOCKS } from "./unlocks.ts";
 
 export interface LogLine {
@@ -136,6 +137,10 @@ export function logLines(state: GameState): LogLine[] {
   // Named villagers who have left, in the order they went.
   castDepartures(state.cast).forEach((text, index) => {
     lines.push({ id: `cast:${index}`, text });
+  });
+  // Quarterly targets, as they were answered, and the one still open.
+  targetLog(state).forEach((text, index) => {
+    lines.push({ id: `target:${index}`, text });
   });
   // Overheard chatter comes last. The key counts from the first line ever heard, so it stays put
   // when the oldest lines drop off.

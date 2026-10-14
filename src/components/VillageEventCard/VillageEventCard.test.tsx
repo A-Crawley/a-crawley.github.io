@@ -69,3 +69,18 @@ describe("VillageEventCard", () => {
     expect(screen.getByText(/decided for you in 0:00/)).toBeInTheDocument();
   });
 });
+
+describe("VillageEventCard without a clock", () => {
+  it("shows no countdown for a question that never expires", () => {
+    render(
+      <VillageEventCard
+        title="A quarterly target"
+        body="Body."
+        choices={[{ id: "a", label: "Aim high", detail: "Detail.", cost: null, disabled: false }]}
+        onChoose={() => {}}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Aim high/ })).toBeInTheDocument();
+    expect(screen.queryByText(/decided for you/)).not.toBeInTheDocument();
+  });
+});
