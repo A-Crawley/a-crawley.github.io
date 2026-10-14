@@ -1,4 +1,5 @@
 import { applyAchievements, pendingAchievements } from "./achievements.ts";
+import { applyChatter, pendingChatter } from "./chatter.ts";
 import { applyMilestones, pendingMilestones } from "./milestones.ts";
 import { pendingSnapshots, recordReviews } from "./review.ts";
 import type { GameState } from "./state.ts";
@@ -13,6 +14,7 @@ export function settle(state: GameState): void {
   applyAchievements(state);
   applyMilestones(state);
   recordReviews(state);
+  applyChatter(state);
 }
 
 /** A settled copy of a state. Returns the same object if there is nothing to record. */
@@ -21,7 +23,8 @@ export function withSettled(state: GameState): GameState {
     pendingUnlocks(state).length === 0 &&
     pendingAchievements(state).length === 0 &&
     pendingMilestones(state).length === 0 &&
-    pendingSnapshots(state).length === 0
+    pendingSnapshots(state).length === 0 &&
+    !pendingChatter(state)
   ) {
     return state;
   }

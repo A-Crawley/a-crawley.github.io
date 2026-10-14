@@ -610,3 +610,31 @@ describe("the parting act in a save", () => {
     expect(validateState({ ...raw(), parting: "village" }).ok).toBe(false);
   });
 });
+
+describe("chatter in a save", () => {
+  it("round-trips the lines heard", () => {
+    const state = playedState();
+    state.chatter = { seen: ["stretch", "circle-back"], count: 5, nextAt: 900 };
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 14 save with no lines and the first one due soon", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 14, time: 1000 };
+    delete old.chatter;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.chatter).toEqual({ seen: [], count: 0, nextAt: 1120 });
+  });
+
+  it("rejects chatter that is missing, unknown or inconsistent", () => {
+    const bad: unknown[] = [
+      undefined,
+      { seen: ["nope"], count: 1, nextAt: 1 },
+      { seen: ["stretch"], count: 0, nextAt: 1 },
+      { seen: [], count: -1, nextAt: 1 },
+      { seen: [], count: 0, nextAt: Infinity },
+      { seen: [], count: 1.5, nextAt: 1 },
+    ];
+    for (const chatter of bad) expect(validateState({ ...raw(), chatter }).ok).toBe(false);
+  });
+});

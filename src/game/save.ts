@@ -10,6 +10,8 @@ import { endingIsPossible, ENDINGS } from "./ending.ts";
 import type { Ending } from "./ending.ts";
 import { eventChoice, eventDef, isEventId } from "./events.ts";
 import type { EventsState, PendingEvent, ResolvedEvent } from "./events.ts";
+import { isChatterId, MAX_CHATTER_LINES, MIN_CHATTER_GAP } from "./chatter.ts";
+import type { ChatterState } from "./chatter.ts";
 import { isPartingAct } from "./parting.ts";
 import type { PartingAct } from "./parting.ts";
 import { isMilestoneId, reachedMilestones } from "./milestones.ts";
@@ -96,6 +98,16 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   },
   // 13 -> 14: the parting act before the final choice. Nobody has picked one yet.
   13: (save) => ({ ...save, version: 14, parting: null }),
+  // 14 -> 15: overheard chatter. The first line comes a couple of minutes after the save loads.
+  14: (save) => ({
+    ...save,
+    version: 15,
+    chatter: {
+      seen: [],
+      count: 0,
+      nextAt: (typeof save.time === "number" ? save.time : 0) + MIN_CHATTER_GAP,
+    },
+  }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -218,6 +230,20 @@ function validateMilestones(raw: unknown): MilestonesState | null {
   return { fired, quiet };
 }
 
+function validateChatter(raw: unknown): ChatterState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.seen)) return null;
+  const { count, nextAt } = raw;
+  if (typeof count !== "number" || !Number.isInteger(count) || count < 0) return null;
+  if (typeof nextAt !== "number" || !Number.isFinite(nextAt) || nextAt < 0) return null;
+  if (raw.seen.length > MAX_CHATTER_LINES || raw.seen.length > count) return null;
+  const seen = [];
+  for (const id of raw.seen as unknown[]) {
+    if (!isChatterId(id)) return null;
+    seen.push(id);
+  }
+  return { seen, count, nextAt };
+}
+
 function validateSky(raw: unknown): SkyState | null {
   if (!isRecord(raw) || !Array.isArray(raw.seen) || typeof raw.dry !== "boolean") return null;
   const seen: SightingId[] = [];
@@ -334,6 +360,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const milestones = validateMilestones(raw.milestones);
   if (!milestones) return fail("milestones");
 
+  const chatter = validateChatter(raw.chatter);
+  if (!chatter) return fail("chatter");
+
   let ending: Ending | null = null;
   if (raw.ending !== null) {
     if (!ENDINGS.includes(raw.ending as Ending)) return fail("ending");
@@ -382,6 +411,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       sky,
       milestones,
       parting,
+      chatter,
       unlocked,
       ending,
       achievements,

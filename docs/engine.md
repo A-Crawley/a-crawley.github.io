@@ -379,3 +379,13 @@ The `game-ui-designer` agent (`.claude/agents/`) holds the design principles use
 ## Rival echoes in stage 2 (GAME-59)
 
 `RIVAL_ECHOES` in `unlocks.ts` seeds the rival before stage 3: at research levels 8, 18 and 27 (about a quarter, 60% and 90% of the 30 levels) an unexplained second process shows up as a village log line. They are ordinary unlocks (`echo:<level>:<tone>`), built like the rival incidents: the tone (gentle, wary or ruthless) is fixed from the drift at the moment it fires and then saved, so it cannot change later. They only fire in stage 2, so an old save already past it gets none. Derived and saved through `unlocked`, so there is no save version bump; the 30 research levels are only bought by the player, so `catchUp` never crosses one, it only settles one that was waiting. They sit alongside `researchHalf` and `researchNearly`, which are unchanged. Log only: no economy change, no Sky note and no stage review line (left out on purpose, see the ticket).
+
+## Overheard chatter (GAME-51)
+
+`src/game/chatter.ts` adds rare dry "overheard" lines to the village log. Cosmetic only: nothing but the log reads them.
+
+- **Saved state (version 15):** `chatter = { seen, count, nextAt }`. `seen` is the last 12 line ids (so the log keeps a short history), `count` is every line heard so far and drives the next pick, `nextAt` is the game time the next line is due. The 14 to 15 migration starts with no lines and the first due 2 minutes after the save's time.
+- **Cadence:** the first line at 150 s of play, then 120 to 240 s apart (`chatterGap`, a fixed hash of the count, so the same save always gives the same gaps). `applyChatter` runs inside `settle`, once per settle, and stops once the run is finished or ended.
+- **Which line:** `pickChatter` is a fixed function of the count and the state: it takes the lines that fit (right stage, and for a few, a condition such as hungry, idle hands, a full store or machines), skips the one just heard, and picks by hash. Because it is saved the moment it happens, a reload never reshuffles it.
+- **Away time:** `tick` settles once per second, so a long absence would produce many lines. `capAwayChatter` (called from `catchUp`) keeps only the latest new one. The 8 hour cap and 25% rate are unchanged.
+- **Log:** the lines come last in `logLines`, keyed by their number since the first, so keys stay put as the oldest drop off.
