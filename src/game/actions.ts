@@ -1,4 +1,4 @@
-import type { ItemId } from "./config.ts";
+import type { ItemId, Route } from "./config.ts";
 import {
   advanceStage,
   buyMany,
@@ -69,6 +69,18 @@ export function setPolicy(state: GameState, policy: keyof Policies, on: boolean)
   if (state.policies[policy] === on) return state;
   const next = structuredClone(state);
   next.policies[policy] = on;
+  return next;
+}
+
+/**
+ * Choose how exploits are bought (GAME-40). Free and reversible, and only in stage 3 while the run
+ * is going: it changes the price and the side effects of the next exploit, never one already bought.
+ */
+export function setRoute(state: GameState, route: Route): GameState {
+  if (state.stage !== 3 || isFinished(state) || state.ending !== null) return state;
+  if (state.route === route) return state;
+  const next = structuredClone(state);
+  next.route = route;
   return next;
 }
 

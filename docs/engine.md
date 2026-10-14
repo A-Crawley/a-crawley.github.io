@@ -407,3 +407,13 @@ The `game-ui-designer` agent (`.claude/agents/`) holds the design principles use
 - **Save version 17:** `brief` (null, `fast` or `steady`). The 16 to 17 migration sets null: a save already in stage 2 or later has no brief and keeps its numbers, and one still in stage 1 will be asked. A brief in a stage 1 save is rejected.
 - **Offline:** `catchUp` runs through `tick` and the engine, so the brief's effects apply while away exactly as online.
 - **Wording:** a log line for the choice and a "Research brief" line in the stage 2 review (`reviewCopy` now takes a list of extra notes). The drift appears only as words.
+
+## The exploit route (GAME-40)
+
+In stage 3 the player can switch exploits to the **loud** route (an "Approach" toggle in the shop; quiet is the default). `state.route` is `quiet` or `loud` and `setRoute` changes it for the exploits bought from then on. It is free and reversible, and only works in stage 3 while the run is going.
+
+- **Price:** `priceFactor` makes an exploit cost `CONFIG.routes.loud.priceFactor` (0.85) of its quiet price. Everything else is unchanged, and the quote, the bulk buy and the wait note all use it.
+- **Memory and drift:** `buy` and `buyMany` count each exploit bought loudly in `state.loudExploits` and move the drift by `driftPerExploit` (-120) for each. The rival mirrors the player, so a loud run reads as a less gentle one and the final odds slip. The most it can cost is 22 x 120 = 2640 of 16000, about 0.165 of the compassion index, so under 12 points of Conquest odds, which is about one band step in the odds word.
+- **Incidents:** `rivalProgress(state)` is exploits bought plus one more for every two bought loudly. The rival incident unlocks (`rival:<n>:<tone>`) fire when it reaches 1, 6, 12 and 18, so a loud run meets each one sooner. Their tone is still fixed when they happen.
+- **Save version 18:** `route` and `loudExploits`. The 17 to 18 migration sets quiet and 0. A save with more loud exploits than exploits is rejected.
+- **Offline:** time stops at the final choice and nothing is bought while away, so `catchUp` neither picks a route nor buys loudly. The sim's efficient player uses loud; the other two use quiet.

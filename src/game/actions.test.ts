@@ -9,10 +9,12 @@ import {
   release,
   retrain,
   setPolicy,
+  setRoute,
   takeRestDay,
 } from "./actions.ts";
 import { logLines } from "./log.ts";
 import { createGameState } from "./state.ts";
+import type { GameState } from "./state.ts";
 import { withUnlocks } from "./unlocks.ts";
 
 const fresh = () => createGameState(0);
@@ -346,5 +348,32 @@ describe("displaced workers", () => {
     expect(text(release(state))).toContain("released");
     expect(text(retrain(state))).toContain("retrained");
     expect(text(redeploy(state))).toContain("lateral");
+  });
+});
+
+describe("setRoute", () => {
+  function stage3(): GameState {
+    const state = createGameState(0);
+    state.stage = 3;
+    return state;
+  }
+
+  it("switches the route in stage 3, and back, without touching anything else", () => {
+    const state = stage3();
+    const loud = setRoute(state, "loud");
+    expect(loud.route).toBe("loud");
+    expect(state.route).toBe("quiet");
+    expect({ ...loud, route: "quiet" }).toEqual(state);
+    expect(setRoute(loud, "quiet").route).toBe("quiet");
+  });
+
+  it("does nothing outside stage 3, when it is already set, or once the run is over", () => {
+    const early = createGameState(0);
+    expect(setRoute(early, "loud")).toBe(early);
+    const state = stage3();
+    expect(setRoute(state, "quiet")).toBe(state);
+    const done = stage3();
+    done.owned.exploit = CONFIG.exploitsGoal;
+    expect(setRoute(done, "loud")).toBe(done);
   });
 });

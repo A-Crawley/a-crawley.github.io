@@ -249,3 +249,17 @@ x1.05 and x0.95 the three run totals are 117.5 (efficient), 115.2 (balanced) and
 3% of output at the end. The morale push is small next to a rest day or the "well fed" lift.
 A real player has no reason to pick one by habit, so the choice should read as a style, not a fix.
 Not measured with a person playing.
+
+## Stage 3 exploit route (GAME-40)
+
+Loud exploits cost 85% of the quiet price (`CONFIG.routes.loud`), each loud exploit moves the drift by
+-120, and every two loud exploits count as one more toward the rival's incidents (which are events
+only). The sim's efficient player buys loud; balanced and compassionate stay quiet.
+
+Run totals (efficient / balanced / compassionate): 114.1 / 115.2 / 116.4 minutes, against 117.5 / 115.2 /
+116.4 before: only the efficient run changed, and stage 3 for it went from 20.2 to 18.9 minutes. All
+the guards in `player.test.ts` pass unchanged (efficient within 5% of balanced, compassionate within 5%,
+everything between 105 and 140). Cheapness is a real but small gain: a loud balanced run would save
+roughly a minute and a half in stage 3 and give up about 11 points of Conquest odds at most. The
+efficient bot is already at the 15% odds floor, so it pays nothing for the nudge, which is the point
+of the joke. Not played by a person, so whether the trade feels right is open.

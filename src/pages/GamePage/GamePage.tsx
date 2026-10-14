@@ -518,6 +518,16 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
               </ShopSection>
             );
           })}
+          {state.stage === 3 && (
+            <ShopSection title="Approach" collapsible={phone} defaultExpanded>
+              <PolicyToggle
+                label="Loud exploits"
+                description={`Exploits cost ${Math.round((1 - CONFIG.routes.loud.priceFactor) * 100)}% less. The rival notices sooner, and the odds of getting through slip. Applies to exploits bought from now on.`}
+                checked={state.route === "loud"}
+                onChange={(on) => game.setRoute(on ? "loud" : "quiet")}
+              />
+            </ShopSection>
+          )}
           {(offeredUpgrades.length > 0 || state.upgrades.length > 0) && (
             <Panel>
               <UpgradeList

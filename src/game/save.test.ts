@@ -701,3 +701,38 @@ describe("the research brief in a save", () => {
     expect(validateState({ ...raw(), stage: 1, brief: "fast" }).ok).toBe(false);
   });
 });
+
+describe("the exploit route in a save", () => {
+  function atStage3(): GameState {
+    const state = playedState();
+    state.stage = 3;
+    state.owned.exploit = 5;
+    return state;
+  }
+
+  it("round-trips the route and the loud count", () => {
+    const state = atStage3();
+    state.route = "loud";
+    state.loudExploits = 3;
+    expect(parseSave(serializeState(state))).toEqual({ ok: true, value: state });
+  });
+
+  it("upgrades a version 17 save onto the quiet route with nothing loud", () => {
+    const old: Record<string, unknown> = { ...raw(), version: 17 };
+    delete old.route;
+    delete old.loudExploits;
+    const result = parseSave(JSON.stringify(old));
+    expect(result.ok && result.value.version).toBe(STATE_VERSION);
+    expect(result.ok && result.value.route).toBe("quiet");
+    expect(result.ok && result.value.loudExploits).toBe(0);
+  });
+
+  it("rejects an unknown route, or more loud exploits than exploits", () => {
+    const good = JSON.parse(serializeState(atStage3())) as Record<string, unknown>;
+    expect(validateState({ ...good, route: "silent" }).ok).toBe(false);
+    expect(validateState({ ...good, route: undefined }).ok).toBe(false);
+    expect(validateState({ ...good, loudExploits: 6 }).ok).toBe(false);
+    expect(validateState({ ...good, loudExploits: -1 }).ok).toBe(false);
+    expect(validateState({ ...good, loudExploits: 1.5 }).ok).toBe(false);
+  });
+});

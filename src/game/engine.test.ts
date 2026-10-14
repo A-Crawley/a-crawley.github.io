@@ -31,6 +31,7 @@ import {
   redeployOne,
   releaseOne,
   retrainOne,
+  rivalProgress,
   startRestDay,
   step,
   unemployed,
@@ -798,5 +799,62 @@ describe("displaced workers", () => {
     operators.stage = 2;
     operators.operators = 6;
     expect(moraleDrivers(operators).some((d) => d.id === "idle")).toBe(false);
+  });
+});
+
+describe("the exploit route (GAME-40)", () => {
+  function atExploits(route: "quiet" | "loud", exploits = 0): SimState {
+    const state = createState();
+    state.stage = 3;
+    state.route = route;
+    state.owned.exploit = exploits;
+    state.infra = 1e12;
+    return state;
+  }
+  const exploit = itemDef("exploit");
+
+  it("makes an exploit cheaper by the loud factor, and leaves other prices alone", () => {
+    const quiet = atExploits("quiet");
+    const loud = atExploits("loud");
+    expect(costOf(loud, exploit)).toBeCloseTo(
+      costOf(quiet, exploit) * CONFIG.routes.loud.priceFactor,
+    );
+    expect(bulkCostOf(loud, exploit, 5)).toBeCloseTo(
+      bulkCostOf(quiet, exploit, 5) * CONFIG.routes.loud.priceFactor,
+    );
+    const builder = itemDef("builder");
+    expect(costOf(loud, builder)).toBe(costOf(quiet, builder));
+  });
+
+  it("remembers loud exploits and nudges the drift for each, quiet ones not at all", () => {
+    const loud = atExploits("loud");
+    buyMany(loud, exploit, 3);
+    expect(loud.owned.exploit).toBe(3);
+    expect(loud.loudExploits).toBe(3);
+    expect(loud.drift).toBe(3 * CONFIG.routes.loud.driftPerExploit);
+    const quiet = atExploits("quiet");
+    buyMany(quiet, exploit, 3);
+    expect(quiet.loudExploits).toBe(0);
+    expect(quiet.drift).toBe(0);
+  });
+
+  it("brings the rival's story on sooner for a loud run only", () => {
+    const loud = atExploits("loud");
+    buyMany(loud, exploit, 4);
+    expect(rivalProgress(loud)).toBe(4 + Math.floor(4 / CONFIG.routes.loud.loudPerExtraIncident));
+    const quiet = atExploits("quiet");
+    buyMany(quiet, exploit, 4);
+    expect(rivalProgress(quiet)).toBe(4);
+  });
+
+  it("costs less overall for the same exploits, but only slips the odds a little", () => {
+    const loud = atExploits("loud");
+    const quiet = atExploits("quiet");
+    buyMany(loud, exploit, CONFIG.exploitsGoal);
+    buyMany(quiet, exploit, CONFIG.exploitsGoal);
+    expect(1e12 - loud.infra).toBeLessThan(1e12 - quiet.infra);
+    const slip = conquestOdds(quiet.drift) - conquestOdds(loud.drift);
+    expect(slip).toBeGreaterThan(0);
+    expect(slip).toBeLessThan(0.15);
   });
 });
