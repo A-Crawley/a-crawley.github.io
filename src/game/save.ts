@@ -126,6 +126,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 16 -> 17: the research brief. A run already past the start of stage 2 has no brief and keeps
   // the numbers it had; one still in stage 1 will be asked when stage 2 begins.
   16: (save) => ({ ...save, version: 17, brief: null }),
+  // 17 -> 18: the exploit route. Everyone starts on the quiet route with nothing bought loudly.
+  17: (save) => ({ ...save, version: 18, route: "quiet", loudExploits: 0 }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -397,6 +399,13 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
+  if (raw.route !== "quiet" && raw.route !== "loud") return fail("route");
+  const loudExploits = raw.loudExploits;
+  if (typeof loudExploits !== "number" || !Number.isInteger(loudExploits) || loudExploits < 0) {
+    return fail("loudExploits");
+  }
+  if (loudExploits > owned.exploit) return fail("loudExploits");
+
   let brief: BriefId | null = null;
   if (raw.brief !== null) {
     if (!isBriefId(raw.brief) || raw.stage < 2) return fail("brief");
@@ -457,6 +466,8 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       chatter,
       cast,
       brief,
+      route: raw.route,
+      loudExploits,
       unlocked,
       ending,
       achievements,

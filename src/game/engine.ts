@@ -2,7 +2,7 @@ import { bulkCost, maxAffordable, milestoneMultiplier, unitCost } from "./econom
 import { CONFIG, DISPLACED, ITEMS, STORAGE, VILLAGE } from "./config.ts";
 import { hasUpgrade, UPGRADE_EFFECTS } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
-import type { BriefId, Currency, ItemDef, ItemId, Stage } from "./config.ts";
+import type { BriefId, Route, Currency, ItemDef, ItemId, Stage } from "./config.ts";
 
 export type Counts = Record<ItemId, number>;
 
@@ -46,6 +46,10 @@ export interface SimState {
   upgrades: UpgradeId[];
   /** The stage 2 research brief the player chose, or null (not chosen, or a save from before). */
   brief: BriefId | null;
+  /** How exploits are bought right now (stage 3). Quiet unless the player switches to loud. */
+  route: Route;
+  /** Exploits bought by the loud route over the run. */
+  loudExploits: number;
 }
 
 export interface Rates {
@@ -96,6 +100,8 @@ export function createState(): SimState {
     released: 0,
     upgrades: [],
     brief: null,
+    route: "quiet",
+    loudExploits: 0,
   };
 }
 
@@ -370,6 +376,7 @@ function priceFactor(state: SimState, def: ItemDef): number {
   if (def.currency === "food" && state.policies.rationsOptimisation) {
     factor *= CONFIG.policies.rationsOptimisation.foodCostFactor;
   }
+  if (def.id === "exploit" && state.route === "loud") factor *= CONFIG.routes.loud.priceFactor;
   if (def.id === "builder" && hasUpgrade(state, "sharedSpreadsheet")) {
     factor *= UPGRADE_EFFECTS.sharedSpreadsheet;
   }
@@ -386,6 +393,24 @@ export function canAfford(state: SimState, def: ItemDef): boolean {
 export function buy(state: SimState, def: ItemDef): void {
   state[def.currency] -= costOf(state, def);
   state.owned[def.id] += 1;
+  noteRoute(state, def, 1);
+}
+
+/** Buying exploits the loud way is remembered, and nudges the drift towards efficiency. */
+function noteRoute(state: SimState, def: ItemDef, count: number): void {
+  if (def.id !== "exploit" || state.route !== "loud") return;
+  state.loudExploits += count;
+  state.drift += CONFIG.routes.loud.driftPerExploit * count;
+}
+
+/**
+ * How far the rival's story has got: exploits bought, plus one more for every few bought the loud
+ * way, so a loud run meets each incident sooner.
+ */
+export function rivalProgress(state: SimState): number {
+  return (
+    state.owned.exploit + Math.floor(state.loudExploits / CONFIG.routes.loud.loudPerExtraIncident)
+  );
 }
 
 /** How a purchase is sized: an exact number of units, or as many as the player can afford. */
@@ -455,6 +480,7 @@ export function quotePurchase(state: SimState, def: ItemDef, quantity: BuyQuanti
 export function buyMany(state: SimState, def: ItemDef, count: number): void {
   state[def.currency] -= bulkCostOf(state, def, count);
   state.owned[def.id] += count;
+  noteRoute(state, def, count);
 }
 
 export function canRest(state: SimState): boolean {

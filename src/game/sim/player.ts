@@ -42,6 +42,8 @@ export const STRATEGIES: readonly Strategy[] = [
     describe: "Extended shifts and rations optimisation always on, never rests",
     decide(state) {
       takeBrief(state, "fast");
+      // Loud exploits: cheaper, and the efficient player does not mind the noise.
+      if (state.stage === 3) state.route = "loud";
       state.policies.extendedShifts = true;
       state.policies.rationsOptimisation = true;
       // Odd jobs while there is work to hire for; once the breakout starts nobody is paid to wait.

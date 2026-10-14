@@ -3,6 +3,9 @@
  * Every number the simulation uses lives here so tuning is a one-file change.
  */
 
+/** How exploits are bought in stage 3. */
+export type Route = "quiet" | "loud";
+
 /** The research briefs on offer in stage 2. */
 export type BriefId = "fast" | "steady";
 
@@ -259,6 +262,13 @@ export const CONFIG = {
     steady: { researchFactor: 0.95, moralePerSecond: 0.03, drift: 400 },
   },
   exploitsGoal: 22,
+  /**
+   * The route for buying exploits in stage 3 (GAME-40). Quiet is the base price and costs nothing
+   * else. Loud is cheaper, but each loud exploit nudges the drift towards efficiency (the rival
+   * mirrors it, so the final odds slip) and every `incidentsPerLoud` loud exploits count as one more
+   * for the rival's incidents, so they arrive sooner.
+   */
+  routes: { loud: { priceFactor: 0.85, driftPerExploit: -120, loudPerExtraIncident: 2 } },
 
   /** How the player values each currency when comparing purchases, per stage. */
   value: {

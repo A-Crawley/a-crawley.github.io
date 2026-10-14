@@ -1016,3 +1016,36 @@ describe("GamePage research brief", () => {
     expect(screen.queryByRole("heading", { name: "Research brief" })).not.toBeInTheDocument();
   });
 });
+
+describe("GamePage exploit route", () => {
+  function stage3(): GameState {
+    const state = createGameState(Date.now());
+    state.stage = 3;
+    state.owned.exploit = 2;
+    return state;
+  }
+
+  it("offers a loud/quiet toggle in stage 3 only, and switches it", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null, initialState: reviewed(stage3()) }} />);
+    const toggle = screen.getByRole("switch", { name: /Loud exploits/ });
+    expect(toggle).not.toBeChecked();
+    await user.click(toggle);
+    expect(screen.getByRole("switch", { name: /Loud exploits/ })).toBeChecked();
+    cleanup();
+
+    render(<GamePage options={{ storage: null }} />);
+    expect(screen.queryByRole("switch", { name: /Loud exploits/ })).not.toBeInTheDocument();
+  });
+
+  it("makes the exploit cheaper while loud is on", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const state = stage3();
+    state.infra = 1e9;
+    render(<GamePage options={{ storage: null, initialState: reviewed(state) }} />);
+    const price = () => screen.getByRole("button", { name: /Exploit/i }).textContent;
+    const quiet = price();
+    await user.click(screen.getByRole("switch", { name: /Loud exploits/ }));
+    expect(price()).not.toBe(quiet);
+  });
+});

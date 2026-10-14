@@ -2,7 +2,16 @@ import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
 import { isUpgradeAvailable, UPGRADES } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
-import { bedsOf, capOf, costOf, idleHands, isAvailable, isHungry, ratesFor } from "./engine.ts";
+import {
+  bedsOf,
+  capOf,
+  costOf,
+  idleHands,
+  isAvailable,
+  isHungry,
+  ratesFor,
+  rivalProgress,
+} from "./engine.ts";
 import { TEMPERAMENTS, temperamentOf } from "./ending.ts";
 import type { Temperament } from "./ending.ts";
 import type { GameState } from "./state.ts";
@@ -139,7 +148,7 @@ const RIVAL_UNLOCKS: readonly UnlockDef[] = RIVAL_INCIDENTS.flatMap(({ exploits,
     id: `rival:${exploits}:${tone}` as const,
     when: (s: GameState) =>
       s.stage === 3 &&
-      s.owned.exploit >= exploits &&
+      rivalProgress(s) >= exploits &&
       temperamentOf(s.drift) === tone &&
       !s.unlocked.some((id) => id.startsWith(`rival:${exploits}:`)),
     log: lines[tone],

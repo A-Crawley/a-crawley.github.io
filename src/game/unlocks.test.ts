@@ -355,6 +355,20 @@ describe("rival echoes in stage 2", () => {
   });
 });
 
+describe("rival incidents and the loud route", () => {
+  const rival = (state: GameState) => state.unlocked.filter((id) => id.startsWith("rival:"));
+
+  it("come sooner when exploits were bought loudly", () => {
+    const quiet = stateWith({ exploit: 5 }, 3);
+    const loud = stateWith({ exploit: 5 }, 3);
+    loud.loudExploits = 4; // two more exploits' worth of rival story
+    applyUnlocks(quiet);
+    applyUnlocks(loud);
+    expect(rival(quiet)).toEqual(["rival:1:wary"]);
+    expect(rival(loud)).toEqual(["rival:1:wary", "rival:6:wary"]);
+  });
+});
+
 function stateWith(
   owned: Partial<GameState["owned"]>,
   stage: GameState["stage"],

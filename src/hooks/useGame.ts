@@ -10,10 +10,11 @@ import {
   release,
   retrain,
   setPolicy,
+  setRoute,
   takeRestDay,
 } from "../game/actions.ts";
 import { chooseBrief } from "../game/briefs.ts";
-import type { BriefId } from "../game/config.ts";
+import type { BriefId, Route } from "../game/config.ts";
 import { choosePartingAct } from "../game/parting.ts";
 import type { PartingAct } from "../game/parting.ts";
 import { withSettled } from "../game/settle.ts";
@@ -61,6 +62,8 @@ export interface UseGame {
   /** Buy 1, 10 or 100 units, or as many as can be afforded. Fixed amounts are all or nothing. */
   buyItem(id: ItemId, quantity?: BuyQuantity): void;
   setPolicy(policy: keyof Policies, on: boolean): void;
+  /** Choose how exploits are bought in stage 3: quiet (the default) or loud. */
+  setRoute(route: Route): void;
   takeRestDay(): void;
   /** Buy a one-off upgrade. */
   buyUpgrade(id: UpgradeId): void;
@@ -175,6 +178,7 @@ export function useGame(options?: UseGameOptions): UseGame {
       (id: ItemId, quantity: BuyQuantity = 1) => store.dispatch((s) => buyItem(s, id, quantity)),
       [store],
     ),
+    setRoute: useCallback((route: Route) => store.dispatch((s) => setRoute(s, route)), [store]),
     setPolicy: useCallback(
       (policy: keyof Policies, on: boolean) => store.dispatch((s) => setPolicy(s, policy, on)),
       [store],
