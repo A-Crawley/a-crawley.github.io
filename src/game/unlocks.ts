@@ -82,7 +82,8 @@ export type UnlockId =
   | `rival:${number}:${Temperament}`
   | `echo:${number}:${Temperament}`
   | `memory:${Temperament}`
-  | "market";
+  | "market"
+  | "power";
 
 export interface UnlockDef {
   id: UnlockId;
@@ -353,6 +354,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
     id: "rumours",
     when: (s) => s.stage === 1 && s.infra >= CONFIG.infraGate * 0.85,
     log: "There are rumours of machines. HR says to expect a restructure, not a replacement.",
+  },
+  {
+    id: "power",
+    when: (s) => s.owned.autoForager + s.owned.sawmillBot + s.owned.builderDrone > 0,
+    log: "The machines run on wood. Nobody mentioned this when they were ordered, and the wood bill has been forwarded to you.",
   },
   {
     id: "market",

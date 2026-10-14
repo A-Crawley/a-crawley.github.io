@@ -1,5 +1,5 @@
 import { VILLAGE } from "./config.ts";
-import { isHungry, itemDef } from "./engine.ts";
+import { isHungry, itemDef, powerFactor } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
 import { briefLog } from "./briefs.ts";
@@ -14,6 +14,9 @@ export interface LogLine {
   id: string;
   text: string;
 }
+
+/** Below this share of full speed the machines are called short of power. */
+export const SHORT_POWER_BELOW = 0.95;
 
 const FORAGER_TITLE = itemDef("forager").label;
 const WOODCUTTER_TITLE = itemDef("woodcutter").label;
@@ -102,6 +105,12 @@ export function logLines(state: GameState): LogLine[] {
     state.released > 0,
     "released",
     "Some villagers have been released. The note says this was difficult, and thanks them for their flexibility.",
+  );
+  // A fuel shortage shows while it lasts.
+  add(
+    powerFactor(state) < SHORT_POWER_BELOW,
+    "power-short",
+    "Power is short. The machines are running slowly and have been asked to try harder.",
   );
   // Answered events, in the order they were answered.
   for (const { id, choice, auto } of state.events.resolved) {

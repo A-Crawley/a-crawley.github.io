@@ -12,6 +12,8 @@ export interface VillagePanelProps {
   foodEaten: number;
   /** True once the village has been short of food long enough to notice. */
   hungry: boolean;
+  /** Machines' fuel, once there are machines: wood burned per second and the share of full speed. */
+  power?: { use: number; factor: number };
 }
 
 type FoodState = "growing" | "steady" | "falling" | "hungry";
@@ -39,6 +41,7 @@ export function VillagePanel({
   foodMade,
   foodEaten,
   hungry,
+  power,
 }: VillagePanelProps) {
   const format = useNumberFormat();
   const free = Math.max(0, beds - population);
@@ -65,6 +68,14 @@ export function VillagePanel({
           : undefined,
     },
   ];
+  if (power) {
+    const short = power.factor < 0.99;
+    rows.push({
+      label: "Power",
+      value: short ? `Short: machines at ${Math.round(power.factor * 100)}%` : "Fuelled",
+      note: `${format.rate(power.use)} wood burned per second`,
+    });
+  }
   return (
     <Box component="section" aria-labelledby="village-title">
       <Typography component="h2" variant="h6" id="village-title">

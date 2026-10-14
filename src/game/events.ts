@@ -104,7 +104,7 @@ function bump(state: GameState, morale: number, drift: number): void {
 
 /** What the village makes in `seconds`, added to a stock (the stock cap still applies). */
 function windfall(state: GameState, currency: "food" | "wood", seconds: number): void {
-  state[currency] += ratesFor(state, state.owned, false)[currency] * seconds;
+  state[currency] += Math.max(0, ratesFor(state, state.owned, false)[currency]) * seconds;
   clampStocks(state);
 }
 

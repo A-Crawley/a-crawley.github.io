@@ -276,11 +276,7 @@ export function globalMultiplier(state: SimState): number {
  * The simulation models an always-clicking player, so it includes click income. The real game
  * turns that off, because there each click is its own action.
  */
-export function ratesFor(
-  state: SimState,
-  owned: Counts = state.owned,
-  includeClicks = true,
-): Rates {
+function grossRates(state: SimState, owned: Counts, includeClicks: boolean, power: number): Rates {
   const { output, milestones, milestoneFactor } = CONFIG;
   const ms = (id: ItemId) => milestoneMultiplier(owned[id], milestones, milestoneFactor);
   const global = globalMultiplier({ ...state, owned });
@@ -298,20 +294,67 @@ export function ratesFor(
   const clicks = includeClicks ? CONFIG.clicksPerSecond * CONFIG.clickValue : 0;
   const food =
     (foragers * output.forager * ms("forager") * basket +
-      owned.autoForager * output.autoForager * ms("autoForager") * operated +
+      owned.autoForager * output.autoForager * ms("autoForager") * operated * power +
       odd +
       clicks) *
     global;
   const wood =
     (woodcutters * output.woodcutter * ms("woodcutter") * axe +
-      owned.sawmillBot * output.sawmillBot * ms("sawmillBot") * operated) *
+      owned.sawmillBot * output.sawmillBot * ms("sawmillBot") * operated * power) *
     global;
   const infra =
     (builders * output.builder * ms("builder") +
-      owned.builderDrone * output.builderDrone * ms("builderDrone") * operated) *
+      owned.builderDrone * output.builderDrone * ms("builderDrone") * operated * power) *
     global;
 
   return { food, wood, infra };
+}
+
+/** Machines in a set of counts. */
+export function machineCount(owned: Counts): number {
+  return owned.autoForager + owned.sawmillBot + owned.builderDrone;
+}
+
+/** Wood the machines want each second: nothing while the village is resting or looking up. */
+export function powerDemand(state: SimState, owned: Counts = state.owned): number {
+  const machines = machineCount(owned);
+  if (machines === 0 || globalMultiplier({ ...state, owned }) <= 0) return 0;
+  return CONFIG.power.perMachine * machines;
+}
+
+/**
+ * How much of full speed the machines run at, from 0 to 1. They run at full speed whenever the wood
+ * in store plus what is made this second covers what they burn. When it does not, they slow until
+ * what they burn is exactly what is there to burn, so a shortage slows them rather than stopping
+ * them (down to a floor, see CONFIG.power). Buying wood down to nothing therefore does not stall them while production is healthy.
+ */
+export function powerFactor(state: SimState, owned: Counts = state.owned): number {
+  const demand = powerDemand(state, owned);
+  if (demand === 0) return 1;
+  const full = grossRates(state, owned, false, 1).wood;
+  if (state.wood + full >= demand) return 1;
+  const base = grossRates(state, owned, false, 0).wood;
+  const gap = demand - (full - base);
+  return Math.max(CONFIG.power.minFactor, Math.min(1, (state.wood + base) / gap));
+}
+
+/**
+ * Output per second for a given set of owned counts, net of what the machines burn. Wood can
+ * therefore be a negative rate: a village that builds machines faster than it can fuel them.
+ * The simulation models an always-clicking player, so it includes click income. The real game
+ * turns that off, because there each click is its own action.
+ */
+export function ratesFor(
+  state: SimState,
+  owned: Counts = state.owned,
+  includeClicks = true,
+): Rates {
+  const demand = powerDemand(state, owned);
+  if (demand === 0) return grossRates(state, owned, includeClicks, 1);
+  const power = powerFactor(state, owned);
+  const rates = grossRates(state, owned, includeClicks, power);
+  // Whatever the machines cannot burn is simply not burned: the stock never goes below nothing.
+  return { ...rates, wood: Math.max(rates.wood - demand * power, -state.wood) };
 }
 
 export function isAvailable(state: SimState, def: ItemDef): boolean {
@@ -598,6 +641,8 @@ export function step(state: SimState, dt = 1, includeClicks = true, hunger = tru
   state.wood += rates.wood * dt;
   state.infra += rates.infra * dt;
 
+  // The machines may have burned the last of the wood; rounding must not leave it below nothing.
+  if (state.wood < 0) state.wood = 0;
   clampStocks(state);
 
   // The Exchange rate recovers while nobody trades.

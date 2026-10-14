@@ -238,7 +238,7 @@ export const CONFIG = {
     forager: 0.4,
     woodcutter: 0.25,
     builder: 0.03,
-    autoForager: 6,
+    autoForager: 7,
     sawmillBot: 4,
     builderDrone: 0.5,
   },
@@ -269,6 +269,14 @@ export const CONFIG = {
    * for the rival's incidents, so they arrive sooner.
    */
   routes: { loud: { priceFactor: 0.85, driftPerExploit: -120, loudPerExtraIncident: 2 } },
+
+  /**
+   * Machines run on wood (GAME-32): each burns this much wood a second while the village is
+   * working. If the wood cannot cover it, every machine slows in proportion, but never below
+   * `minFactor` of full speed: a machine short of fuel is a slow machine, not a dead one, so a
+   * wood bill can never starve the village.
+   */
+  power: { perMachine: 0.75, minFactor: 0.5 },
 
   /**
    * The Exchange (GAME-34): swap food and wood, never infrastructure, so the stage gates keep their

@@ -60,6 +60,7 @@ describe("production", () => {
     const state = createState();
     state.owned.forager = 3;
     state.owned.autoForager = 1;
+    state.wood = 100; // fuel: machines run on wood
     expect(idleVillagers(state.owned)).toBe(1);
     const expected = 2 * CONFIG.output.forager + CONFIG.output.autoForager + CONFIG.clicksPerSecond;
     expect(ratesFor(state).food).toBeCloseTo(expected);

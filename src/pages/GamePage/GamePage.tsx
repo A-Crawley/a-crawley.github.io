@@ -33,6 +33,9 @@ import {
   isResting,
   moraleDrivers,
   isWalkingOut,
+  machineCount,
+  powerDemand,
+  powerFactor,
   quotePurchase,
   ratesFor,
   unemployed,
@@ -400,6 +403,14 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
             foodMade={rates.food}
             foodEaten={upkeepPerSecond(state)}
             hungry={isHungry(state)}
+            power={
+              machineCount(state.owned) > 0
+                ? {
+                    use: powerDemand(state) * powerFactor(state),
+                    factor: powerFactor(state),
+                  }
+                : undefined
+            }
           />
         </Panel>,
       );

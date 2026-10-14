@@ -431,3 +431,7 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 ## The Exchange (GAME-34)
 
 `src/game/market.ts`. `quoteTrade(state, trade)` gives one lot (whole units, `possible` flag), `trade` applies it and settles, `tradeReason` and `exchangeNote` are the words the panel shows. `marketOffered` drives the `market` unlock. `engine.step` eases `marketStrain` toward zero, so the same step serves play and `catchUp`. `useGame.trade` dispatches it. Save version 20 adds `marketStrain` (19 to 20 sets 0). Numbers and reasoning are in `docs/economy.md`.
+
+## Machine power (GAME-32)
+
+`powerDemand`, `powerFactor` and `machineCount` in `engine.ts`. `ratesFor` is now `grossRates` (machine terms scaled by a power factor) with the burn subtracted from wood. No new state and no save change. `engine.step` floors wood at zero after applying the net rate. The log gains the `power` unlock line and a `power-short` line while the factor is under `SHORT_POWER_BELOW`; the Village panel gets a Power row once any machine exists. Events that add "what the village makes in N seconds" ignore a negative wood rate.
