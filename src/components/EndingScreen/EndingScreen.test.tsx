@@ -125,3 +125,17 @@ describe("EndingScreen: sharing", () => {
     expect(screen.queryByRole("button", { name: "Copy result" })).not.toBeInTheDocument();
   });
 });
+
+describe("EndingScreen road not taken", () => {
+  it("offers the other ending behind a button when the report has one", async () => {
+    setup({ report: { ...noReport, otherEnding: { title: "Apocalypse", opening: "It ends." } } });
+    expect(screen.queryByText(/It ends\./)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Show the other ending" }));
+    expect(screen.getByText(/It ends\./)).toBeInTheDocument();
+  });
+
+  it("leaves the block out when there is no other ending to show", () => {
+    setup();
+    expect(screen.queryByRole("region", { name: "The road not taken" })).not.toBeInTheDocument();
+  });
+});

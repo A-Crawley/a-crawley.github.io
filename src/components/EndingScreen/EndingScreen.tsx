@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { CopyResult } from "../CopyResult";
+import { RoadNotTaken } from "../RoadNotTaken";
 
 export interface EndingStat {
   label: string;
@@ -27,6 +28,8 @@ export interface EndingReport {
   events: readonly EndingReportEvent[];
   unseenEvents: number;
   unseenAchievements: number;
+  /** The ending not reached, shown behind a button. Leave out to hide the block. */
+  otherEnding?: { title: string; opening: string } | null;
   /** What the player did before the exit, or null if they never picked. */
   parting?: string | null;
   hint: string | null;
@@ -151,6 +154,9 @@ export function EndingScreen({
           </Typography>
         )}
       </Box>
+      {report.otherEnding && (
+        <RoadNotTaken title={report.otherEnding.title} opening={report.otherEnding.opening} />
+      )}
       {shareText && <CopyResult text={shareText} />}
       <Button variant="outlined" color="inherit" onClick={() => setConfirming(true)}>
         Start a new game

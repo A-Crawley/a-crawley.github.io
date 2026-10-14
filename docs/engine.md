@@ -371,3 +371,7 @@ The `game-ui-designer` agent (`.claude/agents/`) holds the design principles use
 - **Offline:** the choice phase stops time (`isFinished`), so `catchUp` neither skips nor picks the beat.
 - **Ending copy:** `partingAftermath(state)` gives one line per act and ending, shown after the ending paragraphs; `runReport` gets a `parting` line ("At the exit: ..."). Both are null for a save with no act (migrated or already ended).
 - **Save version 14:** adds `parting` (null or an act). The 13 to 14 migration sets null. A non-null act in a run that has not reached the exit is rejected.
+
+## The road not taken (GAME-53)
+
+`runReport` also returns `otherEnding` (name and opening line of the ending not reached, from `ENDING_COPY`; null while there is no ending). `EndingScreen` shows it in the `RoadNotTaken` block, hidden behind a "Show the other ending" button because it is a spoiler, with a one-line nudge to start a new game. Derived only, so there is no save change. It deliberately shows no odds band or drift change: the ticket asked for those, but the hidden-drift rule (see the run report section) wins, so they were left out. A test checks the text has no digits or percentages.
