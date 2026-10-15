@@ -3,6 +3,7 @@ import { isHungry, itemDef, powerFactor } from "./engine.ts";
 import { eventChoice, eventDef } from "./events.ts";
 import type { GameState } from "./state.ts";
 import { briefLog } from "./briefs.ts";
+import { aftermathLines } from "./aftermath.ts";
 import { ECHO_OPENING } from "./echoes.ts";
 import { castDepartures } from "./cast.ts";
 import { chatterText } from "./chatter.ts";
@@ -122,6 +123,8 @@ export function logLines(state: GameState): LogLine[] {
       text: auto ? `${picked.log} Nobody answered, so it was decided for them.` : picked.log,
     });
   }
+  // What those answers led to, a couple of events on.
+  lines.push(...aftermathLines(state));
   // Reveal lines come last, in the order the player met them.
   for (const id of state.unlocked) {
     const log = UNLOCKS.find((unlock) => unlock.id === id)?.log;
