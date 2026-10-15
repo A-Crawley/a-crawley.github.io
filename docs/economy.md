@@ -310,3 +310,15 @@ In stage 2 the player is offered up to three optional targets (`CONFIG.targets`,
 - **Bound:** at most 3 offers a run, so rewards total at most 270 s of food, and drift moves by 300 or less per target. Missing costs nothing beyond what accepting already cost.
 - **Sim:** the bots never accept, so `npm run sim` is unchanged (110.2 / 109.7 / 112.3 min). The windows were set against the bots' research pace, not against a player who plays for targets.
 - **Saved:** `targets` (save version 21, migrated to a fresh state). An accepted window stands still while the player is away.
+
+## Standing orders (GAME-63)
+
+An upgrade in stage 2 ("Standing orders", 1200 food, offered as soon as stage 2 starts) hands routine hiring to the village. The player sets a cap per order (`state.orders`): huts and houses (build when fewer than 2 beds are free), and the three jobs (hire a villager who has no job). Orders fill in the order hut, house, forager, woodcutter, builder. Machines are not orderable: they displace villagers, and that is a decision.
+
+- **Costs:** an order pays the normal price, so it cannot make anything cheaper. It only removes the clicking.
+- **Reserve:** an order never spends below a minute of what the village eats (food) or what its machines burn (wood). A hire does not raise upkeep (the villager already lives there), so keeping the reserve means orders cannot bring on hunger. A test runs ten minutes of orders on a thin food stock and checks the village is never hungry.
+- **Displaced villagers:** orders only hire villagers nobody has displaced, so redeploy, retrain and release stay the player's call.
+- **Drift:** each purchase an order makes nudges the drift by -3 (efficiency). The count of purchases is bounded by the economy (a run buys a few hundred things), so the total is a few hundred at most, about the size of one stretch target.
+- **Away:** orders keep running at the away rate (25%, 8 hours), with the same reserve. Delegating that work is the point of the upgrade, and the reserve and the no-hunger rule for away time mean it cannot hurt an absent player.
+- **Sim:** the bots never set orders, so `npm run sim` is unchanged (110.2 / 109.7 / 112.3 min). Orders only change how many clicks a human needs, not what anything costs.
+- **Saved:** `orders` (save version 22, migrated to empty).

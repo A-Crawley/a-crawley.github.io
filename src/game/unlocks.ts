@@ -1,6 +1,6 @@
 import { CONFIG, ITEMS } from "./config.ts";
 import type { ItemId } from "./config.ts";
-import { isUpgradeAvailable, UPGRADES } from "./upgrades.ts";
+import { hasUpgrade, isUpgradeAvailable, UPGRADES } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
 import {
   bedsOf,
@@ -84,6 +84,7 @@ export type UnlockId =
   | `echo:${number}:${Temperament}`
   | `memory:${Temperament}`
   | "market"
+  | "orders"
   | "power"
   | "seasons"
   | "firstWinter";
@@ -377,6 +378,11 @@ export const UNLOCKS: readonly UnlockDef[] = [
     id: "market",
     when: marketOffered,
     log: "An Exchange opens. It swaps food for wood and wood for food, and charges a handling fee for the handling.",
+  },
+  {
+    id: "orders",
+    when: (s) => hasUpgrade(s, "standingOrders"),
+    log: "Standing orders are in place. Hiring now happens without anyone having to be there for it.",
   },
   {
     id: "stage2",

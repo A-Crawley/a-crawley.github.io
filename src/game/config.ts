@@ -401,6 +401,22 @@ export const CONFIG = {
    */
   offlineRate: 0.25,
 
+  /**
+   * Standing orders (GAME-63): hiring the player has handed over. An order never spends below
+   * `reserveSeconds` of what the village eats (or burns), so it cannot cause hunger. Each purchase
+   * it makes nudges the drift a little towards efficiency.
+   */
+  orders: {
+    reserveSeconds: 60,
+    /** A housing order builds when fewer than this many beds are free. */
+    freeBeds: 2,
+    driftPerPurchase: -3,
+    /** Most purchases one settle pass will make, so a long gap cannot loop for long. */
+    maxPerPass: 25,
+    /** Highest cap a player can set. */
+    maxCap: 200,
+  },
+
   /** Stop after this long if the run has not finished. */
   maxSeconds: 4 * 60 * 60,
 } as const;

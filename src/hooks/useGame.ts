@@ -12,6 +12,7 @@ import {
   setPolicy,
   setRoute,
   trade,
+  setStandingOrder,
   acceptTarget,
   declineTarget,
   takeRestDay,
@@ -27,6 +28,7 @@ import type { UpgradeId } from "../game/upgrades.ts";
 import type { AwaySummary } from "../game/offline.ts";
 import type { TargetKind } from "../game/targets.ts";
 import type { Trade } from "../game/market.ts";
+import type { OrderId } from "../game/standingOrders.ts";
 import { recordOf } from "../game/echoes.ts";
 import { exportSave, importSave } from "../game/save.ts";
 import type { SaveResult } from "../game/save.ts";
@@ -77,6 +79,8 @@ export interface UseGame {
   declineTarget(): void;
   /** Swap one lot of food and wood at the Exchange. */
   trade(which: Trade): void;
+  /** Set the cap on a standing order (0 clears it). */
+  setOrder(id: OrderId, cap: number): void;
   takeRestDay(): void;
   /** Buy a one-off upgrade. */
   buyUpgrade(id: UpgradeId): void;
@@ -206,6 +210,10 @@ export function useGame(options?: UseGameOptions): UseGame {
       saveGame(store.getState(), storage);
     }, [store, storage]),
     trade: useCallback((which: Trade) => store.dispatch((s) => trade(s, which)), [store]),
+    setOrder: useCallback(
+      (id: OrderId, cap: number) => store.dispatch((s) => setStandingOrder(s, id, cap)),
+      [store],
+    ),
     setRoute: useCallback((route: Route) => store.dispatch((s) => setRoute(s, route)), [store]),
     setPolicy: useCallback(
       (policy: keyof Policies, on: boolean) => store.dispatch((s) => setPolicy(s, policy, on)),

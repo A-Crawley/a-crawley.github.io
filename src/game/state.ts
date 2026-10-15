@@ -12,6 +12,7 @@ import type { ChatterState } from "./chatter.ts";
 import type { RunRecord } from "./echoes.ts";
 import { createTargetsState } from "./targets.ts";
 import type { TargetsState } from "./targets.ts";
+import type { Orders } from "./standingOrders.ts";
 import { createMilestonesState } from "./milestones.ts";
 import type { MilestonesState } from "./milestones.ts";
 import { createSkyState } from "./sky.ts";
@@ -21,7 +22,7 @@ import { createReviewsState } from "./review.ts";
 import type { ReviewsState } from "./review.ts";
 
 /** Bumped when the shape changes, so the save system can migrate older saves. */
-export const STATE_VERSION = 21;
+export const STATE_VERSION = 22;
 
 /**
  * The full game state. It is plain data (numbers, booleans and records only), so it survives
@@ -60,6 +61,8 @@ export interface GameState extends SimState {
   echo: RunRecord | null;
   /** Quarterly targets: the offer, the accepted target and how each went. */
   targets: TargetsState;
+  /** Standing orders: a cap per job or housing item the village hires or builds on its own. */
+  orders: Orders;
 }
 
 export function createGameState(now: number, echo: RunRecord | null = null): GameState {
@@ -80,5 +83,6 @@ export function createGameState(now: number, echo: RunRecord | null = null): Gam
     cast: createCastState(base.population),
     echo,
     targets: createTargetsState(),
+    orders: {},
   };
 }

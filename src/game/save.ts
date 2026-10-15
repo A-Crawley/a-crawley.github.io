@@ -14,6 +14,8 @@ import { isBriefId } from "./briefs.ts";
 import type { BriefId } from "./config.ts";
 import { CAST, createCastState } from "./cast.ts";
 import type { CastState } from "./cast.ts";
+import { isOrderId } from "./standingOrders.ts";
+import type { Orders } from "./standingOrders.ts";
 import { createTargetsState, MAX_OFFERS } from "./targets.ts";
 import type { TargetResult, TargetsState } from "./targets.ts";
 import { parseRunRecord } from "./echoes.ts";
@@ -138,6 +140,8 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   // 20 -> 21: quarterly targets. Nothing has been offered yet; the first offer comes at research
   // level 6, so a run already past that simply never gets one.
   20: (save) => ({ ...save, version: 21, targets: createTargetsState() }),
+  // 21 -> 22: standing orders. None are set, and the upgrade that runs them is not owned.
+  21: (save) => ({ ...save, version: 22, orders: {} }),
 };
 
 function migratePopulation(save: RawSave): RawSave {
@@ -220,6 +224,17 @@ const POLICY_FIELDS = ["extendedShifts", "rationsOptimisation"] as const;
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function validateOrders(raw: unknown): Orders | null {
+  if (!isRecord(raw)) return null;
+  const orders: Orders = {};
+  for (const [id, cap] of Object.entries(raw)) {
+    if (!isOrderId(id) || typeof cap !== "number" || !Number.isInteger(cap)) return null;
+    if (cap < 1 || cap > CONFIG.orders.maxCap) return null;
+    orders[id] = cap;
+  }
+  return orders;
 }
 
 function validateEvents(raw: unknown): EventsState | null {
@@ -438,6 +453,9 @@ export function validateState(raw: unknown): SaveResult<GameState> {
   const targets = validateTargets(raw.targets);
   if (!targets) return fail("targets");
 
+  const orders = validateOrders(raw.orders);
+  if (!orders) return fail("orders");
+
   const chatter = validateChatter(raw.chatter);
   if (!chatter) return fail("chatter");
 
@@ -513,6 +531,7 @@ export function validateState(raw: unknown): SaveResult<GameState> {
       cast,
       echo,
       targets,
+      orders,
       brief,
       route: raw.route,
       loudExploits,

@@ -15,7 +15,8 @@ export type UpgradeId =
   | "rootCellar"
   | "maintenanceContract"
   | "preventiveMaintenance"
-  | "onboardingDeck";
+  | "onboardingDeck"
+  | "standingOrders";
 
 export const UPGRADE_EFFECTS = {
   /** Forager output multiplier. */
@@ -141,6 +142,18 @@ export const UPGRADES: readonly UpgradeDef[] = [
     firstStage: 2,
     lastStage: 2,
     requires: (s) => s.owned.autoForager + s.owned.sawmillBot + s.owned.builderDrone >= 1,
+  },
+  {
+    id: "standingOrders",
+    label: "Standing orders",
+    description: "Hiring becomes a policy. The policy hires.",
+    effect: "Hires and builds up to caps you set",
+    currency: "food",
+    cost: 1200,
+    firstStage: 2,
+    lastStage: 2,
+    // Stage 2 is the whole condition: the village has machines to hand the tedium to.
+    requires: () => true,
   },
 ];
 

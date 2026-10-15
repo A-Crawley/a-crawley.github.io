@@ -2,6 +2,7 @@ import { applyAchievements, pendingAchievements } from "./achievements.ts";
 import { applyCast, pendingCast } from "./cast.ts";
 import { applyChatter, pendingChatter } from "./chatter.ts";
 import { applyMilestones, pendingMilestones } from "./milestones.ts";
+import { applyOrders, pendingOrders } from "./standingOrders.ts";
 import { applyTargets, pendingTargets } from "./targets.ts";
 import { pendingSnapshots, recordReviews } from "./review.ts";
 import type { GameState } from "./state.ts";
@@ -12,6 +13,8 @@ import { applyUnlocks, pendingUnlocks } from "./unlocks.ts";
  * them), then achievements. Changes `state` in place, like the engine's `step`.
  */
 export function settle(state: GameState): void {
+  // Orders go first: what they buy can unlock things and earn achievements in the same pass.
+  applyOrders(state);
   applyUnlocks(state);
   applyAchievements(state);
   applyMilestones(state);
@@ -30,7 +33,8 @@ export function withSettled(state: GameState): GameState {
     pendingSnapshots(state).length === 0 &&
     !pendingCast(state) &&
     !pendingChatter(state) &&
-    !pendingTargets(state)
+    !pendingTargets(state) &&
+    !pendingOrders(state)
   ) {
     return state;
   }
