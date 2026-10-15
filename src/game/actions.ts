@@ -21,6 +21,8 @@ import { isUpgradeAvailable, upgradeDef } from "./upgrades.ts";
 import type { UpgradeId } from "./upgrades.ts";
 import type { GameState } from "./state.ts";
 import { settle } from "./settle.ts";
+import { setOrder } from "./standingOrders.ts";
+import type { OrderId } from "./standingOrders.ts";
 
 /**
  * Player actions. Each one returns a new state. When an action is not allowed (not enough
@@ -86,6 +88,13 @@ export function setRoute(state: GameState, route: Route): GameState {
 
 /** Answer a quarterly target offer. See ./targets.ts. */
 export { acceptTarget, declineTarget } from "./targets.ts";
+
+/** Set the cap on a standing order (0 clears it), and fill it at once if it is due. */
+export function setStandingOrder(state: GameState, id: OrderId, cap: number): GameState {
+  const next = setOrder(state, id, cap);
+  if (next !== state) settle(next);
+  return next;
+}
 
 /** Swap food and wood at the Exchange. See ./market.ts. */
 export { trade } from "./market.ts";

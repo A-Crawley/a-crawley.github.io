@@ -33,6 +33,7 @@ import {
   isResting,
   moraleDrivers,
   isWalkingOut,
+  itemDef,
   machineCount,
   powerDemand,
   powerFactor,
@@ -66,6 +67,7 @@ import {
 import { BriefChoice } from "../../components/BriefChoice";
 import { TargetStatus } from "../../components/TargetStatus";
 import { Exchange } from "../../components/Exchange";
+import { StandingOrders } from "../../components/StandingOrders";
 import { castReviewNote } from "../../game/cast.ts";
 import { isPartingAct, PARTING_OPTIONS, partingAftermath } from "../../game/parting.ts";
 import { runReport } from "../../game/runReport.ts";
@@ -75,6 +77,8 @@ import { formatAmount, formatDuration, formatWait } from "../../game/format.ts";
 import { offerTerms, targetSecondsLeft } from "../../game/targets.ts";
 import { nextSeason, seasonOf, secondsToNextSeason } from "../../game/seasons.ts";
 import type { Season } from "../../game/seasons.ts";
+import { ORDER_IDS, reserveOf } from "../../game/standingOrders.ts";
+import type { OrderId } from "../../game/standingOrders.ts";
 import { exchangeNote, quoteTrade, tradeReason, TRADES } from "../../game/market.ts";
 import type { Trade } from "../../game/market.ts";
 import { isUnlocked, showGatherButton } from "../../game/unlocks.ts";
@@ -529,6 +533,7 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
       state.upgrades.length,
       policiesOffered,
       unlocked("market"),
+      unlocked("orders"),
       // Gather food sits above the shop, so it retiring (or coming back when food runs out)
       // moves the shop too.
       gatherOnShow,
@@ -617,6 +622,28 @@ export function GamePage({ options, dev, layout }: GamePageProps) {
                   };
                 })}
                 onTrade={(id) => game.trade(id as Trade)}
+              />
+            </ShopSection>
+          )}
+          {unlocked("orders") && state.stage >= 2 && (
+            <ShopSection title="Standing orders" collapsible={phone}>
+              <StandingOrders
+                maxCap={CONFIG.orders.maxCap}
+                note={`Orders hire and build on their own, and always leave about a minute of food (${formatAmount(reserveOf(state, "food"), settings.notation)}) in the store. Each one nudges the village towards efficiency.`}
+                rows={ORDER_IDS.map((id) => {
+                  const def = itemDef(id);
+                  return {
+                    id,
+                    label: def.label,
+                    cap: state.orders[id] ?? 0,
+                    owned: state.owned[id],
+                    rule:
+                      def.beds !== undefined
+                        ? `Builds when fewer than ${CONFIG.orders.freeBeds} beds are free.`
+                        : "Hires a villager who has no job.",
+                  };
+                })}
+                onChange={(id, cap) => game.setOrder(id as OrderId, cap)}
               />
             </ShopSection>
           )}

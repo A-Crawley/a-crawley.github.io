@@ -2,6 +2,7 @@ import { buyUpgrade } from "./actions.ts";
 import { ITEMS } from "./config.ts";
 import { bedsOf, capOf, costOf, itemDef, ratesFor, retrainCost } from "./engine.ts";
 import { createGameState } from "./state.ts";
+import { ordersRunning } from "./standingOrders.ts";
 import type { GameState } from "./state.ts";
 import { withUnlocks } from "./unlocks.ts";
 import {
@@ -174,9 +175,20 @@ describe("what each upgrade does", () => {
       prices: ITEMS.map((def) => costOf(s, def)),
     });
     for (const upgrade of UPGRADES) {
+      // Standing orders adds a feature, not a number: it has its own check below.
+      if (upgrade.id === "standingOrders") continue;
       const base = upgrade.lastStage === 1 ? early : state;
       expect(snapshot(withUpgrade(base, upgrade.id))).not.toEqual(snapshot(base));
     }
+  });
+
+  it("standing orders switches the orders on, in stage 2 only", () => {
+    const state = rich();
+    expect(ordersRunning(state)).toBe(false);
+    expect(ordersRunning(withUpgrade(state, "standingOrders"))).toBe(true);
+    expect(ordersRunning(withUpgrade({ ...state, stage: 1 as const }, "standingOrders"))).toBe(
+      false,
+    );
   });
 });
 

@@ -1095,6 +1095,55 @@ describe("GamePage exchange", () => {
   });
 });
 
+describe("GamePage standing orders", () => {
+  function ordering(): GameState {
+    const state = createGameState(Date.now());
+    state.stage = 2;
+    state.owned.forager = 10;
+    state.owned.hut = 6;
+    state.owned.granary = 40;
+    state.population = 13; // three villagers with no job
+    state.owned.research = 1;
+    state.food = 5000;
+    state.events.nextAt = Infinity;
+    state.targets.offered = 3;
+    state.targets.results = [
+      { kind: "declined", met: false },
+      { kind: "declined", met: false },
+      { kind: "declined", met: false },
+    ];
+    state.upgrades = ["standingOrders"];
+    state.unlocked.push("village", "stage2", "orders");
+    return state;
+  }
+
+  it("is not there before the upgrade is owned", () => {
+    const state = ordering();
+    state.upgrades = [];
+    state.unlocked = state.unlocked.filter((id) => id !== "orders");
+    render(<GamePage options={{ storage: null, initialState: reviewed(state) }} />);
+    // The upgrade itself is on offer, but nothing can be ordered yet.
+    expect(screen.queryByLabelText("Hut: keep up to")).not.toBeInTheDocument();
+  });
+
+  it("shows an order for each job and building, all off at first", () => {
+    render(<GamePage options={{ storage: null, initialState: reviewed(ordering()) }} />);
+    expect(screen.getByRole("heading", { name: "Standing orders" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Hut: keep up to")).toHaveValue(0);
+    expect(screen.getByLabelText("Food Acquisition Associate: keep up to")).toHaveValue(0);
+  });
+
+  it("hires the jobless villagers once a cap is set", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<GamePage options={{ storage: null, initialState: reviewed(ordering()) }} />);
+    const field = screen.getByLabelText("Food Acquisition Associate: keep up to");
+    await user.clear(field);
+    await user.type(field, "12");
+    expect(field).toHaveValue(12);
+    expect(screen.getByText(/Hires a villager who has no job\. You have 12\./)).toBeInTheDocument();
+  });
+});
+
 describe("GamePage quarterly targets", () => {
   function atLevel(level: number): GameState {
     const state = createGameState(Date.now());

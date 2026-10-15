@@ -443,3 +443,7 @@ In stage 3 the player can switch exploits to the **loud** route (an "Approach" t
 ## Quarterly targets (GAME-52)
 
 `applyTargets` in `targets.ts` runs in `settle()`: it raises an offer when one is due, and resolves an active target as met or missed. `acceptTarget`, `declineTarget` and `holdTarget` (called from `tick` when events are held, so the window stops while away) are the other moves. `state.targets` is `{ offered, offer, active, results }`, and `validateTargets` in `save.ts` enforces `offered === results.length + offer + active`. Save version 21 (20 to 21 sets a fresh state). Results become log lines (`target:<index>`).
+
+## Standing orders (GAME-63)
+
+`standingOrders.ts`. `applyOrders` runs first in `settle()` (so what it buys can unlock things in the same pass), buys up to `CONFIG.orders.maxPerPass` units, and returns how many. `orderDue` is the single rule: a cap is set and not met, the item is available, there is a bed shortage (housing) or a jobless, non-displaced villager (jobs), and the price leaves `reserveOf` in the store. `pendingOrders` lets `withSettled` skip a clone when nothing is due. `setOrder` is pure (the action `setStandingOrder` settles it). Orders run only when `ordersRunning`: the `standingOrders` upgrade is owned, stage 2 or later, and the run is not over. Save version 22 adds `orders` (21 to 22 sets `{}`); `validateOrders` rejects unknown ids and caps outside 1 to 200.
